@@ -4,7 +4,7 @@ description: Intro to property based tests
 
 # プロパティベースのテスト概要
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/roman-numerals)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/roman-numerals)
 
 一部の企業は、インタビュープロセスの一環として、[ローマ数字のカタ](http://codingdojo.org/kata/RomanNumerals/)を実行するように求めます。この章では、TDDでこれに取り組む方法を示します。
 

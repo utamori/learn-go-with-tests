@@ -4,7 +4,7 @@ description: Context (長期実行プロセスの管理に役立つパッケー�
 
 # コンテキスト
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/context)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/context)
 
 ソフトウェアは、多くの場合、長時間実行され、リソースを大量に消費するプロセスを開始します（多くの場合、ゴルーチンで）。これを引き起こしたアクションがキャンセルされるか、何らかの理由で失敗した場合は、アプリケーションを通じてこれらのプロセスを一貫した方法で停止する必要があります。
 

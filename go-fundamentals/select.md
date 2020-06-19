@@ -4,7 +4,7 @@ description: Select
 
 # 選択
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/select)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/select)
 
 2つのURLを取得し、それらをHTTP GETでヒットして最初に返されたURLを返すことで「競合」する`WebsiteRacer`と呼ばれる関数を作成するように求められました。 10秒以内に戻らない場合は、「エラー（`error`）」を返します。
 

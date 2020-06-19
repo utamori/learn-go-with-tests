@@ -4,7 +4,7 @@ description: Maths
 
 # 数学
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/math)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/math)
 
 現代のコンピューターのすべての能力が驚異的な速さで膨大な合計を実行するために、普通の開発者は自分の仕事を行うために数学を使用することはほとんどありません。
 

@@ -4,7 +4,7 @@ description: Dependency Injection
 
 # 依存性注入
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/di)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/di)
 
 これにはインターフェースの理解が必要になるため、構造体のセクションをすでに読んでいることが前提です。
 

@@ -4,7 +4,7 @@ description: Concurrency
 
 # 並行性
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/concurrency)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/concurrency)
 
 同僚がURLリストのステータスを確認する関数`CheckWebsites`を作成しました。
 

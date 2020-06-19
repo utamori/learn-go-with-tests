@@ -4,7 +4,7 @@ description: Pointers & errors
 
 # ポインタとエラー
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/pointers)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/pointers)
 
 前のセクションでコンセプトに関連する、いくつかの値を取得できる「構造体」について学びました。
 

@@ -4,7 +4,7 @@ description: Sync
 
 # 同期
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/sync)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/sync)
 
 安全に併用できる並行処理を作りたい。
 

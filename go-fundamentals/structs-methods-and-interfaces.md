@@ -4,7 +4,7 @@ description: 'Structs, methods & interfaces'
 
 # 構造体、メソッド、インターフェース
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/structs)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/structs)
 
 高さと幅を指定して長方形の周囲を計算するために、いくつかのジオメトリコードが必要だとします。 `Perimeter(width float64, height float64)`関数を記述できます。
 ここで、 `float64`は` 123.45`のような浮動小数点数用です。

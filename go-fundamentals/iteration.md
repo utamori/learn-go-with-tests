@@ -4,7 +4,7 @@ description: Iteration
 
 # 反復、繰り返し
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/for)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/for)
 
 Goで繰り返し作業を行うには、 `for`が必要です。 Goには `while`、`do`、 `until`キーワードはなく、`for`のみ使用できます。これは良いことです！
 

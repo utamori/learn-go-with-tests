@@ -4,7 +4,7 @@ description: Maps
 
 # マップ
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/maps)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/maps)
 
 [配列とスライス](arrays-and-slices.md)では、値を順番に格納する方法を見ました。
 では、`key`でアイテムを保存し、すばやく検索する方法を見てみましょう。

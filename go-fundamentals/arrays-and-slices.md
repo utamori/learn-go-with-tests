@@ -4,7 +4,7 @@ description: Arrays and slices
 
 # 配列とスライス
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/arrays)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/arrays)
 
 配列を使うと、同じ型の複数の要素を特定の順番で変数に格納することができます。
 

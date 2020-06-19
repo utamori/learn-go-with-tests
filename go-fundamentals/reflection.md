@@ -4,7 +4,7 @@ description: Reflection
 
 # リフレクション
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/reflection)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/reflection)
 
 [Twitter](https://twitter.com/peterbourgon/status/1011403901419937792?s=09)
 
