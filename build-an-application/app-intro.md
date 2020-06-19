@@ -4,19 +4,18 @@ description: Intro
 
 # はじめに
 
-Now that you have hopefully digested the _Go Fundamentals_ section you have a solid grounding of a majority of Go's language features and how to do TDD.
+これで、_GO言語：基礎_ のセクションを理解し、Goの言語機能の大部分とTDDの方法をしっかりと理解することができました。
 
-This next section will involve building an application.
+次のセクションでは、アプリケーションを構築します。
 
-Each chapter will iterate on the previous one, expanding the application's functionality as our product owner dictates.
+各章では、前の章を反復しながら、製品の所有者の指示に従ってアプリケーションの機能を拡張していきます。
 
-New concepts will be introduced to help facilitate writing great code but most of the new material will be learning what can be accomplished from Go's standard library.
+優れたコードを書きやすくするための新しい概念が紹介されますが、新しい教材のほとんどは、Goの標準ライブラリから何ができるかを学ぶことになります。
 
-By the end of this you should have a strong grasp as to how to iteratively write an application in Go, backed by tests.
+この学習が終わる頃には、テストに裏打ちされたGoのアプリケーションを反復的に書く方法をしっかりと理解しているはずです。
 
-* [HTTP server](http-server.md) - We will create an application which listens to HTTP requests and responds to them.
-* [JSON, routing and embedding](json.md) - We will make our endpoints return JSON, explore how to do routing and learn about type embedding.
-* [IO ](io.md) - We will persist and read our data from disk and we'll cover sorting data.
-* [Command line](command-line.md) - We will create a new program leveraging the code we've made so far to make a command line interface. This will involve us restructuring our project to support multiple binaries
-* [Time](time.md) - We will schedule some activities that happen at different times depending on user input. 
-
+* [HTTPサーバー](http-server.md) - HTTP リクエストを受信し、それに応答するアプリケーションを作成します。
+* [JSON、ルーティング、埋め込み](json.md) - エンドポイントがJSONを返すようにし、ルーティングの方法を調べ、型の埋め込みについて学びます。
+* [IO、並び替え](io.md) - ディスクからデータを永続化して読み込み、データのソートを行います。
+* [コマンドライン、パッケージ構造](command-line.md) - これまでに作ったコードを利用して、コマンドラインインターフェースを作る新しいプログラムを作成します。これは、複数のバイナリをサポートするようにプロジェクトを再構築することになります。
+* [時間](time.md) - ユーザーの入力に応じて、異なる時間に発生するいくつかのアクティビティをスケジュールします。
