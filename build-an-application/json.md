@@ -2,15 +2,15 @@
 description: 'JSON, routing and embedding'
 ---
 
-# JSON, ルーティング、埋め込み
+# JSON、ルーティング、埋め込み
 
-[**You can find all the code for this chapter here**](https://github.com/quii/learn-go-with-tests/tree/master/json)
+[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/json)
 
-[In the previous chapter](http-server.md) we created a web server to store how many games players have won.
+[前の章](http-server.md) プレイヤーが勝ったゲームの数を保存するWebサーバーを作成しました。
 
-Our product owner has a new requirement; to have a new endpoint called `/league` which returns a list of all players stored. She would like this to be returned as JSON.
+私たちの製品所有者には新しい要件があります。保存されているすべてのプレーヤーのリストを返す「`/league`」という新しいエンドポイントを作成します。彼女はこれがJSONとして返されることを望んでいます。
 
-## Here is the code we have so far
+## ここまでのコードは
 
 ```go
 // server.go
@@ -96,13 +96,13 @@ func main() {
 }
 ```
 
-You can find the corresponding tests in the link at the top of the chapter.
+章の上部にあるリンクで対応するテストを見つけることができます。
 
-We'll start by making the league table endpoint.
+まず、「`/league`」テーブルのエンドポイントを作成します。
 
-## Write the test first
+## 最初にテストを書く
 
-We'll extend the existing suite as we have some useful test functions and a fake `PlayerStore` to use.
+いくつかの便利なテスト関数と偽の`PlayerStore`を使用するため、既存のスイートを拡張します。
 
 ```go
 func TestLeague(t *testing.T) {
@@ -120,9 +120,9 @@ func TestLeague(t *testing.T) {
 }
 ```
 
-Before worrying about actual scores and JSON we will try and keep the changes small with the plan to iterate toward our goal. The simplest start is to check we can hit `/league` and get an `OK` back.
+実際のスコアとJSONについて心配する前に、目標に向かって反復する計画で変更を小さく保つようにします。最も簡単な開始は、`/league`を押して`OK`が返されることを確認することです。
 
-## Try to run the test
+## テストを実行してみます
 
 ```text
 === RUN   TestLeague/it_returns_200_on_/league
@@ -138,19 +138,19 @@ github.com/quii/learn-go-with-tests/json-and-io/v2.(*PlayerServer).ServeHTTP(0xc
     /Users/quii/go/src/github.com/quii/learn-go-with-tests/json-and-io/v2/server.go:20 +0xec
 ```
 
-Your `PlayerServer` should be panicking like this. Go to the line of code in the stack trace which is pointing to `server.go`.
+あなたの`PlayerServer`はこのようにパニックになるはずです。`server.go`を指しているスタックトレースのコード行に移動します。
 
 ```go
 player := r.URL.Path[len("/players/"):]
 ```
 
-In the previous chapter, we mentioned this was a fairly naive way of doing our routing. What is happening is it's trying to split the string of the path starting at an index beyond `/league` so it is `slice bounds out of range`.
+前の章で、これはルーティングを行うためのかなり単純な方法であると述べました。何が起こっているかというと、 `/league`を超えたインデックスから始まるパスの文字列を分割しようとしているため、`範囲外のスライス境界(slice bounds out of range)`になります。
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
-Go has a built-in routing mechanism called [`ServeMux`](https://golang.org/pkg/net/http/#ServeMux) \(request multiplexer\) which lets you attach `http.Handler`s to particular request paths.
+Goには[`ServeMux`](https://golang.org/pkg/net/http/#ServeMux) (request multiplexer)と呼ばれるルーティング機構が組み込まれており、`http.Handler`を特定のリクエストパスにアタッチすることができます。
 
-Let's commit some sins and get the tests passing in the quickest way we can, knowing we can refactor it with safety once we know the tests are passing.
+いくつかの罪を犯して、テストをできる限り迅速に通過させましょう。テストに成功したら、安全にリファクタリングできます。
 
 ```go
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -176,16 +176,16 @@ func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-* When the request starts we create a router and then we tell it for `x` path use `y` handler.
-* So for our new endpoint, we use `http.HandlerFunc` and an _anonymous function_ to `w.WriteHeader(http.StatusOK)` when `/league` is requested to make our new test pass.
-* For the `/players/` route we just cut and paste our code into another `http.HandlerFunc`.
-* Finally, we handle the request that came in by calling our new router's `ServeHTTP` \(notice how `ServeMux` is _also_ an `http.Handler`?\)
+* リクエストの開始時にはルータを作成し、`x`のパスには`y`ハンドラを使用するように指示します。
+* 新しいエンドポイントには`http.HandlerFunc`を使用し、`/league`がリクエストされたときに `w.WriteHeader(http.StatusOK)` を指定する _anonymous function_ を使用して、新しいテストをパスするようにします。
+* `/players/`のルートについては、コードを切り取り、別の`http.HandlerFunc`に貼り付けています。
+* 最後に、新しいルータの `ServeHTTP` を呼び出して、リクエストを処理します。
 
-The tests should now pass.
+これでテストはパスするはずです。
 
-## Refactor
+## リファクタリング
 
-`ServeHTTP` is looking quite big, we can separate things out a bit by refactoring our handlers into separate methods.
+`ServeHTTP`はかなり大きく見えます。ハンドラを別のメソッドにリファクタリングすることで、物事を少し分離することができます。
 
 ```go
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -213,7 +213,7 @@ func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-It's quite odd \(and inefficient\) to be setting up a router as a request comes in and then calling it. What we ideally want to do is have some kind of `NewPlayerServer` function which will take our dependencies and do the one-time setup of creating the router. Each request can then just use that one instance of the router.
+リクエストが来てからルータの設定をして、それを呼び出すというのは、なんだか変な感じがします。理想的には、ある種の`NewPlayerServer`関数を持っていて、依存関係を取り込んで、 ルータを作成するための一度きりのセットアップを行うことです。それぞれのリクエストはそのルーターのインスタンスを使うだけです。
 
 ```go
 type PlayerServer struct {
@@ -238,13 +238,13 @@ func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-* `PlayerServer` now needs to store a router.
-* We have moved the routing creation out of `ServeHTTP` and into our `NewPlayerServer` so this only has to be done once, not per request.
-* You will need to update all the test and production code where we used to do `PlayerServer{&store}` with `NewPlayerServer(&store)`.
+* `PlayerServer`はルータを保存する必要があります。
+* ルーティングの作成を`ServeHTTP`から`NewPlayerServer`に移動したので、これはリクエストごとではなく一度だけで済みます。
+* `NewPlayerServer(&store)`で `PlayerServer{&store}`を実行するために使用していたすべてのテストおよび製品コードを更新する必要があります。
 
-### One final refactor
+### 最後のリファクタリング
 
-Try changing the code to the following.
+以下のようにコードを変更してみてください。
 
 ```go
 type PlayerServer struct {
@@ -267,23 +267,23 @@ func NewPlayerServer(store PlayerStore) *PlayerServer {
 }
 ```
 
-Finally make sure you **delete** `func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request)` as it is no longer needed!
+最後に、`func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request)`が不要になったので、**delete** が不要になったので、**削除**してください。
 
-## Embedding
+## 埋め込み
 
-We changed the second property of `PlayerServer`, removing the named property `router http.ServeMux` and replaced it with `http.Handler`; this is called _embedding_.
+`PlayerServer`の2番目のプロパティを変更し、名前付きプロパティ`router http.ServeMux`を削除して、`http.Handler`に置き換えました。 これは _埋め込み（embedding）_ と呼ばれます。
 
-> Go does not provide the typical, type-driven notion of subclassing, but it does have the ability to “borrow” pieces of an implementation by embedding types within a struct or interface.
+> Go は典型的な型駆動型のサブクラス化の概念を提供しませんが、構造体やインターフェイス内に型を埋め込むことで、実装の一部を「借用」する機能があります。
 
-[Effective Go - Embedding](https://golang.org/doc/effective_go.html#embedding)
+[効果的なGo - Embedding](https://golang.org/doc/effective_go.html#embedding)
 
-What this means is that our `PlayerServer` now has all the methods that `http.Handler` has, which is just `ServeHTTP`.
+これが意味することは、私たちの `PlayerServer`が` http.Handler`が持つすべてのメソッドを持っているということです。これは単なる `ServeHTTP`です。
 
-To "fill in" the `http.Handler` we assign it to the `router` we create in `NewPlayerServer`. We can do this because `http.ServeMux` has the method `ServeHTTP`.
+この`http.Handler`を「埋める」ために、`NewPlayerServer`で作成した`router`に割り当てます。これは`http.ServeMux`が`ServeHTTP`というメソッドを持っているからです。
 
-This lets us remove our own `ServeHTTP` method, as we are already exposing one via the embedded type.
+埋め込み型を介してすでに公開しているため、これにより独自の`ServeHTTP`メソッドを削除できます。
 
-Embedding is a very interesting language feature. You can use it with interfaces to compose new interfaces.
+埋め込みは非常に興味深い言語機能です。埋め込みは非常に興味深い言語の機能で、新しいインターフェースを構成するためにインターフェースと一緒に使うことができます。
 
 ```go
 type Animal interface {
@@ -292,21 +292,21 @@ type Animal interface {
 }
 ```
 
-And you can use it with concrete types too, not just interfaces. As you'd expect if you embed a concrete type you'll have access to all its public methods and fields.
+また、インターフェースだけでなく、具象型でも使用できます。具象型を埋め込むと予想されるように、そのすべてのパブリックメソッドとフィールドにアクセスできます。
 
-### Any downsides?
+### 欠点はありますか？
 
-You must be careful with embedding types because you will expose all public methods and fields of the type you embed. In our case, it is ok because we embedded just the _interface_ that we wanted to expose \(`http.Handler`\).
+埋め込む型のすべてのパブリックメソッドとフィールドを公開するため、埋め込み型には注意する必要があります。私たちの場合、\(`http.Handler`\)を公開したい _interface_ だけを埋め込んだので問題ありません。
 
-If we had been lazy and embedded `http.ServeMux` instead \(the concrete type\) it would still work _but_ users of `PlayerServer` would be able to add new routes to our server because `Handle(path, handler)` would be public.
+怠惰で埋め込まれた`http.ServeMux`ではなく具象型でも機能しますが、`Handle(path、handler)`が原因で、`PlayerServer`のユーザーはサーバーに新しいルートを追加できます公開する。
 
-**When embedding types, really think about what impact that has on your public API.**
+**型を埋め込むときは、公開APIにどのような影響があるかをよく考えてください**
 
-It is a _very_ common mistake to misuse embedding and end up polluting your APIs and exposing the internals of your type.
+埋め込みを誤用してAPIを汚染し、型の内部を公開することは、よくある間違いです。
 
-Now we've restructured our application we can easily add new routes and have the start of the `/league` endpoint. We now need to make it return some useful information.
+これでアプリケーションが再構築され、新しいルートを簡単に追加して、 `/league`エンドポイントの開始を設定できます。ここで、いくつかの有用な情報を返すようにする必要があります。
 
-We should return some JSON that looks something like this.
+このようなJSONを返す必要があります。
 
 ```javascript
 [
@@ -321,9 +321,9 @@ We should return some JSON that looks something like this.
 ]
 ```
 
-## Write the test first
+## 最初にテストを書く
 
-We'll start by trying to parse the response into something meaningful.
+まず、応答を意味のあるものに解析することから始めます。
 
 ```go
 func TestLeague(t *testing.T) {
@@ -349,22 +349,22 @@ func TestLeague(t *testing.T) {
 }
 ```
 
-### Why not test the JSON string?
+### SON文字列をテストしないのはなぜですか？
 
-You could argue a simpler initial step would be just to assert that the response body has a particular JSON string.
+より単純な最初のステップは、応答の本文に特定のJSON文字列があることを表明することだと主張できます。
 
-In my experience tests that assert against JSON strings have the following problems.
+私の経験では、JSON文字列に対して評価するテストには次の問題があります。
 
-* _Brittleness_. If you change the data-model your tests will fail.
-* _Hard to debug_. It can be tricky to understand what the actual problem is when comparing two JSON strings.
-* _Poor intention_. Whilst the output should be JSON, what's really important is exactly what the data is, rather than how it's encoded.
-* _Re-testing the standard library_. There is no need to test how the standard library outputs JSON, it is already tested. Don't test other people's code.
+* もろさ。データモデルを変更すると、テストは失敗します。
+* デバッグが難しい。 2つのJSON文字列を比較するときに実際の問題が何であるかを理解するのは難しい場合があります。
+* 悪い意図。出力はJSONである必要がありますが、本当に重要なのは、データがエンコードされる方法ではなく、データが正確に何であるかです。
+* 標準ライブラリの再テスト。標準ライブラリがJSONを出力する方法をテストする必要はありません。すでにテストされています。他の人のコードをテストしないでください。
 
-Instead, we should look to parse the JSON into data structures that are relevant for us to test with.
+代わりに、JSONを解析して、テストに関連するデータ構造に変換する必要があります。
 
-### Data modelling
+### データモデリング
 
-Given the JSON data model, it looks like we need an array of `Player` with some fields so we have created a new type to capture this.
+JSONデータモデルを考えると、いくつかのフィールドを持つ`Player`の配列が必要なようですので、これをキャプチャする新しいタイプを作成しました。
 
 ```go
 type Player struct {
@@ -373,18 +373,18 @@ type Player struct {
 }
 ```
 
-### JSON decoding
+### JSONデコード
 
 ```go
 var got []Player
 err := json.NewDecoder(response.Body).Decode(&got)
 ```
 
-To parse JSON into our data model we create a `Decoder` from `encoding/json` package and then call its `Decode` method. To create a `Decoder` it needs an `io.Reader` to read from which in our case is our response spy's `Body`.
+JSONを解析してデータモデルにするには、 `encoding/json`パッケージから`Decoder`を作成し、その`Decode`メソッドを呼び出します。`Decoder`を作成するには、読み取るための`io.Reader`が必要です。この場合は、応答スパイの`Body`です。
 
-`Decode` takes the address of the thing we are trying to decode into which is why we declare an empty slice of `Player` the line before.
+`Decode`は、デコードしようとしているもののアドレスを受け取ります。そのため、前の行で`Player`の空のスライスを宣言します。
 
-Parsing JSON can fail so `Decode` can return an `error`. There's no point continuing the test if that fails so we check for the error and stop the test with `t.Fatalf` if it happens. Notice that we print the response body along with the error as it's important for someone running the test to see what string cannot be parsed.
+JSONの解析が失敗する可能性があるため、`Decode`が`error`を返す可能性があります。それが失敗した場合にテストを続行する意味はないので、エラーを確認し、エラーが発生した場合は `t.Fatalf`でテストを停止します。テストを実行している誰かが解析できない文字列を確認することが重要であるため、エラーとともに応答本文を表示することに注意してください。
 
 ## Try to run the test
 
@@ -394,9 +394,9 @@ Parsing JSON can fail so `Decode` can return an `error`. There's no point contin
         server_test.go:107: Unable to parse response from server '' into slice of Player, 'unexpected end of JSON input'
 ```
 
-Our endpoint currently does not return a body so it cannot be parsed into JSON.
+現在、エンドポイントは本文を返さないため、JSONに解析できません。
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
 ```go
 func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
@@ -410,20 +410,20 @@ func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-The test now passes.
+テストに成功しました。
 
-### Encoding and Decoding
+### エンコードとデコード
 
-Notice the lovely symmetry in the standard library.
+標準ライブラリの素敵な対称性に注目してください。
 
-* To create an `Encoder` you need an `io.Writer` which is what `http.ResponseWriter` implements.
-* To create a `Decoder` you need an `io.Reader` which the `Body` field of our response spy implements.
+* `Encoder`を作成するには、`http.ResponseWriter`が実装する`io.Writer`が必要です。
+* `Decoder`を作成するには、レスポンススパイの`Body`フィールドが実装する`io.Reader`が必要です。
 
-Throughout this book, we have used `io.Writer` and this is another demonstration of its prevalence in the standard library and how a lot of libraries easily work with it.
+この本を通して、`io.Writer`を使用しました。これは、標準ライブラリでの普及と、多くのライブラリが簡単に動作することを示すもう1つのデモです。
 
-## Refactor
+## リファクタリング
 
-It would be nice to introduce a separation of concern between our handler and getting the `leagueTable` as we know we're going to not hard-code that very soon.
+ハンドラーと`leagueTable`を取得することの間に懸念の分離を導入すると、すぐにはハードコードしないことになるので便利です。
 
 ```go
 func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
@@ -438,13 +438,13 @@ func (p *PlayerServer) getLeagueTable() []Player {
 }
 ```
 
-Next, we'll want to extend our test so that we can control exactly what data we want back.
+次に、テストを拡張して、必要なデータを正確に制御できるようにします。
 
-## Write the test first
+## 最初にテストを書く
 
-We can update the test to assert that the league table contains some players that we will stub in our store.
+テストを更新して、`League`テーブルにストアでスタブするプレーヤーが含まれていることをアサートできます。
 
-Update `StubPlayerStore` to let it store a league, which is just a slice of `Player`. We'll store our expected data in there.
+`League`を保存できるように、`StubPlayerStore`を更新します。これは、`Player`のスライスにすぎません。そこに期待されるデータを保存します。
 
 ```go
 type StubPlayerStore struct {
@@ -454,7 +454,7 @@ type StubPlayerStore struct {
 }
 ```
 
-Next, update our current test by putting some players in the league property of our stub and assert they get returned from our server.
+次に、スタブの`League`プロパティに一部のプレーヤーを配置して現在のテストを更新し、サーバーから返されることを評価します。
 
 ```go
 func TestLeague(t *testing.T) {
@@ -491,18 +491,18 @@ func TestLeague(t *testing.T) {
 }
 ```
 
-## Try to run the test
+## テストを実行してみます
 
 ```text
 ./server_test.go:33:3: too few values in struct initializer
 ./server_test.go:70:3: too few values in struct initializer
 ```
 
-## Write the minimal amount of code for the test to run and check the failing test output
+## テストを実行するための最小限のコードを記述し、失敗したテスト出力を確認します
 
-You'll need to update the other tests as we have a new field in `StubPlayerStore`; set it to nil for the other tests.
+`StubPlayerStore`に新しいフィールドがあるので、他のテストを更新する必要があります。他のテストでは`nil`に設定します。
 
-Try running the tests again and you should get
+テストをもう一度実行してみてください。
 
 ```text
 === RUN   TestLeague/it_returns_the_league_table_as_JSON
@@ -510,9 +510,9 @@ Try running the tests again and you should get
         server_test.go:124: got [{Chris 20}] want [{Cleo 32} {Chris 20} {Tiest 14}]
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
-We know the data is in our `StubPlayerStore` and we've abstracted that away into an interface `PlayerStore`. We need to update this so anyone passing us in a `PlayerStore` can provide us with the data for leagues.
+データが`StubPlayerStore`にあることを知っており、それをインターフェイス` PlayerStore`に抽象化しました。`PlayerStore`で私たちを渡す誰もがリーグのデータを提供できるように、これを更新する必要があります。
 
 ```go
 type PlayerStore interface {
@@ -522,7 +522,7 @@ type PlayerStore interface {
 }
 ```
 
-Now we can update our handler code to call that rather than returning a hard-coded list. Delete our method `getLeagueTable()` and then update `leagueHandler` to call `GetLeague()`.
+これで、ハードコードされたリストを返すのではなく、ハンドラーコードを更新してそれを呼び出すことができます。メソッド`getLeagueTable()`を削除してから、`leagueHandler`を更新して`GetLeague()`を呼び出します。
 
 ```go
 func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
@@ -531,7 +531,7 @@ func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-Try and run the tests.
+テストを実行してみてください。
 
 ```text
 # github.com/quii/learn-go-with-tests/json-and-io/v4
@@ -547,9 +547,9 @@ Try and run the tests.
     *StubPlayerStore does not implement PlayerStore (missing GetLeague method)
 ```
 
-The compiler is complaining because `InMemoryPlayerStore` and `StubPlayerStore` do not have the new method we added to our interface.
+`InMemoryPlayerStore`と`StubPlayerStore`には、インターフェイスに追加した新しいメソッドがないため、コンパイラーは不平を言っています。
 
-For `StubPlayerStore` it's pretty easy, just return the `league` field we added earlier.
+`StubPlayerStore`の場合は非常に簡単です。先ほど追加した`league`フィールドを返すだけです。
 
 ```go
 func (s *StubPlayerStore) GetLeague() []Player {
@@ -557,7 +557,7 @@ func (s *StubPlayerStore) GetLeague() []Player {
 }
 ```
 
-Here's a reminder of how `InMemoryStore` is implemented.
+ここでは、`InMemoryStore`の実装方法について説明します。
 
 ```go
 type InMemoryPlayerStore struct {
@@ -565,9 +565,9 @@ type InMemoryPlayerStore struct {
 }
 ```
 
-Whilst it would be pretty straightforward to implement `GetLeague` "properly" by iterating over the map remember we are just trying to _write the minimal amount of code to make the tests pass_.
+`GetLeague`を「適切に」実装することは、マップを反復することでかなり簡単ですが、テストをパスするための最小限のコードを記述しようとしていることを思い出してください。
 
-So let's just get the compiler happy for now and live with the uncomfortable feeling of an incomplete implementation in our `InMemoryStore`.
+それでは、コンパイラーを今のところ幸せにして、`InMemoryStore`での実装が不完全であるという不快な気持ちに耐えてみましょう。
 
 ```go
 func (i *InMemoryPlayerStore) GetLeague() []Player {
@@ -575,13 +575,13 @@ func (i *InMemoryPlayerStore) GetLeague() []Player {
 }
 ```
 
-What this is really telling us is that _later_ we're going to want to test this but let's park that for now.
+これが実際に私たちに伝えていることは、これをテストしたいのですが、とりあえずここに置いておきましょう。
 
-Try and run the tests, the compiler should pass and the tests should be passing!
+テストを試して実行すると、コンパイラーはパスし、テストはパスするはずです！
 
-## Refactor
+## リファクタリング
 
-The test code does not convey out intent very well and has a lot of boilerplate we can refactor away.
+テストコードは意図をうまく伝えておらず、リファクタリングできる定型文がたくさんあります。
 
 ```go
 t.Run("it returns the league table as JSON", func(t *testing.T) {
@@ -605,7 +605,7 @@ t.Run("it returns the league table as JSON", func(t *testing.T) {
 })
 ```
 
-Here are the new helpers
+ここに新しいヘルパーがあります
 
 ```go
 func getLeagueFromResponse(t *testing.T, body io.Reader) (league []Player) {
@@ -632,11 +632,11 @@ func newLeagueRequest() *http.Request {
 }
 ```
 
-One final thing we need to do for our server to work is make sure we return a `content-type` header in the response so machines can recognise we are returning `JSON`.
+サーバーが機能するために必要な最後の1つは、`JSON`を返していることをマシンが認識できるように、応答で`content-type`ヘッダーを返すことを確認することです。
 
-## Write the test first
+## 最初にテストを書く
 
-Add this assertion to the existing test
+このアサーションを既存のテストに追加します
 
 ```go
 if response.Result().Header.Get("content-type") != "application/json" {
@@ -644,7 +644,7 @@ if response.Result().Header.Get("content-type") != "application/json" {
 }
 ```
 
-## Try to run the test
+## テストを実行してみます
 
 ```text
 === RUN   TestLeague/it_returns_the_league_table_as_JSON
@@ -652,9 +652,9 @@ if response.Result().Header.Get("content-type") != "application/json" {
         server_test.go:124: response did not have content-type of application/json, got map[Content-Type:[text/plain; charset=utf-8]]
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
-Update `leagueHandler`
+`leagueHandler`を更新します
 
 ```go
 func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
@@ -663,11 +663,11 @@ func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-The test should pass.
+テストは成功するはずです。
 
-## Refactor
+## リファクタリング
 
-Add a helper for `assertContentType`.
+`assertContentType`のヘルパーを追加します。
 
 ```go
 const jsonContentType = "application/json"
@@ -680,19 +680,19 @@ func assertContentType(t *testing.T, response *httptest.ResponseRecorder, want s
 }
 ```
 
-Use it in the test.
+テストで使用してください。
 
 ```go
 assertContentType(t, response, jsonContentType)
 ```
 
-Now that we have sorted out `PlayerServer` for now we can turn our attention to `InMemoryPlayerStore` because right now if we tried to demo this to the product owner `/league` will not work.
+これで`PlayerServer`を整理したので、`InMemoryPlayerStore`に目を向けることができます。これを製品の所有者にデモしようとした場合、`/league`は機能しないためです。
 
-The quickest way for us to get some confidence is to add to our integration test, we can hit the new endpoint and check we get back the correct response from `/league`.
+確信を得るための最も簡単な方法は、統合テストに追加することです。新しいエンドポイントにアクセスして、 `/league`から正しい応答が返されることを確認できます。
 
-## Write the test first
+## 最初にテストを書く
 
-We can use `t.Run` to break up this test a bit and we can reuse the helpers from our server tests - again showing the importance of refactoring tests.
+`t.Run`を使用してこのテストを少し分解し、サーバーテストのヘルパーを再利用できます。これもリファクタリングテストの重要性を示しています。
 
 ```go
 func TestRecordingWinsAndRetrievingThem(t *testing.T) {
@@ -726,7 +726,7 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 }
 ```
 
-## Try to run the test
+## テストを実行してみます
 
 ```text
 === RUN   TestRecordingWinsAndRetrievingThem/get_league
@@ -734,9 +734,9 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
         server_integration_test.go:35: got [] want [{Pepper 3}]
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
-`InMemoryPlayerStore` is returning `nil` when you call `GetLeague()` so we'll need to fix that.
+`GetLeague()`を呼び出すと、`InMemoryPlayerStore`は`nil`を返すため、修正する必要があります。
 
 ```go
 func (i *InMemoryPlayerStore) GetLeague() []Player {
@@ -748,17 +748,16 @@ func (i *InMemoryPlayerStore) GetLeague() []Player {
 }
 ```
 
-All we need to do is iterate over the map and convert each key/value to a `Player`.
+必要なのは、マップを反復処理して、各キー/値を`Player`に変換することだけです。
 
-The test should now pass.
+これでテストに成功するはずです。
 
-## Wrapping up
+## まとめ
 
-We've continued to safely iterate on our program using TDD, making it support new endpoints in a maintainable way with a router and it can now return JSON for our consumers. In the next chapter, we will cover persisting the data and sorting our league.
+TDDを使用してプログラムを安全に反復し続け、ルーターで保守可能な方法で新しいエンドポイントをサポートし、コンシューマーにJSONを返すことができるようになりました。次の章では、データの永続化とリーグの分類について説明します。
 
-What we've covered:
+ここで習得したもの
 
-* **Routing**. The standard library offers you an easy to use type to do routing. It fully embraces the `http.Handler` interface in that you assign routes to `Handler`s and the router itself is also a `Handler`. It does not have some features you might expect though such as path variables \(e.g `/users/{id}`\). You can easily parse this information yourself but you might want to consider looking at other routing libraries if it becomes a burden. Most of the popular ones stick to the standard library's philosophy of also implementing `http.Handler`.
-* **Type embedding**. We touched a little on this technique but you can [learn more about it from Effective Go](https://golang.org/doc/effective_go.html#embedding). If there is one thing you should take away from this is that it can be extremely useful but _always thinking about your public API, only expose what's appropriate_.
-* **JSON deserializing and serializing**. The standard library makes it very trivial to serialise and deserialise your data. It is also open to configuration and you can customise how these data transformations work if necessary.
-
+* **ルーティング**. 標準ライブラリには、ルーティングを行うための使いやすい型が用意されています。標準ライブラリは`http.Handler`インターフェースを完全に取り入れており、`Handler`にルートを割り当て、ルータ自身も`Handler`になります。しかし、パス変数のような、あなたが期待するような機能はありません。この情報を自分で簡単に解析することはできますが、それが面倒になったら他のルーティングライブラリを見ることを検討したほうがいいかもしれません。人気のあるもののほとんどは、`http.Handler`も実装するという標準ライブラリの哲学に固執しています。
+* **型の埋め込み**. この手法については少し触れましたが、[Effective Goから学ぶ](https://golang.org/doc/effective_go.html#embedding)もあります。ここから一つだけ取っておくべきことがあるとすれば、非常に便利なことがあるということですが、常にパブリックAPIのことを考えて、適切なものだけを公開するということです。
+* **JSONのデシリアライズとシリアライズ**. 標準ライブラリは、データのシリアライズとデシリアライズを非常に簡単にしてくれます。また、設定にもオープンで、必要に応じてこれらのデータ変換がどのように動作するかをカスタマイズできます。
