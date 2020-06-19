@@ -21,7 +21,7 @@ xcode-select --install
 次に、以下を実行して自作をインストールします。
 
 ```bash
-/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 ```
 
 この時点で、次のようにGoをインストールできます。
@@ -91,7 +91,7 @@ go mod init <modulepath>
 ```text
 module cmd
 
-go 1.12
+go 1.14
 
 require (
         github.com/google/pprof v0.0.0-20190515194954-54271f7e092f
@@ -123,13 +123,13 @@ VS Codeが正しくインストールされていることを確認できます�
 code .
 ```
 
-VS Codeはほとんどソフトウェアが有効になっていない状態で出荷されます。拡張機能をインストールすることで新しいソフトウェアを有効にできます。 Goサポートを追加するには、拡張機能をインストールする必要があります。VSCodeにはさまざまなものがありますが、例外は[Luke Hobanのパッケージ](https://github.com/Microsoft/vscode-go)です。これは次のようにインストールできます。
+VS Codeはほとんどソフトウェアが有効になっていない状態で出荷されます。拡張機能をインストールすることで新しいソフトウェアを有効にできます。 Goサポートを追加するには、拡張機能をインストールする必要があります。VSCodeにはさまざまなものがありますが、例外は[Luke Hobanのパッケージ](https://github.com/golang/vscode-go)です。これは次のようにインストールできます。
 
 ```bash
-code --install-extension ms-vscode.go
+code --install-extension golang.go
 ```
 
-VS Codeで初めてGoファイルを開くと、分析ツールが見つからないことが示されます。これらをインストールするには、ボタンをクリックする必要があります。 VS Codeによってインストールされるツールのリストは、[こちら](https://github.com/Microsoft/vscode-go/wiki/Go-tools-that-the-Go-extension-depends-on)。
+VS Codeで初めてGoファイルを開くと、分析ツールが見つからないことが示されます。これらをインストールするには、ボタンをクリックする必要があります。 VS Codeによってインストールされるツールのリストは、[こちら](https://github.com/golang/vscode-go/blob/master/docs/tools.md)。
 
 ## Go デバッガー
 
@@ -139,11 +139,11 @@ Go（VS Codeに統合されている）のデバッグに適したオプショ�
 go get -u github.com/go-delve/delve/cmd/dlv
 ```
 
-VS CodeでGoデバッガーを構成および実行するための追加のヘルプについては、[VS Codeデバッグドキュメント](https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code)を参照してください。
+VS CodeでGoデバッガーを構成および実行するための追加のヘルプについては、[VS Codeデバッグドキュメント](https://github.com/golang/vscode-go/blob/master/docs/debugging.md)を参照してください。
 
 ## Go リンター
 
-デフォルトのリンターに対する改良は、[GolangCI-Lint](https://github.com/golangci/golangci-lint)を使用して構成できます。
+デフォルトのリンターに対する改良は、[GolangCI-Lint](https://golangci-lint.run)を使用して構成できます。
 
 これは次のようにインストールできます。
 
