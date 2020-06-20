@@ -4,17 +4,17 @@ description: Command line & package structure
 
 # コマンドライン、パッケージ構造
 
-[**You can find all the code for this chapter here**](https://github.com/quii/learn-go-with-tests/tree/master/command-line)
+[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/command-line)
 
-Our product owner now wants to _pivot_ by introducing a second application - a command line application.
+私たちの製品の所有者は、2つ目のアプリケーション（コマンドラインアプリケーション）を導入することで _pivot_ を実行したいと考えています。
 
-For now, it will just need to be able to record a player's win when the user types `Ruth wins`. The intention is to eventually be a tool for helping users play poker.
+今のところ、ユーザーが「ルースの勝利`Ruth wins」と入力したときに、プレーヤーの勝利を記録できる必要があります。意図は、最終的にはユーザーがポーカーをプレイするのを助けるためのツールになることです。
 
-The product owner wants the database to be shared amongst the two applications so that the league updates according to wins recorded in the new application.
+製品の所有者は、2つのアプリケーション間でデータベースを共有して、新しいアプリケーションに記録された勝利に応じてリーグが更新されるようにしたいと考えています。
 
-## A reminder of the code
+## コードの注意
 
-We have an application with a `main.go` file that launches an HTTP server. The HTTP server won't be interesting to us for this exercise but the abstraction it uses will. It depends on a `PlayerStore`.
+HTTPサーバーを起動する`main.go`ファイルを含むアプリケーションがあります。この演習では、HTTPサーバーは興味深いものではありませんが、使用する抽象化は興味深いものです。それは`PlayerStore`に依存しています。
 
 ```go
 type PlayerStore interface {
@@ -24,29 +24,30 @@ type PlayerStore interface {
 }
 ```
 
-In the previous chapter, we made a `FileSystemPlayerStore` which implements that interface. We should be able to re-use some of this for our new application.
+前の章では、そのインターフェースを実装する`FileSystemPlayerStore`を作りました。これを新しいアプリケーションで再利用できるはずです。
 
-## Some project refactoring first
+## 最初にいくつかのプロジェクトのリファクタリング
 
-Our project now needs to create two binaries, our existing web server and the command line app.
+このプロジェクトでは、既存のWebサーバーとコマンドラインアプリの2つのバイナリを作成する必要があります。
 
-Before we get stuck into our new work we should structure our project to accommodate this.
+新しい作業に取り掛かる前に、これに対応できるようにプロジェクトを構成する必要があります。
 
-So far all the code has lived in one folder, in a path looking like this
+これまでのところ、すべてのコードは次のようなパスの1つのフォルダーにあります
 
 `$GOPATH/src/github.com/your-name/my-app`
 
-In order for you to make an application in Go, you need a `main` function inside a `package main`. So far all of our "domain" code has lived inside `package main` and our `func main` can reference everything.
+Goでアプリケーションを作成するには、`package main`内に`main`関数が必要です。これまでのところ、「ドメイン」コードはすべて`package main`内にあり、`func main`はすべてを参照できます。
 
-This was fine so far and it is good practice not to go over-the-top with package structure. If you take the time to look through the standard library you will see very little in the way of lots of folders and structure.
+これはこれまでは問題ありませんでした。パッケージ構造をあえてやり過ぎないことをお勧めします。時間をかけて標準ライブラリを確認すると、多数のフォルダと構造がほとんど見えません。
 
-Thankfully it's pretty straightforward to add structure _when you need it_.
+ありがたいことに、必要なときに構造を追加するのは非常に簡単です。
 
-Inside the existing project create a `cmd` directory with a `webserver` directory inside that \(e.g `mkdir -p cmd/webserver`\).
+既存のプロジェクト内に`cmd`ディレクトリを作成し、その中に`webserver`ディレクトリを作成します（例：`mkdir -p cmd/webserver`）。
 
-Move the `main.go` inside there.
 
-If you have `tree` installed you should run it and your structure should look like this
+そこに`main.go`を移動します。
+
+`tree`がインストールされている場合は、それを実行し、構造は次のようになります。
 
 ```text
 .
@@ -63,13 +64,13 @@ If you have `tree` installed you should run it and your structure should look li
 └── tape_test.go
 ```
 
-We now effectively have a separation between our application and the library code but we now need to change some package names. Remember when you build a Go application its package _must_ be `main`.
+これで、アプリケーションとライブラリコードが実質的に分離されましたが、一部のパッケージ名を変更する必要があります。 Goアプリケーションをビルドするときは、そのパッケージを「`main`」にする必要があることを忘れないでください。
 
-Change all the other code to have a package called `poker`.
+他のすべてのコードを変更して、`poker`というパッケージを作成します。
 
-Finally, we need to import this package into `main.go` so we can use it to create our web server. Then we can use our library code by using `poker.FunctionName`.
+最後に、このパッケージを`main.go`にインポートして、それを使用してWebサーバーを作成できるようにする必要があります。次に、`poker.FunctionName`を使用してライブラリコードを使用できます。
 
-The paths will be different on your computer, but it should be similar to this:
+パスはコンピューターによって異なりますが、次のようになります。
 
 ```go
 package main
@@ -104,21 +105,22 @@ func main() {
 }
 ```
 
-The full path may seem a bit jarring, but this is how you can import _any_ publicly available library into your code.
+完全なパスは少し不快に思えるかもしれませんが、これにより、一般に入手可能なライブラリをコードにインポートできます。
 
-By separating our domain code into a separate package and committing it to a public repo like GitHub any Go developer can write their own code which imports that package the features we've written available. The first time you try and run it will complain it is not existing but all you need to do is run `go get`.
+ドメインコードを個別のパッケージに分離し、それをGitHubのようなパブリックリポジトリにコミットすることで、Go開発者は私たちが書いた機能をパッケージ化してインポートする独自のコードを書くことができます。初めて実行すると、それが存在しないというメッセージが表示されますが、`go get`を実行するだけで済みます。
 
-[In addition, users can view the documentation at godoc.org](https://godoc.org/github.com/quii/learn-go-with-tests/command-line/v1).
 
-### Final checks
+[さらに、ユーザーは`godoc.org`でドキュメントを表示できます](https://godoc.org/github.com/quii/learn-go-with-tests/command-line/v1).
 
-* Inside the root run `go test` and check they're still passing
-* Go inside our `cmd/webserver` and do `go run main.go`
-  * Visit `http://localhost:5000/league` and you should see it's still working
+### 最終チェック
 
-### Walking skeleton
+* ルート内で「`go test`」を実行し、まだ合格していることを確認します
+* `cmd/webserver`内に移動し、`go run main.go`を実行します
+  * `http://localhost:5000/league` にアクセスすると、まだ機能していることがわかります
 
-Before we get stuck into writing tests, let's add a new application that our project will build. Create another directory inside `cmd` called `cli` \(command line interface\) and add a `main.go` with the following
+### スケルトンを歩く
+
+テストの作成に取り掛かる前に、プロジェクトで構築する新しいアプリケーションを追加しましょう。`cmd`内に`cli`（コマンドラインインターフェイス）という別のディレクトリを作成し、次のように`main.go`を追加します
 
 ```go
 package main
@@ -130,15 +132,15 @@ func main() {
 }
 ```
 
-The first requirement we'll tackle is recording a win when the user types `{PlayerName} wins`.
+私たちが取り組む最初の要件は、ユーザーが「`{PlayerName} wins`」と入力したときに勝利を記録することです。
 
-## Write the test first
+## 最初にテストを書く
 
-We know we need to make something called `CLI` which will allow us to `Play` poker. It'll need to read user input and then record wins to a `PlayerStore`.
+`CLI`と呼ばれるものを作ってポーカーを`Play`できるようにする必要があることはわかっています。ユーザー入力を読み取り、勝利を`PlayerStore`に記録する必要があります。
 
-Before we jump too far ahead though, let's just write a test to check it integrates with the `PlayerStore` how we'd like.
+ただし、先に進む前に、`PlayerStore`とどのように統合できるかを確認するためのテストを作成してみましょう。
 
-Inside `CLI_test.go` \(in the root of the project, not inside `cmd`\)
+`CLI_test.go`内（`cmd`内ではなくプロジェクトのルート内）
 
 ```go
 func TestCLI(t *testing.T) {
@@ -152,23 +154,23 @@ func TestCLI(t *testing.T) {
 }
 ```
 
-* We can use our `StubPlayerStore` from other tests
-* We pass in our dependency into our not yet existing `CLI` type
-* Trigger the game by an unwritten `PlayPoker` method
-* Check that a win is recorded
+* 他のテストの`StubPlayerStore`を使用できます
+* 依存関係をまだ存在していない`CLI`タイプに渡します
+* 未作成の`PlayPoker`メソッドでゲームをトリガーします
+* 勝利が記録されていることを確認する
 
-## Try to run the test
+## テストを実行してみます
 
 ```text
 # github.com/quii/learn-go-with-tests/command-line/v2
 ./cli_test.go:25:10: undefined: CLI
 ```
 
-## Write the minimal amount of code for the test to run and check the failing test output
+## テストを実行するための最小限のコードを記述し、失敗したテスト出力を確認します
 
-At this point, you should be comfortable enough to create our new `CLI` struct with the respective field for our dependency and add a method.
+この時点で、依存関係の各フィールドを使用して新しい`CLI`構造体を作成し、メソッドを追加するのに十分快適であるはずです。
 
-You should end up with code like this
+あなたはこのようなコードで終わるはずです。
 
 ```go
 type CLI struct {
@@ -178,7 +180,7 @@ type CLI struct {
 func (cli *CLI) PlayPoker() {}
 ```
 
-Remember we're just trying to get the test running so we can check the test fails how we'd hope
+テストを実行しようとしているだけなので、テストが失敗したことを希望どおりに確認できます。
 
 ```text
 --- FAIL: TestCLI (0.00s)
@@ -186,7 +188,7 @@ Remember we're just trying to get the test running so we can check the test fail
 FAIL
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
 ```go
 func (cli *CLI) PlayPoker() {
@@ -194,13 +196,13 @@ func (cli *CLI) PlayPoker() {
 }
 ```
 
-That should make it pass.
+それは成功するはずです。
 
-Next, we need to simulate reading from `Stdin` \(the input from the user\) so that we can record wins for specific players.
+次に、特定のプレーヤーの勝利を記録できるように、`Stdin`（ユーザーからの入力）からの読み取りをシミュレートする必要があります。
 
-Let's extend our test to exercise this.
+テストを拡張してこれを実行してみましょう。
 
-## Write the test first
+## 最初にテストを書く
 
 ```go
 func TestCLI(t *testing.T) {
@@ -223,17 +225,17 @@ func TestCLI(t *testing.T) {
 }
 ```
 
-`os.Stdin` is what we'll use in `main` to capture the user's input. It is a `*File` under the hood which means it implements `io.Reader` which as we know by now is a handy way of capturing text.
+`os.Stdin`は、ユーザーの入力をキャプチャするために`main`で使用するものです。これは内部的には`*File`であり、これは`io.Reader`を実装していることを意味します。
 
-We create an `io.Reader` in our test using the handy `strings.NewReader`, filling it with what we expect the user to type.
+テストでは、便利な`strings.NewReader`を使用して`io.Reader`を作成し、ユーザーが入力することを期待する内容を入力します。
 
-## Try to run the test
+## テストを実行してみます
 
 `./CLI_test.go:12:32: too many values in struct initializer`
 
-## Write the minimal amount of code for the test to run and check the failing test output
+## テストを実行するための最小限のコードを記述し、失敗したテスト出力を確認します
 
-We need to add our new dependency into `CLI`.
+新しい依存関係を`CLI`に追加する必要があります。
 
 ```go
 type CLI struct {
@@ -242,7 +244,7 @@ type CLI struct {
 }
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
 ```text
 --- FAIL: TestCLI (0.00s)
@@ -250,7 +252,7 @@ type CLI struct {
 FAIL
 ```
 
-Remember to do the strictly easiest thing first
+最初に最も簡単なことを忘れないでください。
 
 ```go
 func (cli *CLI) PlayPoker() {
@@ -258,11 +260,11 @@ func (cli *CLI) PlayPoker() {
 }
 ```
 
-The test passes. We'll add another test to force us to write some real code next, but first, let's refactor.
+テストに成功しました。次に、実際のコードを書くように強制する別のテストを追加しますが、最初にリファクタリングしましょう。
 
-## Refactor
+## リファクタリング
 
-In `server_test` we earlier did checks to see if wins are recorded as we have here. Let's DRY that assertion up into a helper
+`server_test`では、ここでのように勝利が記録されているかどうかを以前に確認しました。そのアサーションをヘルパーにDRYにしてみましょう
 
 ```go
 func assertPlayerWin(t *testing.T, store *StubPlayerStore, winner string) {
@@ -278,9 +280,9 @@ func assertPlayerWin(t *testing.T, store *StubPlayerStore, winner string) {
 }
 ```
 
-Now replace the assertions in both `server_test.go` and `CLI_test.go`.
+ここで、`server_test.go`と`CLI_test.go`の両方のアサーションを置き換えます。
 
-The test should now read like so
+テストは次のようになります。
 
 ```go
 func TestCLI(t *testing.T) {
@@ -294,9 +296,9 @@ func TestCLI(t *testing.T) {
 }
 ```
 
-Now let's write _another_ test with different user input to force us into actually reading it.
+次に、異なるユーザー入力を使用して _another_ テストを作成し、実際に読み取らせるようにします。
 
-## Write the test first
+## 最初にテストを書く
 
 ```go
 func TestCLI(t *testing.T) {
@@ -324,7 +326,7 @@ func TestCLI(t *testing.T) {
 }
 ```
 
-## Try to run the test
+## テストを実行してみます
 
 ```text
 === RUN   TestCLI
@@ -337,13 +339,13 @@ func TestCLI(t *testing.T) {
 FAIL
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
-We'll use a [`bufio.Scanner`](https://golang.org/pkg/bufio/) to read the input from the `io.Reader`.
+[`bufio.Scanner`](https://golang.org/pkg/bufio/)を使用して、` io.Reader`から入力を読み取ります。
 
-> Package bufio implements buffered I/O. It wraps an io.Reader or io.Writer object, creating another object \(Reader or Writer\) that also implements the interface but provides buffering and some help for textual I/O.
+> パッケージbufioはバッファI/Oを実装しています。io.Readerまたはio.Writerオブジェクトをラップし、別のオブジェクト（ReaderまたはWriter）を作成します。このオブジェクトもインターフェイスを実装しますが、バッファリングとテキストI/Oのヘルプを提供します。
 
-Update the code to the following
+コードを次のように更新します。
 
 ```go
 type CLI struct {
@@ -362,14 +364,14 @@ func extractWinner(userInput string) string {
 }
 ```
 
-The tests will now pass.
+テストに成功します。
 
-* `Scanner.Scan()` will read up to a newline.
-* We then use `Scanner.Text()` to return the `string` the scanner read to.
+* `Scanner.Scan()`は改行まで読み込みます。
+* 次に、`Scanner.Text()`を使用して、スキャナーが読み取った`string`を返します。
 
-Now that we have some passing tests, we should wire this up into `main`. Remember we should always strive to have fully-integrated working software as quickly as we can.
+合格したテストがいくつかあるので、これを`main`に接続する必要があります。できる限り迅速に、完全に統合された実用的なソフトウェアを使用できるように常に努力する必要があることを忘れないでください。
 
-In `main.go` add the following and run it. \(you may have to adjust the path of the second dependency to match what's on your computer\)
+`main.go`に以下を追加して実行します。（2番目の依存関係のパスをコンピューター上のものと一致するように調整する必要がある場合があります）
 
 ```go
 package main
@@ -404,34 +406,33 @@ func main() {
 }
 ```
 
-You should get an error
+エラーが発生するはずです。
 
 ```text
 command-line/v3/cmd/cli/main.go:32:25: implicit assignment of unexported field 'playerStore' in poker.CLI literal
 command-line/v3/cmd/cli/main.go:32:34: implicit assignment of unexported field 'in' in poker.CLI literal
 ```
 
-What's happening here is because we are trying to assign to the fields `playerStore` and `in` in `CLI`. These are unexported \(private\) fields. We _could_ do this in our test code because our test is in the same package as `CLI` \(`poker`\). But our `main` is in package `main` so it does not have access.
+ここで起こっているのは、`CLI`のフィールド`playerStore`および`in`に割り当てようとしているためです。これらは、エクスポートされていない（private）フィールドです。テストは`CLI`（`poker`）と同じパッケージにあるため、テストコードでこれを行うことができました。しかし、`main`はパッケージ`main`にあるため、アクセスできません。
 
-This highlights the importance of _integrating your work_. We rightfully made the dependencies of our `CLI` private \(because we don't want them exposed to users of `CLI`s\) but haven't made a way for users to construct it.
+これは、_作業を統合することの重要性を強調しています。私たちは、`CLI`の依存関係を正しく（`CLI`のユーザーに公開したくないため）にしましたが、ユーザーがそれを構築する方法を作りませんでした。
 
-Is there a way to have caught this problem earlier?
+この問題を早期に発見する方法はありますか？
 
 ### `package mypackage_test`
 
-In all other examples so far, when we make a test file we declare it as being in the same package that we are testing.
+これまでの他のすべての例では、テストファイルを作成するときに、テストしているのと同じパッケージ内にあることを宣言しています。
 
-This is fine and it means on the odd occasion where we want to test something internal to the package we have access to the unexported types.
+これは問題なく、エクスポートされていない型にアクセスできるパッケージの内部で何かをテストしたいという奇妙な機会を意味します。
 
-But given we have advocated for _not_ testing internal things _generally_, can Go help enforce that? What if we could test our code where we only have access to the exported types \(like our `main` does\)?
+しかし、内部的なものを一般的にテストしないことを提唱した場合、Goはそれを実施するのを助けることができますか？エクスポートされた型にのみアクセスできるコードをテストできたら（`main`のように）、どうでしょうか？
 
-When you're writing a project with multiple packages I would strongly recommend that your test package name has `_test` at the end. When you do this you will only be able to have access to the public types in your package. This would help with this specific case but also helps enforce the discipline of only testing public APIs. If you still wish to test internals you can make a separate test with the package you want to test.
+複数のパッケージを含むプロジェクトを作成している場合、テストパッケージ名の最後に「`_test`」を付けることを強くお勧めします。これを行うと、パッケージ内のパブリックタイプにのみアクセスできます。これは、この特定のケースに役立ちますが、パブリックAPIのみをテストするという規律を強化するのにも役立ちます。それでも内部をテストしたい場合は、テストしたいパッケージで別のテストを行うことができます。
 
-An adage with TDD is that if you cannot test your code then it is probably hard for users of your code to integrate with it. Using `package foo_test` will help with this by forcing you to test your code as if you are importing it like users of your package will.
+TDDの格言は、コードをテストできない場合、コードのユーザーがコードと統合することはおそらく困難であることです。`package foo_test`を使用すると、パッケージのユーザーのようにコードをインポートする場合と同じようにコードをテストするように強制することで、これを支援します。
 
-Before fixing `main` let's change the package of our test inside `CLI_test.go` to `poker_test`.
-
-If you have a well-configured IDE you will suddenly see a lot of red! If you run the compiler you'll get the following errors
+適切に構成されたIDEがある場合、突然多くの赤（Red）が表示されます。
+コンパイラを実行すると、次のエラーが発生します
 
 ```text
 ./CLI_test.go:12:19: undefined: StubPlayerStore
@@ -440,17 +441,18 @@ If you have a well-configured IDE you will suddenly see a lot of red! If you run
 ./CLI_test.go:27:3: undefined: assertPlayerWin
 ```
 
-We have now stumbled into more questions on package design. In order to test our software we made unexported stubs and helper functions which are no longer available for us to use in our `CLI_test` because the helpers are defined in the `_test.go` files in the `poker` package.
+パッケージデザインに関する質問が増えました。ソフトウェアをテストするために、エクスポートされていないスタブとヘルパー関数を作成しました。ヘルパーは、`poker`パッケージの`_test.go`ファイルで定義されているため、`CLI_test`では使用できなくなりました。
 
-#### Do we want to have our stubs and helpers 'public'?
+#### スタブとヘルパーを「公開」したいですか？
 
-This is a subjective discussion. One could argue that you do not want to pollute your package's API with code to facilitate tests.
+これは主観的な議論です。テストを容易にするために、コードでパッケージのAPIを汚染したくないと主張する人もいます。
 
-In the presentation ["Advanced Testing with Go"](https://speakerdeck.com/mitchellh/advanced-testing-with-go?slide=53) by Mitchell Hashimoto, it is described how at HashiCorp they advocate doing this so that users of the package can write tests without having to re-invent the wheel writing stubs. In our case, this would mean anyone using our `poker` package won't have to create their own stub `PlayerStore` if they wish to work with our code.
+Mitchell・Hashimotoによるプレゼンテーション[Goを使った高度なテスト](https://speakerdeck.com/mitchellh/advanced-testing-with-go?slide=53)には、HashiCorpでこれを行うことを提唱する方法が記載されています。
+パッケージのユーザーは、ホイールライティングスタブを再発明することなくテストを作成できます。私たちの場合、これは、`poker`パッケージを使用する誰もが、コードを操作したい場合、独自のスタブ`PlayerStore`を作成する必要がないことを意味します。
 
-Anecdotally I have used this technique in other shared packages and it has proved extremely useful in terms of users saving time when integrating with our packages.
+事例として、私は他の共有パッケージでこの手法を使用しており、ユーザーが私たちのパッケージと統合するときに時間を節約するという点で非常に有用であることがわかりました。
 
-So let's create a file called `testing.go` and add our stub and our helpers.
+それでは、`testing.go`というファイルを作成して、スタブとヘルパーを追加しましょう。
 
 ```go
 package poker
@@ -491,9 +493,9 @@ func AssertPlayerWin(t *testing.T, store *StubPlayerStore, winner string) {
 // todo for you - the rest of the helpers
 ```
 
-You'll need to make the helpers public \(remember exporting is done with a capital letter at the start\) if you want them to be exposed to importers of our package.
+ヘルパーをパッケージのインポーターに公開したい場合は、ヘルパーを公開する必要があります（エクスポートは最初は大文字で行われることに注意してください）。
 
-In our `CLI` test you'll need to call the code as if you were using it within a different package.
+`CLI`テストでは、別のパッケージ内でコードを使用しているかのようにコードを呼び出す必要があります。
 
 ```go
 func TestCLI(t *testing.T) {
@@ -521,7 +523,7 @@ func TestCLI(t *testing.T) {
 }
 ```
 
-You'll now see we have the same problems as we had in `main`
+これで、`main`と同じ問題が発生することがわかります。
 
 ```text
 ./CLI_test.go:15:26: implicit assignment of unexported field 'playerStore' in poker.CLI literal
@@ -530,7 +532,7 @@ You'll now see we have the same problems as we had in `main`
 ./CLI_test.go:25:39: implicit assignment of unexported field 'in' in poker.CLI literal
 ```
 
-The easiest way to get around this is to make a constructor as we have for other types. We'll also change `CLI` so it stores a `bufio.Scanner` instead of the reader as it's now automatically wrapped at construction time.
+これを回避する最も簡単な方法は、他の型と同じようにコンストラクターを作成することです。また、構築時に自動的にラップされるように、リーダーの代わりに`bufio.Scanner`を格納するように、`CLI`も変更します。
 
 ```go
 type CLI struct {
@@ -546,7 +548,7 @@ func NewCLI(store PlayerStore, in io.Reader) *CLI {
 }
 ```
 
-By doing this, we can then simplify and refactor our reading code
+これにより、読み取りコードを簡素化してリファクタリングできます。
 
 ```go
 func (cli *CLI) PlayPoker() {
@@ -564,19 +566,20 @@ func (cli *CLI) readLine() string {
 }
 ```
 
-Change the test to use the constructor instead and we should be back to the tests passing.
+代わりにコンストラクタを使用するようにテストを変更すると、成功したテストに戻るはずです。
 
-Finally, we can go back to our new `main.go` and use the constructor we just made
+最後に、新しい`main.go`に戻り、先ほど作成したコンストラクタを使用できます。
 
 ```go
 game := poker.NewCLI(store, os.Stdin)
 ```
 
-Try and run it, type "Bob wins".
+試して実行し、「`"Bob wins"`」と入力してください。
 
-### Refactor
+### リファクタリング
 
-We have some repetition in our respective applications where we are opening a file and creating a `FileSystemStore` from its contents. This feels like a slight weakness in our package's design so we should make a function in it to encapsulate opening a file from a path and returning you the `PlayerStore`.
+それぞれのアプリケーションで、ファイルを開いてその内容から「FileSystemStore」を作成するという繰り返しがあります。
+これは、パッケージの設計のわずかな弱点のように感じられるので、パスからファイルを開いて、`PlayerStore`を返すようにカプセル化する関数を作成する必要があります。
 
 ```go
 func FileSystemPlayerStoreFromFile(path string) (*FileSystemPlayerStore, func(), error) {
@@ -600,9 +603,9 @@ func FileSystemPlayerStoreFromFile(path string) (*FileSystemPlayerStore, func(),
 }
 ```
 
-Now refactor both of our applications to use this function to create the store.
+次に、両方のアプリケーションをリファクタリングして、この関数を使用してストアを作成します。
 
-#### CLI application code
+#### CLIアプリケーションコード
 
 ```go
 package main
@@ -630,7 +633,7 @@ func main() {
 }
 ```
 
-#### Web server application code
+#### Webサーバーアプリケーションコード
 
 ```go
 package main
@@ -659,23 +662,29 @@ func main() {
 }
 ```
 
-Notice the symmetry: despite being different user interfaces the setup is almost identical. This feels like good validation of our design so far. And notice also that `FileSystemPlayerStoreFromFile` returns a closing function, so we can close the underlying file once we are done using the Store.
+対称性に注意してください。
 
-## Wrapping up
+ユーザーインターフェイスが異なっていても、設定はほぼ同じです。
+これは、これまでのところ、私たちの設計の妥当な検証のようです。
+また、`FileSystemPlayerStoreFromFile`は終了関数を返すため、ストアの使用が終了したら、基になるファイルを閉じることができます。
 
-### Package structure
+## まとめ
 
-This chapter meant we wanted to create two applications, re-using the domain code we've written so far. In order to do this, we needed to update our package structure so that we had separate folders for our respective `main`s.
+### パッケージ構造
 
-By doing this we ran into integration problems due to unexported values so this further demonstrates the value of working in small "slices" and integrating often.
+この章では、これまでに作成したドメインコードを再利用して、2つのアプリケーションを作成したいと考えました。
+これを行うには、パッケージ構造を更新して、それぞれの`main`に個別のフォルダーを用意する必要がありました。
 
-We learned how `mypackage_test` helps us create a testing environment which is the same experience for other packages integrating with your code, to help you catch integration problems and see how easy \(or not!\) your code is to work with.
+これを行うと、エクスポートされない値が原因で統合の問題が発生したため、小さな「スライス」で作業し、頻繁に統合することの価値をさらに示しています。
 
-### Reading user input
+「`mypackage_test`」がコードと統合する他のパッケージと同じ経験であるテスト環境の作成にどのように役立つかを学び、統合の問題を見つけて、コードの操作がどれほど簡単かを確認しました。
 
-We saw how reading from `os.Stdin` is very easy for us to work with as it implements `io.Reader`. We used `bufio.Scanner` to easily read line by line user input.
+### ユーザー入力を読み取る
 
-### Simple abstractions leads to simpler code re-use
+`os.Stdin`は、`io.Reader`を実装しているため、読み取りが非常に簡単です。
+「`bufio.Scanner`」を使用して、ユーザー入力を1行ずつ簡単に読み取ることができました。
 
-It was almost no effort to integrate `PlayerStore` into our new application \(once we had made the package adjustments\) and subsequently testing was very easy too because we decided to expose our stub version too.
+### 単純な抽象化により、コードの再利用が簡単になります
 
+「`PlayerStore`」を新しいアプリケーションに統合するのはほとんど手間がかかりませんでした（パッケージの調整を行った後）。
+スタブバージョンも公開することにしたため、テストも非常に簡単でした。
