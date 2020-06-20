@@ -4,24 +4,24 @@ description: OS Exec
 
 # OS実行
 
-[**You can find all the code here**](https://github.com/quii/learn-go-with-tests/tree/master/q-and-a/os-exec)
+[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/q-and-a/os-exec)
 
-[keith6014](https://www.reddit.com/user/keith6014) asks on [reddit](https://www.reddit.com/r/golang/comments/aaz8ji/testdata_and_function_setup_help/)
+[keith6014](https://www.reddit.com/user/keith6014)が[reddit](https://www.reddit.com/r/golang/comments/aaz8ji/testdata_and_function_setup_help/)で質問する
 
-> I am executing a command using os/exec.Command\(\) which generated XML data. The command will be executed in a function called GetData\(\).
+> XMLデータを生成した`os/exec.Command()`を使用してコマンドを実行しています。コマンドは、`GetData()`という関数で実行されます。
 >
-> In order to test GetData\(\), I have some testdata which I created.
+> `GetData()`をテストするために、作成した`testdata`をいくつか持っています。
 >
-> In my \_test.go I have a TestGetData which calls GetData\(\) but that will use os.exec, instead I would like for it to use my testdata.
+> 私の`_test.go`には、`GetData()`を呼び出す`TestGetData`がありますが、`os.exec`を使用しますが、代わりに`testdata`を使用します。
 >
-> What is a good way to achieve this? When calling GetData should I have a "test" flag mode so it will read a file ie GetData\(mode string\)?
+> これを達成するための良い方法は何ですか？ `GetData`を呼び出すときは、「テスト」フラグモードを使用して、`GetData(mode string)`というファイルを読み取る必要がありますか？
 
-A few things
+いくつかのこと
 
-* When something is difficult to test, it's often due to the separation of concerns not being quite right
-* Don't add "test modes" into your code, instead use [Dependency Injection](../go-fundamentals/dependency-injection.md) so that you can model your dependencies and separate concerns. 
+* 何かをテストするのが難しい場合、懸念の分離が正しくないことが原因であることがよくあります
+* コードに「テストモード」を追加しないでください。代わりに、[依存関係の注入（DI）](../go-fundamentals/dependency-injection.md)を使用して、依存関係をモデル化し、懸念事項を分離できるようにします。
 
-I have taken the liberty of guessing what the code might look like
+私は勝手にコードがどのように見えるかを推測しました。
 
 ```go
 type Payload struct {
@@ -44,12 +44,12 @@ func GetData() string {
 }
 ```
 
-* It uses `exec.Command` which allows you to execute an external command to the process
-* We capture the output in `cmd.StdoutPipe` which returns us a `io.ReadCloser` \(this will become important\)
-* The rest of the code is more or less copy and pasted from the [excellent documentation](https://golang.org/pkg/os/exec/#example_Cmd_StdoutPipe). 
-  * We capture any output from stdout into an `io.ReadCloser` and then we `Start` the command and then wait for all the data to be read by calling `Wait`. In between those two calls we decode the data into our `Payload` struct.
+* プロセスへの外部コマンドを実行できる`exec.Command`を使用します
+* 出力を`cmd.StdoutPipe`にキャプチャして、`io.ReadCloser`を返します（これは重要になります）
+* コードの残りの部分は、[優れたドキュメント](https://golang.org/pkg/os/exec/#example_Cmd_StdoutPipe)から多かれ少なかれコピーして貼り付けたものです。
+  * stdoutからの出力をキャプチャして`io.ReadCloser`に取り込み、次にコマンドを`Start`してから、`Wait`を呼び出してすべてのデータが読み取られるのを待ちます。これらの2つの呼び出しの間で、データを`Payload`構造体にデコードします。
 
-Here is what is contained inside `msg.xml`
+これが `msg.xml`内に含まれているものです。
 
 ```markup
 <payload>
@@ -57,7 +57,7 @@ Here is what is contained inside `msg.xml`
 </payload>
 ```
 
-I wrote a simple test to show it in action
+実際の動作を示す簡単なテストを作成しました。
 
 ```go
 func TestGetData(t *testing.T) {
@@ -70,22 +70,23 @@ func TestGetData(t *testing.T) {
 }
 ```
 
-## Testable code
+## テスト可能なコード
 
-Testable code is decoupled and single purpose. To me it feels like there are two main concerns for this code
+テスト可能なコードは分離され、単一の目的です。
+私には、このコードには2つの主な懸念があるように感じます
 
-1. Retrieving the raw XML data
-2. Decoding the XML data and applying our business logic \(in this case `strings.ToUpper` on the `<message>`\)
+1. 未加工のXMLデータを取得する。
+2. XMLデータをデコードし、ビジネスロジックを適用します（この場合は`<message>`の`strings.ToUpper`です）
 
-The first part is just copying the example from the standard lib.
+最初の部分は、サンプルを標準`lib`からコピーすることです。
 
-The second part is where we have our business logic and by looking at the code we can see where the "seam" in our logic starts; it's where we get our `io.ReadCloser`. We can use this existing abstraction to separate concerns and make our code testable.
+2番目の部分はビジネスロジックがある場所です。コードを見ると、ロジックの「シーム`"seam"`」がどこから始まるかがわかります。ここで、`io.ReadCloser`を取得します。この既存の抽象化を使用して、問題を分離し、コードをテスト可能にすることができます。
 
-**The problem with GetData is the business logic is coupled with the means of getting the XML. To make our design better we need to decouple them**
+**GetDataの問題は、ビジネスロジックがXMLを取得する手段と結合していることです。デザインを改善するには、それらを切り離す必要があります**
 
-Our `TestGetData` can act as our integration test between our two concerns so we'll keep hold of that to make sure it keeps working.
+私たちの`TestGetData`は2つの懸念事項の間の統合テストとして機能することができるため、それが機能し続けることを確認するためにそれを保持します。
 
-Here is what the newly separated code looks like
+新しく分離されたコードは次のようになります
 
 ```go
 type Payload struct {
@@ -119,7 +120,9 @@ func TestGetDataIntegration(t *testing.T) {
 }
 ```
 
-Now that `GetData` takes its input from just an `io.Reader` we have made it testable and it is no longer concerned how the data is retrieved; people can re-use the function with anything that returns an `io.Reader` \(which is extremely common\). For example we could start fetching the XML from a URL instead of the command line.
+`GetData`が入力を`io.Reader`から取得するようになったので、これをテスト可能にして、データの取得方法を考慮しなくなりました。人々は`io.Reader`（これは非常に一般的です）を返すもので関数を再利用できます。
+
+たとえば、コマンドラインではなくURLからXMLのフェッチを開始できます。
 
 ```go
 func TestGetData(t *testing.T) {
@@ -137,7 +140,6 @@ func TestGetData(t *testing.T) {
 }
 ```
 
-Here is an example of a unit test for `GetData`.
+これは`GetData`の単体テストの例です。
 
-By separating the concerns and using existing abstractions within Go testing our important business logic is a breeze.
-
+懸念を分離し、Goのテストで既存の抽象化を使用することで、重要なビジネスロジックが簡単になります。
