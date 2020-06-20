@@ -4,13 +4,13 @@ description: IO and sorting
 
 # IO、並び替え
 
-[**You can find all the code for this chapter here**](https://github.com/quii/learn-go-with-tests/tree/master/io)
+[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/io)
 
-[In the previous chapter](json.md) we continued iterating on our application by adding a new endpoint `/league`. Along the way we learned about how to deal with JSON, embedding types and routing.
+[前の章](json.md) 新しいエンドポイント `/league`を追加することで、アプリケーションを繰り返し続けました。途中で、JSONの処理方法、埋め込みタイプ、ルーティングについて学習しました。
 
-Our product owner is somewhat perturbed by the software losing the scores when the server was restarted. This is because our implementation of our store is in-memory. She is also not pleased that we didn't interpret the `/league` endpoint should return the players ordered by the number of wins!
+私たちの製品の所有者は、サーバーが再起動されたときにソフトウェアがスコアを失うことにいくらか混乱しています。これは、ストアの実装がインメモリであるためです。彼女はまた、「`/league`」エンドポイントが勝ちの数で順序付けられたプレーヤーを返す必要があると解釈しなかったことに不満を持っています！
 
-## The code so far
+## これまでのコード
 
 ```go
 // server.go
@@ -137,23 +137,23 @@ func main() {
 }
 ```
 
-You can find the corresponding tests in the link at the top of the chapter.
+章の上部にあるリンクで対応するテストを見つけることができます。
 
-## Store the data
+## データを保存する
 
-There are dozens of databases we could use for this but we're going to go for a very simple approach. We're going to store the data for this application in a file as JSON.
+これを使用できるデータベースは数十ありますが、ここでは非常にシンプルなアプローチを採用します。このアプリケーションのデータをJSONとしてファイルに保存します。
 
-This keeps the data very portable and is relatively simple to implement.
+これにより、データの移植性が非常に高くなり、実装が比較的簡単になります。
 
-It won't scale especially well but given this is a prototype it'll be fine for now. If our circumstances change and it's no longer appropriate it'll be simple to swap it out for something different because of the `PlayerStore` abstraction we have used.
+特にうまくスケーリングしませんが、これはプロトタイプなので、今のところは問題ありません。私たちの状況が変化し、それが適切でなくなった場合、私たちが使用した`PlayerStore`抽象化のため、それを別のものと交換するのは簡単です。
 
-We will keep the `InMemoryPlayerStore` for now so that the integration tests keep passing as we develop our new store. Once we are confident our new implementation is sufficient to make the integration test pass we will swap it in and then delete `InMemoryPlayerStore`.
+新しいストアを開発するときに統合テストに合格し続けるために、今のところ`InMemoryPlayerStore`を保持します。新しい実装が統合テストに合格するのに十分であると確信したら、それを入れ替えてから、`InMemoryPlayerStore`を削除します。
 
-## Write the test first
+## 最初にテストを書く
 
-By now you should be familiar with the interfaces around the standard library for reading data \(`io.Reader`\), writing data \(`io.Writer`\) and how we can use the standard library to test these functions without having to use real files.
+これで、データの読み取り（`io.Reader`）、データの書き込み（`io.Writer`）、および標準ライブラリを使用してこれらの関数をテストすることなく標準ライブラリをテストする方法について、標準ライブラリに関連するインターフェースに精通しているはずです。実際のファイルを使用する必要があります。
 
-For this work to be complete we'll need to implement `PlayerStore` so we'll write tests for our store calling the methods we need to implement. We'll start with `GetLeague`.
+この作業を完了するには、 `PlayerStore`を実装する必要があるため、実装する必要のあるメソッドを呼び出すストアのテストを記述します。`GetLeague`から始めます。
 
 ```go
 func TestFileSystemStore(t *testing.T) {
@@ -177,24 +177,25 @@ func TestFileSystemStore(t *testing.T) {
 }
 ```
 
-We're using `strings.NewReader` which will return us a `Reader`, which is what our `FileSystemPlayerStore` will use to read data. In `main` we will open a file, which is also a `Reader`.
+私たちは`Reader`を返す`strings.NewReader`を使用しています。
+これは、`FileSystemPlayerStore`がデータを読み取るために使用するものです。`main`では、`Reader`でもあるファイルを開きます。
 
-## Try to run the test
+## テストを実行してみます
 
 ```text
 # github.com/quii/learn-go-with-tests/json-and-io/v7
 ./FileSystemStore_test.go:15:12: undefined: FileSystemPlayerStore
 ```
 
-## Write the minimal amount of code for the test to run and check the failing test output
+## テストを実行するための最小限のコードを記述し、失敗したテスト出力を確認します
 
-Let's define `FileSystemPlayerStore` in a new file
+新しいファイルで`FileSystemPlayerStore`を定義しましょう
 
 ```go
 type FileSystemPlayerStore struct {}
 ```
 
-Try again
+再試行
 
 ```text
 # github.com/quii/learn-go-with-tests/json-and-io/v7
@@ -202,7 +203,7 @@ Try again
 ./FileSystemStore_test.go:17:15: store.GetLeague undefined (type FileSystemPlayerStore has no field or method GetLeague)
 ```
 
-It's complaining because we're passing in a `Reader` but not expecting one and it doesn't have `GetLeague` defined yet.
+`Reader`を渡していますが、予期しておらず、まだ`GetLeague`が定義されていないため、問題があります。
 
 ```go
 type FileSystemPlayerStore struct {
@@ -214,7 +215,7 @@ func (f *FileSystemPlayerStore) GetLeague() []Player {
 }
 ```
 
-One more try...
+もう一回試してみる...
 
 ```text
 === RUN   TestFileSystemStore//league_from_a_reader
@@ -222,9 +223,9 @@ One more try...
         FileSystemStore_test.go:24: got [] want [{Cleo 10} {Chris 33}]
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
-We've read JSON from a reader before
+以前にリーダーからJSONを読み取りました
 
 ```go
 func (f *FileSystemPlayerStore) GetLeague() []Player {
@@ -234,15 +235,16 @@ func (f *FileSystemPlayerStore) GetLeague() []Player {
 }
 ```
 
-The test should pass.
+テストは成功するはずです。
 
 ## Refactor
 
-We _have_ done this before! Our test code for the server had to decode the JSON from the response.
+これは以前に行ったことです！
+サーバーのテストコードは、応答からJSONをデコードする必要がありました。
 
-Let's try DRYing this up into a function.
+この関数をDRYにしてみましょう。
 
-Create a new file called `league.go` and put this inside.
+`league.go`と呼ばれる新しいファイルを作成し、これを中に入れます。
 
 ```go
 func NewLeague(rdr io.Reader) ([]Player, error) {
@@ -256,7 +258,7 @@ func NewLeague(rdr io.Reader) ([]Player, error) {
 }
 ```
 
-Call this in our implementation and in our test helper `getLeagueFromResponse` in `server_test.go`
+これを実装と、`server_test.go`のテストヘルパー`getLeagueFromResponse`で呼び出します
 
 ```go
 func (f *FileSystemPlayerStore) GetLeague() []Player {
@@ -265,11 +267,11 @@ func (f *FileSystemPlayerStore) GetLeague() []Player {
 }
 ```
 
-We haven't got a strategy yet for dealing with parsing errors but let's press on.
+構文解析エラーに対処するための戦略はまだありませんが、続けましょう。
 
-### Seeking problems
+### 問題を探す
 
-There is a flaw in our implementation. First of all, let's remind ourselves how `io.Reader` is defined.
+私たちの実装に欠陥があります。まず、`io.Reader`の定義を思い出してみましょう。
 
 ```go
 type Reader interface {
@@ -277,9 +279,10 @@ type Reader interface {
 }
 ```
 
-With our file, you can imagine it reading through byte by byte until the end. What happens if you try to `Read` a second time?
+私たちのファイルを使用すると、最後までバイト単位で読み取ることを想像できます。
+もう一度「読み取り`Read`」しようとするとどうなりますか？
 
-Add the following to the end of our current test.
+現在のテストの最後に以下を追加します。
 
 ```go
 // read again
@@ -287,11 +290,11 @@ got = store.GetLeague()
 assertLeague(t, got, want)
 ```
 
-We want this to pass, but if you run the test it doesn't.
+これは成功させたいのですが、テストを実行すると成功しません。
 
-The problem is our `Reader` has reached the end so there is nothing more to read. We need a way to tell it to go back to the start.
+問題は、`Reader`が最後に到達したため、これ以上読むものがないことです。最初に戻るように指示する方法が必要です。
 
-[ReadSeeker](https://golang.org/pkg/io/#ReadSeeker) is another interface in the standard library that can help.
+[ReadSeeker](https://golang.org/pkg/io/#ReadSeeker)は、標準ライブラリにあるもう1つのインターフェースで、役立ちます。
 
 ```go
 type ReadSeeker interface {
@@ -300,7 +303,7 @@ type ReadSeeker interface {
 }
 ```
 
-Remember embedding? This is an interface comprised of `Reader` and [`Seeker`](https://golang.org/pkg/io/#Seeker)
+埋め込みを覚えていますか？これは、`Reader`と[`Seeker`]（https://golang.org/pkg/io/#Seeker）で構成されるインターフェースです。
 
 ```go
 type Seeker interface {
@@ -308,7 +311,7 @@ type Seeker interface {
 }
 ```
 
-This sounds good, can we change `FileSystemPlayerStore` to take this interface instead?
+これはいいですね、代わりにこのインターフェイスを取るように`FileSystemPlayerStore`を変更できますか？
 
 ```go
 type FileSystemPlayerStore struct {
@@ -322,11 +325,12 @@ func (f *FileSystemPlayerStore) GetLeague() []Player {
 }
 ```
 
-Try running the test, it now passes! Happily for us `string.NewReader` that we used in our test also implements `ReadSeeker` so we didn't have to make any other changes.
+テストを実行してみてください。テストは成功しました！
+テストで使用した`string.NewReader`は、`ReadSeeker`も実装しているため、他の変更を行う必要はありませんでした。
 
-Next we'll implement `GetPlayerScore`.
+次に、`GetPlayerScore`を実装します。
 
-## Write the test first
+## 最初にテストを書く
 
 ```go
 t.Run("get player score", func(t *testing.T) {
@@ -346,15 +350,15 @@ t.Run("get player score", func(t *testing.T) {
 })
 ```
 
-## Try to run the test
+## テストを実行してみます
 
 ```text
 ./FileSystemStore_test.go:38:15: store.GetPlayerScore undefined (type FileSystemPlayerStore has no field or method GetPlayerScore)
 ```
 
-## Write the minimal amount of code for the test to run and check the failing test output
+## テストを実行するための最小限のコードを記述し、失敗したテスト出力を確認します
 
-We need to add the method to our new type to get the test to compile.
+テストをコンパイルするには、メソッドを新しい型に追加する必要があります。
 
 ```go
 func (f *FileSystemPlayerStore) GetPlayerScore(name string) int {
@@ -362,7 +366,7 @@ func (f *FileSystemPlayerStore) GetPlayerScore(name string) int {
 }
 ```
 
-Now it compiles and the test fails
+これでコンパイルされ、テストは失敗します
 
 ```text
 === RUN   TestFileSystemStore/get_player_score
@@ -370,9 +374,9 @@ Now it compiles and the test fails
         FileSystemStore_test.go:43: got 0 want 33
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
-We can iterate over the league to find the player and return their score
+リーグを繰り返してプレーヤーを見つけ、スコアを返すことができます。
 
 ```go
 func (f *FileSystemPlayerStore) GetPlayerScore(name string) int {
@@ -390,9 +394,9 @@ func (f *FileSystemPlayerStore) GetPlayerScore(name string) int {
 }
 ```
 
-## Refactor
+## リファクタリング
 
-You will have seen dozens of test helper refactorings so I'll leave this to you to make it work
+何十ものテストヘルパーリファクタリングを確認したので、これを機能させるためにこれをあなたにお任せします。
 
 ```go
 t.Run("/get player score", func(t *testing.T) {
@@ -408,15 +412,15 @@ t.Run("/get player score", func(t *testing.T) {
 })
 ```
 
-Finally, we need to start recording scores with `RecordWin`.
+最後に、`RecordWin`でスコアの記録を開始する必要があります。
 
-## Write the test first
+## 最初にテストを書く
 
-Our approach is fairly short-sighted for writes. We can't \(easily\) just update one "row" of JSON in a file. We'll need to store the _whole_ new representation of our database on every write.
+私たちのアプローチは、書き込みに対してかなり近視眼的です。ファイル内のJSONの「行」を1つだけ更新することは簡単にはできません。すべての書き込みで、データベースの _whole_ 新しい表現を保存する必要があります。
 
-How do we write? We'd normally use a `Writer` but we already have our `ReadSeeker`. Potentially we could have two dependencies but the standard library already has an interface for us `ReadWriteSeeker` which lets us do all the things we'll need to do with a file.
+どうやって書くの？通常は`Writer`を使用しますが、すでに`ReadSeeker`があります。潜在的に2つの依存関係が存在する可能性がありますが、標準ライブラリにはすでに`ReadWriteSeeker`用のインターフェースがあり、ファイルで必要なすべてのことを実行できます。
 
-Let's update our type
+タイプを更新しましょう
 
 ```go
 type FileSystemPlayerStore struct {
@@ -424,7 +428,7 @@ type FileSystemPlayerStore struct {
 }
 ```
 
-See if it compiles
+コンパイルされるかどうかを確認します
 
 ```go
 ./FileSystemStore_test.go:15:34: cannot use database (type *strings.Reader) as type io.ReadWriteSeeker in field value:
@@ -433,18 +437,18 @@ See if it compiles
     *strings.Reader does not implement io.ReadWriteSeeker (missing Write method)
 ```
 
-It's not too surprising that `strings.Reader` does not implement `ReadWriteSeeker` so what do we do?
+`strings.Reader`が` ReadWriteSeeker`を実装しないことはそれほど驚くべきことではないので、何をしますか？
 
-We have two choices
+2つの選択肢があります
 
-* Create a temporary file for each test. `*os.File` implements `ReadWriteSeeker`. The pro of this is it becomes more of an integration test, we're really reading and writing from the file system so it will give us a very high level of confidence. The cons are we prefer unit tests because they are faster and generally simpler. We will also need to do more work around creating temporary files and then making sure they're removed after the test.
-* We could use a third party library. [Mattetti](https://github.com/mattetti) has written a library [filebuffer](https://github.com/mattetti/filebuffer) which implements the interface we need and doesn't touch the file system.
+* テストごとに一時ファイルを作成します。`*os.File`は`ReadWriteSeeker`を実装します。これの長所は、それが統合テストになり、実際にファイルシステムからの読み取りと書き込みを行っているため、非常に高い信頼性が得られることです。短所は、ユニットテストの方が速く、一般にシンプルであるためです。また、一時ファイルを作成し、テスト後にそれらが確実に削除されるように、さらに作業を行う必要があります。
+* サードパーティのライブラリを使用できます。[Mattetti](https://github.com/mattetti)は、必要なインターフェイスを実装し、ファイルシステムに触れないライブラリ[filebuffer](https://github.com/mattetti/filebuffer)を作成しました。
 
-I don't think there's an especially wrong answer here, but by choosing to use a third party library I would have to explain dependency management! So we will use files instead.
+ここでは特に間違った答えはないと思いますが、サードパーティのライブラリを使用することを選択することで、依存関係の管理について説明する必要があります。そのため、代わりにファイルを使用します。
 
-Before adding our test we need to make our other tests compile by replacing the `strings.Reader` with an `os.File`.
+テストを追加する前に、`strings.Reader`を`os.File`で置き換えることにより、他のテストをコンパイルする必要があります。
 
-Let's create a helper function which will create a temporary file with some data inside it
+内部にいくつかのデータを含む一時ファイルを作成するヘルパー関数を作成しましょう
 
 ```go
 func createTempFile(t *testing.T, initialData string) (io.ReadWriteSeeker, func()) {
@@ -467,9 +471,10 @@ func createTempFile(t *testing.T, initialData string) (io.ReadWriteSeeker, func(
 }
 ```
 
-[TempFile](https://golang.org/pkg/io/ioutil/#TempDir) creates a temporary file for us to use. The `"db"` value we've passed in is a prefix put on a random file name it will create. This is to ensure it won't clash with other files by accident.
+[TempFile](https://golang.org/pkg/io/ioutil/#TempDir)は、使用する一時ファイルを作成します。渡した `"db"`値は、作成するランダムなファイル名に付けられるプレフィックスです。これは、誤って他のファイルと衝突しないようにするためです。
 
-You'll notice we're not only returning our `ReadWriteSeeker` \(the file\) but also a function. We need to make sure that the file is removed once the test is finished. We don't want to leak details of the files into the test as it's prone to error and uninteresting for the reader. By returning a `removeFile` function, we can take care of the details in our helper and all the caller has to do is run `defer cleanDatabase()`.
+`ReadWriteSeeker`（ファイル）だけでなく、関数も返すことに気づくでしょう。
+テストが終了したら、ファイルを確実に削除する必要があります。エラーが発生しやすく、読者の興味をそそる可能性があるため、ファイルの詳細をテストに漏らしたくない。`removeFile`関数を返すことで、ヘルパーの詳細を処理でき、呼び出し側が実行する必要があるのは`defer cleanDatabase()`を実行することだけです。
 
 ```go
 func TestFileSystemStore(t *testing.T) {
@@ -511,9 +516,9 @@ func TestFileSystemStore(t *testing.T) {
 }
 ```
 
-Run the tests and they should be passing! There were a fair amount of changes but now it feels like we have our interface definition complete and it should be very easy to add new tests from now.
+テストを実行すると、テストに成功するはずです。かなりの量の変更がありましたが、インターフェースの定義が完了したように感じられ、これから新しいテストを簡単に追加できるはずです。
 
-Let's get the first iteration of recording a win for an existing player
+既存のプレイヤーの勝利を記録する最初の反復を取得しましょう
 
 ```go
 t.Run("store wins for existing players", func(t *testing.T) {
@@ -532,13 +537,13 @@ t.Run("store wins for existing players", func(t *testing.T) {
 })
 ```
 
-## Try to run the test
+## テストを実行してみます
 
 `./FileSystemStore_test.go:67:8: store.RecordWin undefined (type FileSystemPlayerStore has no field or method RecordWin)`
 
-## Write the minimal amount of code for the test to run and check the failing test output
+## テストを実行するための最小限のコードを記述し、失敗したテスト出力を確認します
 
-Add the new method
+新しいメソッドを追加する
 
 ```go
 func (f *FileSystemPlayerStore) RecordWin(name string) {
@@ -552,9 +557,9 @@ func (f *FileSystemPlayerStore) RecordWin(name string) {
         FileSystemStore_test.go:71: got 33 want 34
 ```
 
-Our implementation is empty so the old score is getting returned.
+私たちの実装は空なので、古いスコアが返されます。
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
 ```go
 func (f *FileSystemPlayerStore) RecordWin(name string) {
@@ -571,19 +576,19 @@ func (f *FileSystemPlayerStore) RecordWin(name string) {
 }
 ```
 
-You may be asking yourself why I am doing `league[i].Wins++` rather than `player.Wins++`.
+なぜ私が「`player.Wins++`」ではなく「`league[i].Wins++`」をしているのか、疑問に思われるかもしれません。
 
-When you `range` over a slice you are returned the current index of the loop \(in our case `i`\) and a _copy_ of the element at that index. Changing the `Wins` value of a copy won't have any effect on the `league` slice that we iterate on. For that reason, we need to get the reference to the actual value by doing `league[i]` and then changing that value instead.
+スライス上で「範囲`range`」を指定すると、ループの現在のインデックス（この場合は`i`）とそのインデックスにある要素の_copy_が返されます。コピーの`Wins`値を変更しても、繰り返し処理する`league`スライスには影響しません。そのため、`league[i]`を実行して実際の値への参照を取得し、代わりにその値を変更する必要があります。
 
-If you run the tests, they should now be passing.
+テストを実行すると、テストは成功するはずです。
 
-## Refactor
+## リファクタリング
 
-In `GetPlayerScore` and `RecordWin`, we are iterating over `[]Player` to find a player by name.
+`GetPlayerScore`と`RecordWin`では、名前でプレーヤーを見つけるために`[] Player`を繰り返し処理しています。
 
-We could refactor this common code in the internals of `FileSystemStore` but to me, it feels like this is maybe useful code we can lift into a new type. Working with a "League" so far has always been with `[]Player` but we can create a new type called `League`. This will be easier for other developers to understand and then we can attach useful methods onto that type for us to use.
+`FileSystemStore`の内部でこの共通コードをリファクタリングすることもできますが、私には、これが新しいタイプに引き上げることができるおそらく有用なコードであると感じています。これまで「リーグ`"League"`」での作業は常に`[]Player`で行っていましたが、`League`という新しいタイプを作成できます。これは、他の開発者が理解しやすくなり、そのタイプに便利なメソッドをアタッチして使用できるようになります。
 
-Inside `league.go` add the following
+`league.go`内に以下を追加します
 
 ```go
 type League []Player
@@ -598,11 +603,11 @@ func (l League) Find(name string) *Player {
 }
 ```
 
-Now if anyone has a `League` they can easily find a given player.
+誰かが`League`を持っている場合、彼らは与えられたプレイヤーを簡単に見つけることができます。
 
-Change our `PlayerStore` interface to return `League` rather than `[]Player`. Try to re-run the tests, you'll get a compilation problem because we've changed the interface but it's very easy to fix; just change the return type from `[]Player` to `League`.
+`PlayerStore`インターフェイスを変更して、`[]Player`ではなく`League`を返すようにします。テストを再実行してみてください。インターフェイスを変更したためコンパイルの問題が発生しますが、修正は非常に簡単です。戻り値の型を `[]Player`から`League`に変更するだけです。
 
-This lets us simplify our methods in `FileSystemStore`.
+これにより、`FileSystemStore`のメソッドを簡略化できます。
 
 ```go
 func (f *FileSystemPlayerStore) GetPlayerScore(name string) int {
@@ -629,11 +634,11 @@ func (f *FileSystemPlayerStore) RecordWin(name string) {
 }
 ```
 
-This is looking much better and we can see how we might be able to find other useful functionality around `League` can be refactored.
+これはかなり見栄えがよく、`League`の他の便利な機能をリファクタリングできる方法を見つけることができます。
 
-We now need to handle the scenario of recording wins of new players.
+新しいプレーヤーの勝利を記録するシナリオを処理する必要があります。
 
-## Write the test first
+## 最初にテストを書く
 
 ```go
 t.Run("store wins for new players", func(t *testing.T) {
@@ -652,7 +657,7 @@ t.Run("store wins for new players", func(t *testing.T) {
 })
 ```
 
-## Try to run the test
+## テストを実行してみます
 
 ```text
 === RUN   TestFileSystemStore/store_wins_for_new_players#01
@@ -660,9 +665,9 @@ t.Run("store wins for new players", func(t *testing.T) {
         FileSystemStore_test.go:86: got 0 want 1
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
-We just need to handle the scenario where `Find` returns `nil` because it couldn't find the player.
+プレーヤーが見つからなかったために`Find`が`nil`を返すシナリオを処理する必要があるだけです。
 
 ```go
 func (f *FileSystemPlayerStore) RecordWin(name string) {
@@ -680,9 +685,9 @@ func (f *FileSystemPlayerStore) RecordWin(name string) {
 }
 ```
 
-The happy path is looking ok so we can now try using our new `Store` in the integration test. This will give us more confidence that the software works and then we can delete the redundant `InMemoryPlayerStore`.
+ハッピーパスは問題なく見えたので、統合テストで新しい`Store`を使用してみることができます。これにより、ソフトウェアが動作するという確信が高まり、冗長な`InMemoryPlayerStore`を削除できます。
 
-In `TestRecordingWinsAndRetrievingThem` replace the old store.
+`TestRecordingWinsAndRetrievingThem`で古いストアを置き換えます。
 
 ```go
 database, cleanDatabase := createTempFile(t, "")
@@ -690,7 +695,8 @@ defer cleanDatabase()
 store := &FileSystemPlayerStore{database}
 ```
 
-If you run the test it should pass and now we can delete `InMemoryPlayerStore`. `main.go` will now have compilation problems which will motivate us to now use our new store in the "real" code.
+テストを実行すると、テストに成功し、`InMemoryPlayerStore`を削除できます。
+`main.go`にコンパイルの問題が発生し、「実際の」コードで新しいストアを使用するようになります。
 
 ```go
 package main
@@ -719,17 +725,17 @@ func main() {
 }
 ```
 
-* We create a file for our database.
-* The 2nd argument to `os.OpenFile` lets you define the permissions for opening the file, in our case `O_RDWR` means we want to read and write _and_ `os.O_CREATE` means create the file if it doesn't exist.
-* The 3rd argument means sets permissions for the file, in our case, all users can read and write the file. [\(See superuser.com for a more detailed explanation\)](https://superuser.com/questions/295591/what-is-the-meaning-of-chmod-666).
+* データベース用のファイルを作成します。
+* `os.OpenFile`の2番目の引数では、ファイルを開くための権限を定義できます。この場合、`O_RDWR`は読み取りと書き込みを行うことを意味し、`os.O_CREATE`はファイルが存在しない場合にファイルを作成することを意味します。
+* 3番目の引数は、ファイルのアクセス権を設定することを意味します。この場合、すべてのユーザーがファイルの読み取りと書き込みを行うことができます。[（詳細な説明は`superuser.com`を参照）](https://superuser.com/questions/295591/what-is-the-meaning-of-chmod-666).
 
-Running the program now persists the data in a file in between restarts, hooray!
+プログラムを実行すると、再起動の間にデータがファイルに永続化されるようになりました。
 
-## More refactoring and performance concerns
+## より多くのリファクタリングとパフォーマンスの懸念
 
-Every time someone calls `GetLeague()` or `GetPlayerScore()` we are reading the entire file and parsing it into JSON. We should not have to do that because `FileSystemStore` is entirely responsible for the state of the league; it should only need to read the file when the program starts up and only need to update the file when data changes.
+誰かが`GetLeague()`または`GetPlayerScore()`を呼び出すたびに、ファイル全体を読み取ってJSONに解析します。`FileSystemStore`はリーグの状態に完全に責任があるため、これを行う必要はありません。プログラムの起動時にファイルを読み取るだけで、データが変更されたときにファイルを更新するだけです。
 
-We can create a constructor which can do some of this initialisation for us and store the league as a value in our `FileSystemStore` to be used on the reads instead.
+この初期化の一部を実行できるコンストラクターを作成し、代わりに読み取りで使用するためにリーグを`FileSystemStore`の値として保存できます。
 
 ```go
 type FileSystemPlayerStore struct {
@@ -747,7 +753,7 @@ func NewFileSystemPlayerStore(database io.ReadWriteSeeker) *FileSystemPlayerStor
 }
 ```
 
-This way we only have to read from disk once. We can now replace all of our previous calls to getting the league from disk and just use `f.league` instead.
+この方法では、ディスクから一度だけ読み取る必要があります。ディスクからリーグを取得するための以前の呼び出しをすべて置き換えて、代わりに`f.league`を使用できます。
 
 ```go
 func (f *FileSystemPlayerStore) GetLeague() League {
@@ -779,19 +785,19 @@ func (f *FileSystemPlayerStore) RecordWin(name string) {
 }
 ```
 
-If you try to run the tests it will now complain about initialising `FileSystemPlayerStore` so just fix them by calling our new constructor.
+テストを実行しようとすると、`FileSystemPlayerStore`の初期化について不平を言うので、新しいコンストラクターを呼び出して修正するだけです。
 
-### Another problem
+### 別の問題
 
-There is some more naivety in the way we are dealing with files which _could_ create a very nasty bug down the line.
+非常に厄介なバグを発生させる可能性があるファイルを処理する方法には、いくつかの単純な点があります。
 
-When we `RecordWin`, we `Seek` back to the start of the file and then write the new data—but what if the new data was smaller than what was there before?
+`RecordWin`を実行すると、ファイルの先頭に`Seek`して新しいデータを書き込みますが、新しいデータが以前のデータよりも小さい場合はどうなるでしょうか。
 
-In our current case, this is impossible. We never edit or delete scores so the data can only get bigger. However, it would be irresponsible for us to leave the code like this; it's not unthinkable that a delete scenario could come up.
+私たちの現在のケースでは、これは不可能です。スコアを編集または削除することはないため、データが大きくなるだけです。ただし、コードをこのようにしておくのは無責任です。削除シナリオが発生することは考えられないことではありません。
 
-How will we test for this though? What we need to do is first refactor our code so we separate out the concern of the _kind of data we write, from the writing_. We can then test that separately to check it works how we hope.
+しかし、これをどのようにテストしますか？最初にコードをリファクタリングする必要があるので、書き込むデータの種類の懸念を書き込みから分離します。次に、それを個別にテストして、期待どおりに動作することを確認できます。
 
-We'll create a new type to encapsulate our "when we write we go from the beginning" functionality. I'm going to call it `Tape`. Create a new file with the following:
+新しいタイプを作成して、「最初から書き始める」機能をカプセル化します。これを「テープ`Tape`」と呼びます。以下を使用して新しいファイルを作成します。
 
 ```go
 package main
@@ -808,7 +814,7 @@ func (t *tape) Write(p []byte) (n int, err error) {
 }
 ```
 
-Notice that we're only implementing `Write` now, as it encapsulates the `Seek` part. This means our `FileSystemStore` can just have a reference to a `Writer` instead.
+ここでは、`Seek`部分をカプセル化しているため、ここでは`Write`のみを実装していることに注意してください。つまり、`FileSystemStore`は、代わりに`Writer`への参照のみを持つことができます。
 
 ```go
 type FileSystemPlayerStore struct {
@@ -817,7 +823,7 @@ type FileSystemPlayerStore struct {
 }
 ```
 
-Update the constructor to use `Tape`
+`Tape`を使用するようにコンストラクタを更新します
 
 ```go
 func NewFileSystemPlayerStore(database io.ReadWriteSeeker) *FileSystemPlayerStore {
@@ -831,13 +837,15 @@ func NewFileSystemPlayerStore(database io.ReadWriteSeeker) *FileSystemPlayerStor
 }
 ```
 
-Finally, we can get the amazing payoff we wanted by removing the `Seek` call from `RecordWin`. Yes, it doesn't feel much, but at least it means if we do any other kind of writes we can rely on our `Write` to behave how we need it to. Plus it will now let us test the potentially problematic code separately and fix it.
+最後に、`RecordWin`から`Seek`呼び出しを削除することで、私たちが望んでいた驚くべき見返りを得ることができます。はい、あまり感じませんが、少なくとも他の種類の書き込みを行う場合、`Write`を使用して必要な動作を実行できることを意味します。さらに、潜在的に問題のあるコードを個別にテストして修正できるようになります。
 
-Let's write the test where we want to update the entire contents of a file with something that is smaller than the original contents.
+ファイルの内容全体を元の内容よりも小さいもので更新するテストを書いてみましょう。
 
-## Write the test first
+## 最初にテストを書く
 
-Our test will create a file with some content, try to write to it using the `tape`, and read it all again to see what's in the file. In `tape_test.go`:
+テストでは、コンテンツを含むファイルを作成し、`tape`を使用してファイルに書き込み、もう一度読み取って、ファイルの内容を確認します。
+
+`tape_test.go`
 
 ```go
 func TestTape_Write(t *testing.T) {
@@ -860,7 +868,7 @@ func TestTape_Write(t *testing.T) {
 }
 ```
 
-## Try to run the test
+## テストを実行してみます
 
 ```text
 === RUN   TestTape_Write
@@ -868,13 +876,15 @@ func TestTape_Write(t *testing.T) {
     tape_test.go:23: got 'abc45' want 'abc'
 ```
 
-As we thought! It writes the data we want, but leaves the rest of the original data remaining.
+思った通り！
 
-## Write enough code to make it pass
+必要なデータを書き込みますが、元のデータの残りを残します。
 
-`os.File` has a truncate function that will let us effectively empty the file. We should be able to just call this to get what we want.
+## 成功させるのに十分なコードを書く
 
-Change `tape` to the following:
+`os.File`には、ファイルを効率的に空にできる切り捨て関数があります。これを呼び出して、必要なものを取得できます。
+
+`tape`を次のように変更します。
 
 ```go
 type tape struct {
@@ -888,17 +898,17 @@ func (t *tape) Write(p []byte) (n int, err error) {
 }
 ```
 
-The compiler will fail in a number of places where we are expecting an `io.ReadWriteSeeker` but we are sending in `*os.File`. You should be able to fix these problems yourself by now but if you get stuck just check the source code.
+コンパイラーは、`io.ReadWriteSeeker`を想定している多くの場所で失敗しますが、`*os.File`で送信しています。これらの問題は自分で修正できるはずですが、行き詰まった場合はソースコードを確認してください。
 
-Once you get it refactoring our `TestTape_Write` test should be passing!
+それを取得したら、`TestTape_Write`テストはパスするはずです！
 
-### One other small refactor
+### もう1つの小さなリファクタリング
 
-In `RecordWin` we have the line `json.NewEncoder(f.database).Encode(f.league)`.
+`RecordWin`には、`json.NewEncoder(f.database).Encode(f.league)`という行があります。
 
-We don't need to create a new encoder every time we write, we can initialise one in our constructor and use that instead.
+書き込むたびに新しいエンコーダを作成する必要はありません。コンストラクタでエンコーダを初期化して、代わりに使用できます。
 
-Store a reference to an `Encoder` in our type:
+タイプに「エンコーダー`Encoder`」への参照を保存します。
 
 ```go
 type FileSystemPlayerStore struct {
@@ -907,7 +917,7 @@ type FileSystemPlayerStore struct {
 }
 ```
 
-Initialise it in the constructor:
+コンストラクタで初期化します。
 
 ```go
 func NewFileSystemPlayerStore(file *os.File) *FileSystemPlayerStore {
@@ -921,25 +931,25 @@ func NewFileSystemPlayerStore(file *os.File) *FileSystemPlayerStore {
 }
 ```
 
-Use it in `RecordWin`.
+`RecordWin`で使用します。
 
-## Didn't we just break some rules there? Testing private things? No interfaces?
+## ルールを破っただけではありませんか？プライベートなものをテストしていますか？インターフェイスはありませんか？
 
-### On testing private types
+### プライベート型のテストについて
 
-It's true that _in general_ you should favour not testing private things as that can sometimes lead to your tests being too tightly coupled to the implementation, which can hinder refactoring in future.
+一般的にプライベートなものをテストしないほうがよい場合があります。テストが実装に密に結合しすぎて、将来のリファクタリングを妨げる可能性があるためです。
 
-However, we must not forget that tests should give us _confidence_.
+ただし、テストによって _確信_ が得られることを忘れてはなりません。
 
-We were not confident that our implementation would work if we added any kind of edit or delete functionality. We did not want to leave the code like that, especially if this was being worked on by more than one person who may not be aware of the shortcomings of our initial approach.
+なんらかの編集または削除機能を追加した場合、実装が機能するかどうか確信が持てませんでした。特に、最初のアプローチの欠点を認識していない複数の人が作業している場合は、コードをそのままにしたくありませんでした。
 
-Finally, it's just one test! If we decide to change the way it works it won't be a disaster to just delete the test but we have at the very least captured the requirement for future maintainers.
+最後に、これは1つのテストにすぎません。動作方法を変更することを決定した場合、テストを削除するだけで障害になることはありませんが、少なくとも将来のメンテナの要件を把握しています。
 
-### Interfaces
+### インターフェース
 
-We started off the code by using `io.Reader` as that was the easiest path for us to unit test our new `PlayerStore`. As we developed the code we moved on to `io.ReadWriter` and then `io.ReadWriteSeeker`. We then found out there was nothing in the standard library that actually implemented that apart from `*os.File`. We could've taken the decision to write our own or use an open source one but it felt pragmatic just to make temporary files for the tests.
+新しい`PlayerStore`を単体テストするための最も簡単な方法であったため、`io.Reader`を使用してコードを開始しました。コードを開発したとき、`io.ReadWriter`に移動し、次に`io.ReadWriteSeeker`に移動しました。次に、標準ライブラリには、`*os.File`以外に実際にそれを実装したものは何もないことがわかりました。独自に作成するか、オープンソースを使用するかを決定することもできましたが、テスト用の一時ファイルを作成するだけで実用的でした。
 
-Finally, we needed `Truncate` which is also on `*os.File`. It would've been an option to create our own interface capturing these requirements.
+最後に、`*os.File`にもある`Truncate`が必要でした。これらの要件を取り込んだ独自のインターフェースを作成することはオプションでした。
 
 ```go
 type ReadWriteSeekTruncate interface {
@@ -948,21 +958,21 @@ type ReadWriteSeekTruncate interface {
 }
 ```
 
-But what is this really giving us? Bear in mind we are _not mocking_ and it is unrealistic for a **file system** store to take any type other than an `*os.File` so we don't need the polymorphism that interfaces give us.
+しかし、これは本当に私たちに何を与えているのでしょうか？私たちは_モックではない_ことを覚えておいてください。**ファイルシステム**ストアが `*os.File`以外のタイプを取ることは非現実的であるため、インターフェイスが提供するポリモーフィズムは必要ありません。
 
-Don't be afraid to chop and change types and experiment like we have here. The great thing about using a statically typed language is the compiler will help you with every change.
+ここにあるように、タイプを切り刻んで変更し、実験することを恐れないでください。静的に型付けされた言語を使用することの素晴らしい点は、コンパイラーがすべての変更を支援することです。
 
-## Error handling
+## エラー処理
 
-Before we start working on sorting we should make sure we're happy with our current code and remove any technical debt we may have. It's an important principle to get to working software as quickly as possible \(stay out of the red state\) but that doesn't mean we should ignore error cases!
+並べ替えに取り掛かる前に、現在のコードに満足していることを確認し、技術的な負債をすべて取り除く必要があります。ソフトウェアをできるだけ早く（赤の状態から抜け出す）ことは重要な原則ですが、それはエラーのケースを無視する必要があるという意味ではありません。
 
-If we go back to `FileSystemStore.go` we have `league, _ := NewLeague(f.database)` in our constructor.
+`FileSystemStore.go`に戻ると、コンストラクターに`league, _ := NewLeague(f.database)`があります。
 
-`NewLeague` can return an error if it is unable to parse the league from the `io.Reader` that we provide.
+私たちが提供する`io.Reader`からリーグを解析できない場合、`NewLeague`はエラーを返す可能性があります。
 
-It was pragmatic to ignore that at the time as we already had failing tests. If we had tried to tackle it at the same time, we would have been juggling two things at once.
+すでに失敗したテストがあったため、その時点でそれを無視するのは実用的でした。同時にそれに取り組んだとしたら、2つのことを同時に処理していたことになります。
 
-Let's make it so our constructor is capable of returning an error.
+コンストラクタがエラーを返すことができるようにしましょう。
 
 ```go
 func NewFileSystemPlayerStore(file *os.File) (*FileSystemPlayerStore, error) {
@@ -980,7 +990,7 @@ func NewFileSystemPlayerStore(file *os.File) (*FileSystemPlayerStore, error) {
 }
 ```
 
-Remember it is very important to give helpful error messages \(just like your tests\). People on the internet jokingly say that most Go code is:
+（テストと同じように）役立つエラーメッセージを表示することが非常に重要であることを忘れないでください。インターネットの人々は冗談めかして、ほとんどのGoコードは次のとおりだと言っています
 
 ```go
 if err != nil {
@@ -988,9 +998,9 @@ if err != nil {
 }
 ```
 
-**That is 100% not idiomatic.** Adding contextual information \(i.e what you were doing to cause the error\) to your error messages makes operating your software far easier.
+**それは100％慣用的ではありません** エラーメッセージにコンテキスト情報（つまり、エラーを発生させるために実行していたこと）を追加すると、ソフトウェアの操作がはるかに簡単になります。
 
-If you try to compile you'll get some errors.
+コンパイルしようとすると、いくつかのエラーが発生します。
 
 ```text
 ./main.go:18:35: multiple-value NewFileSystemPlayerStore() in single-value context
@@ -1001,7 +1011,7 @@ If you try to compile you'll get some errors.
 ./server_integration_test.go:12:35: multiple-value NewFileSystemPlayerStore() in single-value context
 ```
 
-In main we'll want to exit the program, printing the error.
+メインでは、プログラムを終了してエラーを出力します。
 
 ```go
 store, err := NewFileSystemPlayerStore(db)
@@ -1011,7 +1021,7 @@ if err != nil {
 }
 ```
 
-In the tests we should assert there is no error. We can make a helper to help with this.
+テストでは、エラーがないことを確認する必要があります。これを手伝ってくれるヘルパーを作ることができます。
 
 ```go
 func assertNoError(t *testing.T, err error) {
@@ -1022,7 +1032,8 @@ func assertNoError(t *testing.T, err error) {
 }
 ```
 
-Work through the other compilation problems using this helper. Finally, you should have a failing test:
+このヘルパーを使用して、他のコンパイル問題を処理します。
+最後に、失敗するテストがあるはずです。
 
 ```text
 === RUN   TestRecordingWinsAndRetrievingThem
@@ -1030,9 +1041,9 @@ Work through the other compilation problems using this helper. Finally, you shou
     server_integration_test.go:14: didn't expect an error but got one, problem loading player store from file /var/folders/nj/r_ccbj5d7flds0sf63yy4vb80000gn/T/db841037437, problem parsing league, EOF
 ```
 
-We cannot parse the league because the file is empty. We weren't getting errors before because we always just ignored them.
+ファイルが空であるため、リーグを解析できません。以前は常にエラーを無視していたため、以前はエラーが発生していませんでした。
 
-Let's fix our big integration test by putting some valid JSON in it:
+有効なJSONをいくつか入れて、大きな統合テストを修正しましょう。
 
 ```go
 func TestRecordingWinsAndRetrievingThem(t *testing.T) {
@@ -1040,9 +1051,9 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
     //etc...
 ```
 
-Now that all the tests are passing, we need to handle the scenario where the file is empty.
+すべてのテストに合格したので、ファイルが空であるシナリオを処理する必要があります。
 
-## Write the test first
+## 最初にテストを書く
 
 ```go
 t.Run("works with an empty file", func(t *testing.T) {
@@ -1055,7 +1066,7 @@ t.Run("works with an empty file", func(t *testing.T) {
 })
 ```
 
-## Try to run the test
+## テストを実行してみます
 
 ```text
 === RUN   TestFileSystemStore/works_with_an_empty_file
@@ -1063,9 +1074,9 @@ t.Run("works with an empty file", func(t *testing.T) {
         FileSystemStore_test.go:108: didn't expect an error but got one, problem loading player store from file /var/folders/nj/r_ccbj5d7flds0sf63yy4vb80000gn/T/db019548018, problem parsing league, EOF
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
-Change our constructor to the following
+コンストラクタを次のように変更します。
 
 ```go
 func NewFileSystemPlayerStore(file *os.File) (*FileSystemPlayerStore, error) {
@@ -1096,11 +1107,11 @@ func NewFileSystemPlayerStore(file *os.File) (*FileSystemPlayerStore, error) {
 }
 ```
 
-`file.Stat` returns stats on our file, which lets us check the size of the file. If it's empty, we `Write` an empty JSON array and `Seek` back to the start, ready for the rest of the code.
+`file.Stat`はファイルの統計を返し、ファイルのサイズを確認できます。空の場合は、空のJSON配列を`Write`、`Seek`を最初に戻して、残りのコードの準備をします。
 
-## Refactor
+## リファクタリング
 
-Our constructor is a bit messy now, so let's extract the initialise code into a function:
+コンストラクターは少し面倒なので、初期化コードを関数に抽出してみましょう。
 
 ```go
 func initialisePlayerDBFile(file *os.File) error {
@@ -1143,15 +1154,15 @@ func NewFileSystemPlayerStore(file *os.File) (*FileSystemPlayerStore, error) {
 }
 ```
 
-## Sorting
+## 並べ替え
 
-Our product owner wants `/league` to return the players sorted by their scores, from highest to lowest.
+私たちの製品所有者は、`/league`がプレーヤーをスコアの高い順に並べ替えることを望んでいます。
 
-The main decision to make here is where in the software should this happen. If we were using a "real" database we would use things like `ORDER BY` so the sorting is super fast. For that reason, it feels like implementations of `PlayerStore` should be responsible.
+ここでの主な決定は、ソフトウェアでこれが発生する場所です。「実際の」データベースを使用している場合は、「`ORDER BY`」のようなものを使用するので、ソートは超高速です。そのため、`PlayerStore`の実装に責任があるように思えます。
 
-## Write the test first
+## 最初にテストを書く
 
-We can update the assertion on our first test in `TestFileSystemStore`:
+`TestFileSystemStore`の最初のテストでアサーションを更新できます。
 
 ```go
 t.Run("league sorted", func(t *testing.T) {
@@ -1179,9 +1190,9 @@ t.Run("league sorted", func(t *testing.T) {
 })
 ```
 
-The order of the JSON coming in is in the wrong order and our `want` will check that it is returned to the caller in the correct order.
+入ってくるJSONの順序が間違っており、`want`が正しい順序で呼び出し元に返されることを確認します。
 
-## Try to run the test
+## テストを実行してみます
 
 ```text
 === RUN   TestFileSystemStore/league_from_a_reader,_sorted
@@ -1190,7 +1201,7 @@ The order of the JSON coming in is in the wrong order and our `want` will check 
         FileSystemStore_test.go:51: got [{Cleo 10} {Chris 33}] want [{Chris 33} {Cleo 10}]
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
 ```go
 func (f *FileSystemPlayerStore) GetLeague() League {
@@ -1203,30 +1214,30 @@ func (f *FileSystemPlayerStore) GetLeague() League {
 
 [`sort.Slice`](https://golang.org/pkg/sort/#Slice)
 
-> Slice sorts the provided slice given the provided less function.
+> Sliceは、提供されたless関数を指定して、提供されたスライスをソートします。
 
-Easy!
+かんたん！
 
-## Wrapping up
+## まとめ
 
-### What we've covered
+### 学んだこと
 
-* The `Seeker` interface and its relation to `Reader` and `Writer`.
-* Working with files.
-* Creating an easy to use helper for testing with files that hides all the messy stuff.
-* `sort.Slice` for sorting slices.
-* Using the compiler to help us safely make structural changes to the application.
+* `Seeker`インターフェースと、`Reader`および`Writer`との関係。
+* ファイルの操作。
+* すべての面倒なものを隠すファイルでテストするための使いやすいヘルパーを作成します。
+* スライスをソートするための`sort.Slice`。
+* コンパイラを使用して、アプリケーションの構造を安全に変更できるようにします。
 
-### Breaking rules
+### ルール違反
 
-* Most rules in software engineering aren't really rules, just best practices that work 80% of the time.
-* We discovered a scenario where one of our previous "rules" of not testing internal functions was not helpful for us so we broke the rule.
-* It's important when breaking rules to understand the trade-off you are making. In our case, we were ok with it because it was just one test and would've been very difficult to exercise the scenario otherwise.
-* In order to be able to break the rules **you must understand them first**. An analogy is with learning guitar. It doesn't matter how creative you think you are, you must understand and practice the fundamentals.
+* ソフトウェアエンジニアリングのほとんどのルールは実際にはルールではなく、80％の時間で機能するベストプラクティスにすぎません。
+* 内部関数をテストしないという以前の「ルール」の1つが役に立たないというシナリオを発見したため、ルールを破りました。
+* ルールを破るときは、自分のトレードオフを理解することが重要です。私たちの場合、それは1つのテストにすぎず、それ以外の場合はシナリオを実行することが非常に困難であったため、問題はありませんでした。
+* ルールを破ることができるようにするには、**最初にそれらを理解する必要があります**。例えはギターを学ぶことです。自分がどれほどクリエイティブであるかは関係ありません。基本を理解し、実践する必要があります。
 
-### Where our software is at
+### ソフトウェアのある場所
 
-* We have an HTTP API where you can create players and increment their score.
-* We can return a league of everyone's scores as JSON.
-* The data is persisted as a JSON file.
+* プレーヤーを作成してスコアを増やすことができるHTTP APIがあります。
+* 全員のスコアのリーグをJSONとして返すことができます。
+* データはJSONファイルとして永続化されます。
 
