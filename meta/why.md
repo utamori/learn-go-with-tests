@@ -4,98 +4,106 @@ description: Why unit tests and how to make them work for you
 
 # ユニットテスト機能を作成する方法
 
-[Here's a link to a video of me chatting about this topic](https://www.youtube.com/watch?v=Kwtit8ZEK7U)
+[この話題について雑談している私の動画へのリンクです](https://www.youtube.com/watch?v=Kwtit8ZEK7U)
 
-If you're not into videos, here's wordy version of it.
+動画が苦手な方はこちらの文章版。
 
-## Software
+## ソフトウェア
 
-The promise of software is that it can change. This is why it is called _soft_ ware, it is malleable compared to hardware. A great engineering team should be an amazing asset to a company, writing systems that can evolve with a business to keep delivering value.
+ソフトウェアの約束は、それが変化することができるということです。これがソフトウェアと呼ばれる理由です。優れたエンジニアリング・チームは、価値を提供し続けるために、ビジネスと共に進化できるシステムを書き、会社にとって素晴らしい資産となるはずです。
 
-So why are we so bad at it? How many projects do you hear about that outright fail? Or become "legacy" and have to be entirely re-written \(and the re-writes often fail too!\)
+では、なぜ私たちはそれが苦手なのでしょうか？あなたはどれだけのプロジェクトが失敗に終わったと聞いたことがありますか？あるいは、「レガシー」になってしまい、完全に書き直さなければならなくなってしまうこともあるでしょう。
 
-How does a software system "fail" anyway? Can't it just be changed until it's correct? That's what we're promised!
+ソフトウェアシステムはどうやって「失敗」するのでしょうか？正しくなるまで変更することはできないのか？それがお約束なんだよ！
 
-A lot of people are choosing Go to build systems because it has made a number of choices which one hopes will make it more legacy-proof.
+多くの人がシステムを構築するためにGoを選んでいるのは、それがよりレガシープルーフになることを望む多くの選択をしているからです。
 
-* Compared to my previous life of Scala where [I described how it has enough rope to hang yourself](http://www.quii.dev/Scala_-_Just_enough_rope_to_hang_yourself), Go has only 25 keywords and _a lot_ of systems can be built from the standard library and a few other small libraries. The hope is that with Go you can write code and come back to it in 6 months time and it'll still make sense.
-* The tooling in respect to testing, benchmarking, linting & shipping is first class compared to most alternatives.
-* The standard library is brilliant.
-* Very fast compilation speed for tight feedback loops
-* The Go backward compatibility promise. It looks like Go will get generics and other features in the future but the designers have promised that even Go code you wrote 5 years ago will still build. I literally spent weeks upgrading a project from Scala 2.8 to 2.10. 
+* 私の以前のScala生活では、[首を吊るのに十分なロープがあることを説明しました](http://www.quii.dev/Scala_-_Just_enough_rope_to_hang_yourself)と比較して、Goは25個のキーワードしかなく、標準ライブラリといくつかの小さなライブラリから多くのシステムを構築することができます。Goを使えば、半年後にコードを書いて戻ってきても、まだ意味のあるものになることを期待しています。
+* テスト、ベンチマーク、リント、出荷に関するツールは、他の多くの選択肢と比較しても一級品です。
+* 標準ライブラリは素晴らしいです。
+* タイトなフィードバックループのための非常に速いコンパイル速度
+* Goの下位互換性の約束。Goは将来的にジェネリックやその他の機能を手に入れるようですが、設計者は5年前に書いたGoのコードでもビルドできると約束しています。私は文字通り、プロジェクトをScala 2.8から2.10にアップグレードするのに数週間を費やしました。
 
-Even with all these great properties we can still make terrible systems, so we should look to the past and understand lessons in software engineering that apply no matter how shiny \(or not\) your language is.
+これだけの素晴らしい資産を持っていても、ひどいシステムを作ることができます。
 
-In 1974 a clever software engineer called [Manny Lehman](https://en.wikipedia.org/wiki/Manny_Lehman_%28computer_scientist%29) wrote [Lehman's laws of software evolution](https://en.wikipedia.org/wiki/Lehman%27s_laws_of_software_evolution).
+ということで、私たちは過去に目を向けて、あなたの言語がどれだけ輝いていても（あるいは輝いていなくても）適用されるソフトウェア工学の教訓を理解しなければなりません。
 
-> The laws describe a balance between forces driving new developments on one hand, and forces that slow down progress on the other hand.
+1974年、[Manny Lehman](https://en.wikipedia.org/wiki/Manny_Lehman_%28computer_scientist%29)という賢いソフトウェアエンジニアが[リーマンのソフトウェア進化の法則](https://en.wikipedia.org/wiki/Lehman%27s_laws_of_software_evolution)を書きました。
 
-These forces seem like important things to understand if we have any hope of not being in an endless cycle of shipping systems that turn into legacy and then get re-written over and over again.
+> この法則は、一方では新しい開発を推進する力と、他方では進歩を遅らせる力との間のバランスを記述している。
 
-## The Law of Continuous Change
+これらの力は、レガシーになって何度も何度も書き直されるシステムを出荷するという終わりのないサイクルに陥らないようにするためには、理解しておくべき重要なことのように思われます。
 
-> Any software system used in the real-world must change or become less and less useful in the environment
+## 継続的変化の法則
 
-It feels obvious that a system _has_ to change or it becomes less useful but how often is this ignored?
+> 実世界で使用されているソフトウェアシステムは、環境の中で変化したり、ますます有用でなくなったりしなければならない
 
-Many teams are incentivised to deliver a project on a particular date and then moved on to the next project. If the software is "lucky" there is at least some kind of hand-off to another set of individuals to maintain it, but they didn't write it of course.
+システムを変更しなければならないことは明白なように感じますが、それが無視されることはよくあることでしょうか？
 
-People often concern themselves with trying to pick a framework which will help them "deliver quickly" but not focusing on the longevity of the system in terms of how it needs to evolve.
+多くのチームは、プロジェクトを特定の期日までに完了させ、次のプロジェクトに移るようにインセンティブを与えられています。
 
-Even if you're an incredible software engineer, you will still fall victim to not knowing the future needs of your system. As the business changes some of the brilliant code you wrote is now no longer relevant.
+もしソフトウェアが「運が良ければ」、少なくとも何らかの形で別の個人にメンテナンスを任せることができますが、もちろん彼らはそれを書いたわけではありません。
 
-Lehman was on a roll in the 70s because he gave us another law to chew on.
+人々はしばしば、「迅速な納品」に役立つフレームワークを選ぶことに関心を持ちますが、システムがどのように進化する必要があるかという点では、システムの寿命に焦点を当てていません。
 
-## The Law of Increasing Complexity
+たとえあなたが素晴らしいソフトウェア・エンジニアであっても、システムの将来的なニーズを知らないために犠牲になることがあります。
+ビジネスが変化すると、あなたが書いた素晴らしいコードのいくつかは、もはや関連性がないものになってしまいます。
 
-> As a system evolves, its complexity increases unless work is done to reduce it
+リーマンは70年代に調子に乗っていましたが、彼は私たちに別の法則を与えてくれました。
 
-What he's saying here is we can't have software teams as blind feature factories, piling more and more features on to software in the hope it will survive in the long run.
+## 複雑さが増す法則
 
-We **have** to keep managing the complexity of the system as the knowledge of our domain changes.
+> システムが進化すると、それを減らすための作業が行われない限り、その複雑さは増加します。
 
-## Refactoring
+彼がここで言っているのは、ソフトウェアチームを盲目的な機能工場にすることはできないということです。
+ソフトウェアが長期的に生き残っていくことを願って、より多くの機能を積み上げていきます。
 
-There are _many_ facets of software engineering that keeps software malleable, such as:
+私たちは、私たちの領域の知識が変化するにつれて、システムの複雑さを管理し続けなければなりません。
 
-* Developer empowerment
-* Generally "good" code. Sensible separation of concerns, etc etc
-* Communication skills
-* Architecture
-* Observability
-* Deployability
-* Automated tests
-* Feedback loops
+## リファクタリング
 
-I am going to focus on refactoring. It's a phrase that gets thrown around a lot "we need to refactor this" - said to a developer on their first day of programming without a second thought.
+ソフトウェアエンジニアリングには、ソフトウェアの可鍛性を維持するために、以下のような多くの面があります。
 
-Where does the phrase come from? How is refactoring just different from writing code?
+* 開発者のエンパワーメント
+* 一般的に「良い」コード。懸念事項の賢明な分離など
+* コミュニケーション能力
+* 建築
+* 観測性
+* デプロイアビリティ
+* 自動化されたテスト
+* フィードバックループ
 
-I know that I and many others have _thought_ we were doing refactoring but we were mistaken
+今回はリファクタリングに焦点を当ててみたいと思います。これは「リファクタリングが必要だ」とよく言われるフレーズで、プログラミングを始めた初日に何気なく開発者に言われた言葉です。
 
-[Martin Fowler describes how people are getting it wrong](https://martinfowler.com/bliki/RefactoringMalapropism.html)
+このフレーズはどこから来たのでしょうか？リファクタリングはコードを書くこととどう違うのでしょうか？
 
-> However the term "refactoring" is often used when it's not appropriate. If somebody talks about a system being broken for a couple of days while they are refactoring, you can be pretty sure they are not refactoring.
+私や他の多くの人がリファクタリングをしていると思っていたことを知っていますが、それは間違いでした。
 
-So what is it?
+[マーティン・ファウラーは、人々がどのようにしてそれを間違っているかを説明しています](https://martinfowler.com/bliki/RefactoringMalapropism.html)
 
-### Factorisation
+> しかし、"リファクタリング "という言葉は、適切でない場合によく使われます。もし誰かがリファクタリングをしている間に、システムが数日壊れていると話していたら、彼らはリファクタリングをしていないと確信できるでしょう。
 
-When learning maths at school you probably learned about factorisation. Here's a very simple example
+では、リファクタリングとは何でしょうか？
 
-Calculate `1/2 + 1/4`
+### 因数分解
 
-To do this you _factorise_ the denominators, turning the expression into
+学校で数学を習っているとき、因数分解について学んだことがあるでしょう。とても簡単な例を挙げてみましょう。
 
-`2/4 + 1/4` which you can then turn into `3/4`.
+`1/2 + 1/4`を計算する
 
-We can take some important lessons from this. When we _factorise the expression_ we have **not changed the meaning of the expression**. Both of them equal `3/4` but we have made it easier for us to work with; by changing `1/2` to `2/4` it fits into our "domain" easier.
+これを行うには、分母を因数分解して式を
 
-When you refactor your code, you are trying to find ways of making your code easier to understand and "fit" into your current understanding of what the system needs to do. Crucially **you should not be changing behaviour**.
+`2/4 + 1/4`とすると、`3/4`になります。
 
-#### An example in Go
+このことからいくつかの重要な教訓を得ることができます。**式を因数分解するとき、式の意味は変えていません。**`1/2`を`2/4`に変更することで、`1/2`を`2/4`に変更することで、私たちの「ドメイン」にフィットしやすくなります。
 
-Here is a function which greets `name` in a particular `language`
+コードをリファクタリングするとき
+
+あなたは自分のコードをより理解しやすくし、システムが何をする必要があるかについての現在の理解に「適合」させる方法を見つけようとしています。重要なのは、**動作を変更してはいけないということです。**
+
+#### Goの例です。
+
+特定の`language`で`name`を迎える関数は以下の通りです。
 
 ```text
 func Hello(name, language string) string {
@@ -114,7 +122,7 @@ func Hello(name, language string) string {
 }
 ```
 
-Having dozens of `if` statements doesn't feel good and we have a duplication of concatenating a language specific greeting with `,` and the `name.` So I'll refactor the code.
+何十個もの`if`文を持つのは気分が悪いし、言語固有の挨拶を`,`と`name.`で連結するという重複があるので、コードをリファクタリングしてみます。
 
 ```text
 func Hello(name, language string) string {
@@ -142,29 +150,29 @@ func greeting(language string) string {
 }
 ```
 
-The nature of this refactor isn't actually important, what's important is I haven't changed behaviour.
+このリファクタリングの性質は実際には重要ではなく、重要なのは私が動作を変更していないことです。
 
-When refactoring you can do whatever you like, add interfaces, new types, functions, methods etc. The only rule is you don't change behaviour
+リファクタリングでは、インターフェースの追加、新しい型の追加、関数、メソッドの追加など、好きなことをすることができます。唯一のルールは、動作を変更しないことです。
 
-### When refactoring code you must not be changing behaviour
+### コードをリファクタリングする際には、挙動を変えてはいけません。
 
-This is very important. If you are changing behaviour at the same time you are doing _two_ things at once. As software engineers we learn to break systems up into different files/packages/functions/etc because we know trying to understand a big blob of stuff is hard.
+これはとても重要なことです。もしあなたが同時に行動を変えているのであれば、同時に二つのことをしていることになります。ソフトウェアエンジニアとして、私たちはシステムを別のファイル、パッケージ、機能などに分割することを学びます。
 
-We don't want to have to be thinking about lots of things at once because that's when we make mistakes. I've witnessed so many refactoring endeavours fail because the developers are biting off more than they can chew.
+一度にたくさんのことを考えなければならないのは、間違いを犯すときだからです。私は、多くのリファクタリングの試みが失敗に終わるのを目の当たりにしてきました。
 
-When I was doing factorisations in maths classes with pen and paper I would have to manually check that I hadn't changed the meaning of the expressions in my head. How do we know we aren't changing behaviour when refactoring when working with code, especially on a system that is non-trivial?
+数学の授業で因数分解を紙とペンでやっていたときは、頭の中の式の意味を変えていないかどうかを手動でチェックしなければなりませんでした。コードを扱うときにリファクタリングをするときに、特にトリビアルではないシステムでは、どのようにして挙動を変えていないことを知ることができるだろうか？
 
-Those who choose not to write tests will typically be reliant on manual testing. For anything other than a small project this will be a tremendous time-sink and does not scale in the long run.
+テストを書かないことを選択した人は、典型的には手動テストに依存することになります。小さなプロジェクト以外では、これはとてつもなく時間を浪費することになり、長期的にはスケールしません。
 
-**In order to safely refactor you need unit tests** because they provide
+**安全にリファクタリングを行うため**には、ユニットテストが必要です。
 
-* Confidence you can reshape code without worrying about changing behaviour
-* Documentation for humans as to how the system should behave
-* Much faster and more reliable feedback than manual testing
+* 挙動の変更を気にせずにコードをリシェイプできる自信がある
+* システムがどのように動作するかについての人間向けのドキュメント
+* 手動テストよりもはるかに速く、信頼性の高いフィードバック
 
-#### An example in Go
+#### Goでの例
 
-A unit test for our `Hello` function could look like this
+`Hello`関数のユニットテストは次のようになります。
 
 ```text
 func TestHello(t *testing.T) {
@@ -177,126 +185,131 @@ func TestHello(t *testing.T) {
 }
 ```
 
-At the command line I can run `go test` and get immediate feedback as to whether my refactoring efforts have altered behaviour. In practice it's best to learn the magic button to run your tests within your editor/IDE.
+コマンドラインで`go test`を実行して、リファクタリングの努力が挙動を変えたかどうかのフィードバックをすぐに得ることができます。
+実際には、エディタ/IDE内でテストを実行するための魔法のボタンを覚えるのがベストです。
 
-You want to get in to a state where you are doing
+以下のような状態にしたいと思います。
 
-* Small refactor
-* Run tests
-* Repeat
+* 小さなリファクタ
+* テストの実行
+* リピート
 
-All within a very tight feedback loop so you don't go down rabbit holes and make mistakes.
+すべてが非常にタイトなフィードバックループの中で行われるので、うさぎの穴に落ちてミスをすることはありません。
 
-Having a project where all your key behaviours are unit tested and give you feedback well under a second is a very empowering safety net to do bold refactoring when you need to. This helps us manage the incoming force of complexity that Lehman describes.
+すべての主要な動作がユニットテストされ、1秒以内にフィードバックが得られるプロジェクトを持つことは、必要なときに大胆なリファクタリングを行うための非常に強力なセーフティネットとなります。これは、Lehman氏が説明するような複雑さが押し寄せてくるのを管理するのに役立ちます。
 
-## If unit tests are so great, why is there sometimes resistance to writing them?
+## ユニットテストがそれほど素晴らしいものであるならば、なぜユニットテストを書くことに抵抗があるのでしょうか？
 
-On the one hand you have people \(like me\) saying that unit tests are important for the long term health of your system because they ensure you can keep refactoring with confidence.
+一方では、(私のように)ユニットテストはシステムの長期的な健全性を保つために重要だと言っている人がいます。
 
-On the other you have people describing experiences of unit tests actually _hindering_ refactoring.
+一方では、ユニットテストが実際にリファクタリングを妨げているという経験を述べている人がいます。
 
-Ask yourself, how often do you have to change your tests when refactoring? Over the years I have been on many projects with very good test coverage and yet the engineers are reluctant to refactor because of the perceived effort of changing tests.
+自問自答してみてください。リファクタリングを行う際に、どれくらいの頻度でテストを変更しなければならないのでしょうか？
+私は長年にわたり、非常に良いテストカバレッジを持つ多くのプロジェクトに参加してきましたが、エンジニアはテストを変更する労力を認識しているため、リファクタリングには消極的です。
 
-This is the opposite of what we are promised!
+これは私たちが約束していることとは正反対です。
 
-### Why is this happening?
+### なぜこんなことになったの？
 
-Imagine you were asked to develop a square and we thought the best way to accomplish that would be stick two triangles together.
+正方形の開発を依頼されて、それを達成するための最良の方法は、2つの三角形をくっつけることだと考えたとします。
 
-![Two right-angled triangles to form a square](https://i.imgur.com/ela7SVf.jpg)
+![直角三角形を2つくっつけて正方形を作る](https://i.imgur.com/ela7SVf.jpg)
 
-We write our unit tests around our square to make sure the sides are equal and then we write some tests around our triangles. We want to make sure our triangles render correctly so we assert that the angles sum up to 180 degrees, perhaps check we make 2 of them, etc etc. Test coverage is really important and writing these tests is pretty easy so why not?
+正方形の周りにユニットテストを書いて、辺が等しいことを確認し、三角形の周りにテストを書きます。三角形が正しく表示されることを確認したいので、角度の合計が180度であることを確認したり、2つの三角形を作成しているかどうかを確認したりします。テストのカバレッジは本当に重要で、これらのテストを書くのはとても簡単です。
 
-A few weeks later The Law of Continuous Change strikes our system and a new developer makes some changes. She now believes it would be better if squares were formed with 2 rectangles instead of 2 triangles.
+数週間後、「継続的変更の法則」がシステムを襲い、新しい開発者がいくつかの変更を行いました。彼女は、2つの三角形ではなく、2つの長方形で正方形を形成した方が良いと考えています。
 
-![Two rectangles to form a square](https://i.imgur.com/1G6rYqD.jpg)
+![2つの長方形で正方形を作る](https://i.imgur.com/1G6rYqD.jpg)
 
-She tries to do this refactor and gets mixed signals from a number of failing tests. Has she actually broken important behaviours here? She now has to dig through these triangle tests and try and understand what's going on.
+彼女はこのリファクタリングをしようとすると、いくつかの失敗したテストから複雑なシグナルを得ます。彼女は実際にここで重要な動作を壊してしまったのでしょうか？
+彼女は三角形のテストを掘り下げて、何が起こっているのかを理解しようとしなければなりません。
 
-_It's not actually important that the square was formed out of triangles_ but **our tests have falsely elevated the importance of our implementation details**.
+正方形が三角形から形成されたことは実際には重要ではありませんが、**あなたのテストは実装の詳細の重要性を不当に高めています**。
 
-## Favour testing behaviour rather than implementation detail
+## 実装の詳細よりもテストの振る舞いを優先する
 
-When I hear people complaining about unit tests it is often because the tests are at the wrong abstraction level. They're testing implementation details, overly spying on collaborators and mocking too much.
+ユニットテストについて文句を言う人の話を聞くと、それはテストの抽象化レベルが間違っているからだということがよくあります。彼らは、実装の詳細をテストしたり、共同作業者を過度にスパイしたり、過剰にコケにしたりしています。
 
-I believe it stems from a misunderstanding of what unit tests are and chasing vanity metrics \(test coverage\).
+私は、ユニットテストとは何かを誤解して、虚栄心を煽ったメトリクス（テストカバレッジ）を追いかけていることに起因すると考えています。
 
-If I am saying just test behaviour, should we not just only write system/black-box tests? These kind of tests do have lots of value in terms of verifying key user journeys but they are typically expensive to write and slow to run. For that reason they're not too helpful for _refactoring_ because the feedback loop is slow. In addition black box tests don't tend to help you very much with root causes compared to unit tests.
+もし私がテストの振る舞いだけを言っているのであれば、システム/ブラックボックステストだけを書くべきではないでしょうか？この種のテストはキーとなるユーザージャーニーを検証するという点で多くの価値を持っているが、一般的に書くのにはコストがかかり、実行にも時間がかかる。
 
-So what _is_ the right abstraction level?
+そのため、フィードバックループが遅いため、リファクタリングにはあまり役に立ちません。さらに、ブラックボックステストは、ユニットテストと比較して根本原因についてはあまり役に立たない傾向があります。
 
-## Writing effective unit tests is a design problem
+では、正しい抽象化レベルとは何でしょうか?
 
-Forgetting about tests for a moment, it is desirable to have within your system self-contained, decoupled "units" centered around key concepts in your domain.
+## 効果的なユニットテストを書くことは設計上の問題です。
 
-I like to imagine these units as simple Lego bricks which have coherent APIs that I can combine with other bricks to make bigger systems. Underneath these APIs there could be dozens of things \(types, functions et al\) collaborating to make them work how they need to.
+テストのことはちょっと忘れて、システム内には、ドメイン内の重要な概念を中心とした、自己完結的で分離された「ユニット」があることが望ましいです。
 
-For instance if you were writing a bank in Go, you might have an "account" package. It will present an API that does not leak implementation detail and is easy to integrate with.
+私は、これらのユニットを単純なレゴブロックのように想像したいのですが、このレゴブロックには首尾一貫した API があり、他のブロックと組み合わせてより大きなシステムを作ることができます。これらのAPIの下には、何十ものもの（型や関数など）があり、それらが必要なように動作するように連携している可能性があります。
 
-If you have these units that follow these properties you can write unit tests against their public APIs. _By definition_ these tests can only be testing useful behaviour. Underneath these units I am free to refactor the implementation as much as I need to and the tests for the most part should not get in the way.
+例えば、Goで銀行を書いている場合、"account"パッケージがあるかもしれません。これは、実装の詳細を漏らさず、統合しやすいAPIを提供します。
 
-### Are these unit tests?
+これらのプロパティに従ったユニットがあれば、それらの公開APIに対してユニットテストを書くことができます。定義により、これらのテストは有用な動作のみをテストすることができます。
+これらのユニットの下では、必要に応じて実装を自由にリファクタリングすることができますし、ほとんどの部分でテストが邪魔になることはありません。
 
-**YES**. Unit tests are against "units" like I described. They were _never_ about only being against a single class/function/whatever.
+### これらはユニットテストですか？
 
-## Bringing these concepts together
+**はい**です。ユニットテストは、私が説明したように「ユニット」に対して行われます。ユニットテストは、単一のクラス/関数/何かに対してのみ行われるものではありません。
 
-We've covered
+## これらの概念を一緒にする
 
-* Refactoring
-* Unit tests
-* Unit design
+私たちはカバーしてきました
 
-What we can start to see is that these facets of software design reinforce each other.
+* リファクタリング
+* ユニットテスト
+* ユニット設計
 
-### Refactoring
+このように、ソフトウェア設計のこれらの側面は互いに強化し合っていることがわかります。
 
-* Gives us signals about our unit tests. If we have to do manual checks, we need more tests. If tests are wrongly failing then our tests are at the wrong abstraction level \(or have no value and should be deleted\).
-* Helps us handle the complexities within and between our units.
+### リファクタリング
 
-### Unit tests
+* ユニットテストについてのシグナルを提供してくれます。手動チェックをしなければならないなら、より多くのテストが必要です。テストが間違って失敗している場合、テストは間違った抽象化レベルにあります(または、価値がないので削除されるべきです)。
+* ユニット内とユニット間の複雑さを処理するのに役立ちます。
 
-* Give a safety net to refactor.
-* Verify and document the behaviour of our units.
+### ユニットテスト
 
-### \(Well designed\) units
+* リファクタリングのためのセーフティネットを提供する。
+* ユニットの動作を検証し、文書化する。
 
-* Easy to write _meaningful_ unit tests.
-* Easy to refactor.
+### (よく設計された)ユニット
 
-Is there a process to help us arrive at a point where we can constantly refactor our code to manage complexity and keep our systems malleable?
+* 意味のあるユニットテストを簡単に書ける。
+* リファクタリングが簡単。
 
-## Why Test Driven Development \(TDD\)
+複雑さを管理し、システムを柔軟に保つために、コードを常にリファクタリングできるようなポイントに到達するのを助けるプロセスはありますか？
 
-Some people might take Lehman's quotes about how software has to change and overthink elaborate designs, wasting lots of time upfront trying to create the "perfect" extensible system and end up getting it wrong and going nowhere.
+## なぜテスト駆動開発(TDD)なのか？
 
-This is the bad old days of software where an analyst team would spend 6 months writing a requirements document and an architect team would spend another 6 months coming up with a design and a few years later the whole project fails.
+ソフトウェアは変化しなければならず、精巧な設計を考えすぎて、「完璧な」拡張性のあるシステムを作ろうとして多くの時間を無駄にしてしまい、結果的にそれが間違っていてどこにも進まないというリーマンの名言を鵜呑みにする人もいるかもしれません。
 
-I say bad old days but this still happens!
+これは昔のソフトウェアの悪い時代の話で、アナリストチームが半年間かけて要件書を書き、アーキテクトチームがさらに半年間かけて設計を考え、数年後にはプロジェクト全体が失敗してしまうというものです。
 
-Agile teaches us that we need to work iteratively, starting small and evolving the software so that we get fast feedback on the design of our software and how it works with real users; TDD enforces this approach.
+私は「昔は悪かった」と言っていますが、このようなことは今でも起こっています。
 
-TDD addresses the laws that Lehman talks about and other lessons hard learned through history by encouraging a methodology of constantly refactoring and delivering iteratively.
+アジャイルでは、ソフトウェアの設計と実際のユーザーとの間でどのように動作するかについての迅速なフィードバックを得るために、小さく始めてソフトウェアを進化させ、反復的に作業する必要があることを教えてくれます。
 
-### Small steps
+TDD はこのアプローチを強制します。TDD は、常にリファクタリングを行い、反復的に納品する方法論を奨励することで、リーマンが語った法則や、歴史の中で学んだその他の教訓に対応しています。
 
-* Write a small test for a small amount of desired behaviour
-* Check the test fails with a clear error \(red\)
-* Write the minimal amount of code to make the test pass \(green\)
-* Refactor
-* Repeat
+### 小さな一歩を踏み出す
 
-As you become proficient, this way of working will become natural and fast.
+* 少量の望ましい動作のための小さなテストを書く
+* クリアエラー（赤）でテストが失敗したことを確認してください。
+* テストを通過させるための最小限のコードを書く（緑）。
+* リファクタリング
+* リピート
 
-You'll come to expect this feedback loop to not take very long and feel uneasy if you're in a state where the system isn't "green" because it indicates you may be down a rabbit hole.
+熟練してくると、この働き方が自然と早くなってきます。
 
-You'll always be driving small & useful functionality comfortably backed by the feedback from your tests.
+このフィードバックループにそれほど時間がかからないことを期待するようになり、システムが「緑」ではない状態になると、ウサギの穴に落ちているかもしれないという不安を感じるようになります。
 
-## Wrapping up
+テストのフィードバックに裏打ちされた、小さくて便利な機能を常に快適に走らせることができるようになります。
 
-* The strength of software is that we can change it. _Most_ software will require change over time in unpredictable ways; but don't try and over-engineer because it's too hard to predict the future.
-* Instead we need to make it so we can keep our software malleable. In order to change software we have to refactor it as it evolves or it will turn into a mess
-* A good test suite can help you refactor quicker and in a less stressful manner
-* Writing good unit tests is a design problem so think about structuring your code so you have meaningful units that you can integrate together like Lego bricks.
-* TDD can help and force you to design well factored software iteratively, backed by tests to help future work as it arrives.
+## まとめ
 
+* ソフトウェアの強みは、我々がそれを変えることができるということです。ほとんどのソフトウェアは、予測不可能な方法で時間の経過とともに変化を必要とします。しかし、将来を予測するのはあまりにも難しいので、過剰なエンジニアリングはしないでください。
+* しかし、将来を予測するのはあまりにも難しいので、オーバーエンジニアリングをしようとしないでください。ソフトウェアを変更するためには、進化に合わせてリファクタリングしなければなりません。
+* 良いテストスイートは、リファクタリングを迅速かつストレスの少ない方法で行うことができます。
+* 良いユニットテストを書くことは設計上の問題なので、レゴブロックのように統合できる意味のあるユニットを持つようにコードを構造化することを考えてください。
+* テスト駆動開発(TDD)は、テストに裏打ちされた十分なファクトリー・ソフトウェアを反復的に設計するのに役立ちますし、強制的に設計することができます。
