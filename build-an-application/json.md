@@ -183,7 +183,7 @@ func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 これでテストはパスするはずです。
 
-## リファクタリング
+## リファクタリング♪
 
 `ServeHTTP`はかなり大きく見えます。ハンドラを別のメソッドにリファクタリングすることで、物事を少し分離することができます。
 
@@ -421,7 +421,7 @@ func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
 
 この本を通して、`io.Writer`を使用しました。これは、標準ライブラリでの普及と、多くのライブラリが簡単に動作することを示すもう1つのデモです。
 
-## リファクタリング
+## リファクタリング♪
 
 ハンドラーと`leagueTable`を取得することの間に懸念の分離を導入すると、すぐにはハードコードしないことになるので便利です。
 
@@ -579,7 +579,7 @@ func (i *InMemoryPlayerStore) GetLeague() []Player {
 
 テストを試して実行すると、コンパイラーはパスし、テストはパスするはずです！
 
-## リファクタリング
+## リファクタリング♪
 
 テストコードは意図をうまく伝えておらず、リファクタリングできる定型文がたくさんあります。
 
@@ -665,7 +665,7 @@ func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
 
 テストは成功するはずです。
 
-## リファクタリング
+## リファクタリング♪
 
 `assertContentType`のヘルパーを追加します。
 

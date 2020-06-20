@@ -255,7 +255,7 @@ func PlayerServer(w http.ResponseWriter, r *http.Request) {
 
 `r.URL.Path`はリクエストのパスを返すので、[`strings.TrimPrefix`](https://golang.org/pkg/strings/#TrimPrefix)を使用して、 `/players/`を削除します。要求されたプレーヤーを取得します。それほど堅牢ではありませんが、とりあえずはうまくいくでしょう。
 
-## リファクタリング
+## リファクタリング♪
 
 スコアの取得を関数に分離することで、`PlayerServer`を簡略化できます
 
@@ -690,7 +690,7 @@ func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-## リファクタリング
+## リファクタリング♪
 
 ハンドラーは少し混乱しています。コードを分割して、さまざまな機能を簡単に追跡して分離し、新しい機能に分離しましょう。
 
@@ -886,7 +886,7 @@ func (p *PlayerServer) processWin(w http.ResponseWriter, r *http.Request) {
 
 `processWin`を`http.Request`に変更して、URLを見てプレーヤーの名前を抽出できるようにしました。それができたら、正しい値で`store`を呼び出してテストに合格することができます。
 
-## リファクタリング
+## リファクタリング♪
 
 2つの場所で同じ方法でプレイヤー名を抽出しているので、このコードを少しDRYにすることができます。
 
@@ -1029,7 +1029,7 @@ func main() {
 * 統合テストに接続し、問題がないことを確認します
 * 最後に`main`に接続します
 
-## リファクタリング
+## リファクタリング♪
 
 私たちは、ほぼ、そこにいる！このような同時実行エラーを防ぐために少し努力しましょう
 

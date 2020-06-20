@@ -394,7 +394,7 @@ func (f *FileSystemPlayerStore) GetPlayerScore(name string) int {
 }
 ```
 
-## リファクタリング
+## リファクタリング♪
 
 何十ものテストヘルパーリファクタリングを確認したので、これを機能させるためにこれをあなたにお任せします。
 
@@ -582,7 +582,7 @@ func (f *FileSystemPlayerStore) RecordWin(name string) {
 
 テストを実行すると、テストは成功するはずです。
 
-## リファクタリング
+## リファクタリング♪
 
 `GetPlayerScore`と`RecordWin`では、名前でプレーヤーを見つけるために`[] Player`を繰り返し処理しています。
 
@@ -1109,7 +1109,7 @@ func NewFileSystemPlayerStore(file *os.File) (*FileSystemPlayerStore, error) {
 
 `file.Stat`はファイルの統計を返し、ファイルのサイズを確認できます。空の場合は、空のJSON配列を`Write`、`Seek`を最初に戻して、残りのコードの準備をします。
 
-## リファクタリング
+## リファクタリング♪
 
 コンストラクターは少し面倒なので、初期化コードを関数に抽出してみましょう。
 

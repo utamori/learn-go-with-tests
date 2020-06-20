@@ -182,7 +182,7 @@ PASS
 ok      github.com/gypsydave5/learn-go-with-tests/math/v1/clockface    0.006s
 ```
 
-### リファクタリング
+### リファクタリング♪
 
 まだリファクタリングする必要はありません。コードはほとんどありません！
 
@@ -326,7 +326,7 @@ PASS
 ok      github.com/gypsydave5/learn-go-with-tests/math/v2/clockface    0.011s
 ```
 
-### リファクタリング
+### リファクタリング♪
 
 まだリファクタリングは必要ありません。
 
@@ -634,7 +634,7 @@ PASS
 ok      github.com/gypsydave5/learn-go-with-tests/math/v4/clockface    0.007s
 ```
 
-### リファクタリング
+### リファクタリング♪
 
 これでもかなり満足しています。
 
@@ -700,7 +700,7 @@ PASS
 ok      github.com/gypsydave5/learn-go-with-tests/math/v5/clockface    0.007s
 ```
 
-### リファクタリング
+### リファクタリング♪
 
 ここに定数として取り出されるべきいくつかの魔法の数字があるので、それをやってみましょう
 
@@ -796,7 +796,7 @@ go build
 
 ![秒針のみの時計](../.gitbook/assets/clock%20%281%29.svg)
 
-### リファクタリング
+### リファクタリング♪
 
 これは臭い。まあ、それはまったく悪臭はしませんが、私はそれについて満足していません。
 
@@ -1013,7 +1013,7 @@ func main() {
 
 そして、同じパターンに従って別の時間のテストを書くことができますが、前にはできません...
 
-### リファクタリング
+### リファクタリング♪
 
 3つのことが突き出ています。
 
@@ -1416,7 +1416,7 @@ PASS
 ok      github.com/gypsydave5/learn-go-with-tests/math/v9/clockface    0.009s
 ```
 
-### リファクタリング
+### リファクタリング♪
 
 `minuteHandPoint`と` secondHandPoint`には間違いなく少し繰り返しがあります。一方をコピーして貼り付け、もう一方を作成したためです。関数で乾かしてみましょう。
 
@@ -1475,7 +1475,7 @@ But the proof of the pudding is in the eating.
 
 ![秒針と分針のある時計](../.gitbook/assets/clock%20%282%29.svg)
 
-### リファクタリング
+### リファクタリング♪
 
 `secondHand`関数と`minuteHand`関数から重複を取り除き、そのすべてのスケール、フリップ、および変換をすべて1つの場所に配置します。
 
@@ -1776,7 +1776,7 @@ PASS
 ok      github.com/gypsydave5/learn-go-with-tests/math/v10/clockface    0.007s
 ```
 
-### リファクタリング
+### リファクタリング♪
 
 ラジアンテストの _one_ で`roughlyEqualFloat64`を使用する場合、それらの _all_ に使用する必要があります。それは素晴らしくて単純なリファクタリングです。
 
@@ -1933,7 +1933,7 @@ ok      github.com/gypsydave5/learn-go-with-tests/math/v12/clockface    0.007s
 
 ![時計](../.gitbook/assets/clock.svg)
 
-### リファクタリング
+### リファクタリング♪
 
 `clockface.go`を見ると、いくつかの「マジックナンバー」が浮かんでいます。これらはすべて、文字盤を中心に半回転する時間/分/秒に基づいています。
 リファクタリングして、意味を明確にしましょう。
