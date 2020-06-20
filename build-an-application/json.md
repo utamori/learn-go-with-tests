@@ -4,7 +4,7 @@ description: 'JSON, routing and embedding'
 
 # JSON、ルーティング、埋め込み
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/json)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/json)
 
 [前の章](http-server.md) プレイヤーが勝ったゲームの数を保存するWebサーバーを作成しました。
 

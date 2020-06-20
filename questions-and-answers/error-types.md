@@ -4,7 +4,7 @@ description: Error types
 
 # エラーの種類
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/q-and-a/error-types)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/q-and-a/error-types)
 
 **エラー用に独自のタイプを作成することは、コードを整頓し、コードを使いやすくテストするための洗練された方法になる場合があります。**
 

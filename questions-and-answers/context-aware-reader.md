@@ -4,7 +4,7 @@ description: Context-aware Reader
 
 # コンテキスト認識リーダー
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/q-and-a/context-aware-reader)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/q-and-a/context-aware-reader)
 
 この章では、_Mat・Ryer_ と _David・Hernandez_ が [The Pace Dev Blog](https://pace.dev/blog/2020/02/03/context-aware-ioreader-for-golang-by-mat-ryer)で書いた、コンテキストを意識した`io.Reader`をテストドライブする方法を示します。
 

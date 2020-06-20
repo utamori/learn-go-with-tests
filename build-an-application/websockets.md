@@ -4,7 +4,7 @@ description: WebSockets
 
 # ウェブソケット
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/websockets)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/websockets)
 
 この章では、アプリケーションを改善するためにWebSocketを使用する方法を学びます。
 

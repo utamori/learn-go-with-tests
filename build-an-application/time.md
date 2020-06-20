@@ -4,7 +4,7 @@ description: Time
 
 # 時間
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/time)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/time)
 
 製品の所有者は、[テキサス・ホールデム・ポーカー](https://ja.wikipedia.org/wiki/%E3%83%86%E3%82%AD%E3%82%B5%E3%82%B9%E3%83%BB%E3%83%9B%E3%83%BC%E3%83%AB%E3%83%87%E3%83%A0)をプレイする人々のグループを支援することで、コマンドラインアプリケーションの機能を拡張することを望んでいます。
 

@@ -4,7 +4,7 @@ description: OS Exec
 
 # OS実行
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/q-and-a/os-exec)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/q-and-a/os-exec)
 
 [keith6014](https://www.reddit.com/user/keith6014)が[reddit](https://www.reddit.com/r/golang/comments/aaz8ji/testdata_and_function_setup_help/)で質問する
 

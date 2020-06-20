@@ -4,7 +4,7 @@ description: IO and sorting
 
 # IO、並び替え
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/io)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/io)
 
 [前の章](json.md) 新しいエンドポイント `/league`を追加することで、アプリケーションを繰り返し続けました。途中で、JSONの処理方法、埋め込みタイプ、ルーティングについて学習しました。
 

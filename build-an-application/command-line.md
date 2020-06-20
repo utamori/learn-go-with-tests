@@ -4,7 +4,7 @@ description: Command line & package structure
 
 # コマンドライン、パッケージ構造
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/command-line)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/command-line)
 
 私たちの製品の所有者は、2つ目のアプリケーション（コマンドラインアプリケーション）を導入することで _pivot_ を実行したいと考えています。
 
