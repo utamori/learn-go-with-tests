@@ -4,48 +4,50 @@ description: WebSockets
 
 # ウェブソケット
 
-[**You can find all the code for this chapter here**](https://github.com/quii/learn-go-with-tests/tree/master/websockets)
+[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/websockets)
 
-In this chapter we'll learn how to use WebSockets to improve our application.
+この章では、アプリケーションを改善するためにWebSocketを使用する方法を学びます。
 
-## Project recap
+## プロジェクトの要約
 
-We have two applications in our poker codebase
+ポーカーコードベースには2つのアプリケーションがあります
 
-* _Command line app_. Prompts the user to enter the number of players in a game. From then on informs the players of what the "blind bet" value is, which increases over time. At any point a user can enter `"{Playername} wins"` to finish the game and record the victor in a store.
-* _Web app_. Allows users to record winners of games and displays a league table. Shares the same store as the command line app. 
+* _コマンドラインアプリ_。ゲームのプレーヤー数を入力するようにユーザーに求めます。それ以降は、「ブラインドベット」の値が何であるかをプレイヤーに知らせます。ユーザーはいつでも`" {Playername} wins"`を入力してゲームを終了し、ストアに勝利者を記録できます。
+* _Webアプリ_。ユーザーがゲームの勝者を記録し、リーグテーブルを表示できるようにします。コマンドラインアプリと同じストアを共有します。
 
-## Next steps
+## 次のステップ
 
-The product owner is thrilled with the command line application but would prefer it if we could bring that functionality to the browser. She imagines a web page with a text box that allows the user to enter the number of players and when they submit the form the page displays the blind value and automatically updates it when appropriate. Like the command line application the user can declare the winner and it'll get saved in the database.
+製品の所有者はコマンドラインアプリケーションに興奮していますが、ブラウザーにその機能を提供できればそれを好むでしょう。彼女は、ユーザーがプレーヤーの数を入力できるテキストボックスを備えたWebページを想像し、ユーザーがフォームを送信すると、ページにブラインド値が表示され、必要に応じて自動的に更新されます。コマンドラインアプリケーションと同様に、ユーザーは勝者を宣言でき、データベースに保存されます。
 
-On the face of it, it sounds quite simple but as always we must emphasise taking an _iterative_ approach to writing software.
+一見、それは非常に単純に聞こえますが、いつものように、ソフトウェアを書くために反復的アプローチを取ることを強調しなければなりません。
 
-First of all we will need to serve HTML. So far all of our HTTP endpoints have returned either plaintext or JSON. We _could_ use the same techniques we know \(as they're all ultimately strings\) but we can also use the [html/template](https://golang.org/pkg/html/template/) package for a cleaner solution.
+まず、HTMLを提供する必要があります。
+これまでのところ、すべてのHTTPエンドポイントはプレーンテキストまたはJSONを返しています。（最終的にはすべて文字列なので）知っているのと同じ手法を使用できますが、よりクリーンな[html/template](https://golang.org/pkg/html/template/)パッケージを使用することもできます解決。
 
-We also need to be able to asynchronously send messages to the user saying `The blind is now *y*` without having to refresh the browser. We can use [WebSockets](https://en.wikipedia.org/wiki/WebSocket) to facilitate this.
+また、ブラウザーを更新せずに、「`ブラインドが *y* になりました`」というメッセージを非同期でユーザーに送信できる必要もあります。これを容易にするために、[WebSockets](https://en.wikipedia.org/wiki/WebSocket)を使用できます。
 
-> WebSocket is a computer communications protocol, providing full-duplex communication channels over a single TCP connection
+> WebSocketはコンピューター通信プロトコルであり、単一のTCP接続で全二重通信チャネルを提供します。
 
-Given we are taking on a number of techniques it's even more important we do the smallest amount of useful work possible first and then iterate.
+多くの手法を採用しているため、最初に可能な限り最小限の有用な作業を行ってから繰り返すことがさらに重要です。
 
-For that reason the first thing we'll do is create a web page with a form for the user to record a winner. Rather than using a plain form, we will use WebSockets to send that data to our server for it to record.
+そのため、最初に行うことは、ユーザーが勝者を記録するためのフォームを含むWebページを作成することです。
+プレーンフォームを使用するのではなく、WebSocketを使用して、そのデータをサーバーに送信して記録します。
 
-After that we'll work on the blind alerts by which point we will have a bit of infrastructure code set up.
+その後、ブラインドアラートに取り組みます。
+その時点で、インフラストラクチャコードが少し設定されます。
 
-### What about tests for the JavaScript ?
+### JavaScriptのテストについてはどうですか？
 
-There will be some JavaScript written to do this but I won't go in to writing tests.
+これを行うために記述されたJavaScriptがいくつかありますが、テストの記述まで行いません。
 
-It is of course possible but for the sake of brevity I won't be including any explanations for it.
+ごめんなさい。
+O'Reillyに「テストでJavaScriptを学ぶ」を作ってくれるようにロビーをお願いします。
 
-Sorry folks. Lobby O'Reilly to pay me to make a "Learn JavaScript with tests".
+## 最初にテストを書く
 
-## Write the test first
+まず、ユーザーが「`/game`」を押したときにHTMLを提供する必要があります。
 
-First thing we need to do is serve up some HTML to users when they hit `/game`.
-
-Here's a reminder of the pertinent code in our web server
+ここに私たちのウェブサーバーの関連コードのリマインダーがあります。
 
 ```go
 type PlayerServer struct {
@@ -70,7 +72,7 @@ func NewPlayerServer(store PlayerStore) *PlayerServer {
 }
 ```
 
-The _easiest_ thing we can do for now is check when we `GET /game` that we get a `200`.
+ここでできる最も簡単なことは、「`GET /game`」を実行したときに「`200`」が得られることを確認することです。
 
 ```go
 func TestGame(t *testing.T) {
@@ -87,7 +89,7 @@ func TestGame(t *testing.T) {
 }
 ```
 
-## Try to run the test
+## テストを実行してみます
 
 ```text
 --- FAIL: TestGame (0.00s)
@@ -96,17 +98,17 @@ func TestGame(t *testing.T) {
         server_test.go:109: did not get correct status, got 404, want 200
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
-Our server has a router setup so it's relatively easy to fix.
+私たちのサーバーにはルーターの設定があるので、修正は比較的簡単です。
 
-To our router add
+私たちのルーターに追加します。
 
 ```go
 router.Handle("/game", http.HandlerFunc(p.game))
 ```
 
-And then write the `game` method
+そして`game`メソッドを書きます
 
 ```go
 func (p *PlayerServer) game(w http.ResponseWriter, r *http.Request) {
@@ -114,11 +116,11 @@ func (p *PlayerServer) game(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-## Refactor
+## リファクタリング
 
-The server code is already fine due to us slotting in more code into the existing well-factored code very easily.
+サーバーコードは、既存の適切に因数分解されたコードに非常に簡単にコードを追加できるため、既に問題ありません。
 
-We can tidy up the test a little by adding a test helper function `newGameRequest` to make the request to `/game`. Try writing this yourself.
+`/game`にリクエストを送信するためのテストヘルパー関数`newGameRequest`を追加することで、テストを少し片付けることができます。これを自分で書いてみてください。
 
 ```go
 func TestGame(t *testing.T) {
@@ -135,9 +137,9 @@ func TestGame(t *testing.T) {
 }
 ```
 
-You'll also notice I changed `assertStatus` to accept `response` rather than `response.Code` as I feel it reads better.
+また、「`assertStatus`」を変更して、「`response.Code`」ではなく「`response`」を受け入れるように変更しました。
 
-Now we need to make the endpoint return some HTML, here it is
+次に、エンドポイントにHTMLを返すようにする必要があります。
 
 ```markup
 <!DOCTYPE html>
@@ -171,27 +173,27 @@ Now we need to make the endpoint return some HTML, here it is
 </html>
 ```
 
-We have a very simple web page
+とてもシンプルなウェブページがあります。
 
-* A text input for the user to enter the winner into
-* A button they can click to declare the winner. 
-* Some JavaScript to open a WebSocket connection to our server and handle the submit button being pressed
+* ユーザーが勝者を入力するためのテキスト入力
+* 彼らが勝者を宣言するためにクリックできるボタン。
+* サーバーへのWebSocket接続を開き、送信ボタンが押されたときに処理するためのJavaScriptをいくつか用意しました。
 
-`WebSocket` is built into most modern browsers so we don't need to worry about bringing in any libraries. The web page won't work for older browsers, but we're ok with that for this scenario.
+`WebSocket`はほとんどの最新のブラウザーに組み込まれているので、ライブラリーの持ち込みについて心配する必要はありません。 Webページは古いブラウザーでは機能しませんが、このシナリオではそれで問題ありません。
 
-### How do we test we return the correct markup?
+### 正しいマークアップを返すことをテストするにはどうすればよいですか？
 
-There are a few ways. As has been emphasised throughout the book, it is important that the tests you write have sufficient value to justify the cost.
+いくつかの方法があります。本全体を通して強調されているように、あなたが書くテストはコストを正当化するのに十分な価値を持つことが重要です。
 
-1. Write a browser based test, using something like Selenium. These tests are the most "realistic" of all approaches because they start an actual web browser of some kind and simulates a user interacting with it. These tests can give you a lot of confidence your system works but are more difficult to write than unit tests and much slower to run. For the purposes of our product this is overkill.
-2. Do an exact string match. This _can_ be ok but these kind of tests end up being very brittle. The moment someone changes the markup you will have a test failing when in practice nothing has _actually broken_.
-3. Check we call the correct template. We will be using a templating library from the standard lib to serve the HTML \(discussed shortly\) and we could inject in the _thing_ to generate the HTML and spy on its call to check we're doing it right. This would have an impact on our code's design but doesn't actually test a great deal; other than we're calling it with the correct template file. Given we will only have the one template in our project the chance of failure here seems low. 
+1. Seleniumなどを使用して、ブラウザベースのテストを記述します。これらのテストは、ある種の実際のWebブラウザーを起動して、ユーザーとの対話をシミュレートするため、すべてのアプローチの中で最も「現実的な」ものです。これらのテストは、システムの動作に大きな自信を与えることができますが、単体テストよりも作成が難しく、実行速度がはるかに遅くなります。私たちの製品の目的上、これはやりすぎです。
+2. 文字列を完全に一致させます。これは大丈夫ですが、この種のテストは非常に壊れやすくなります。誰かがマークアップを変更した瞬間に、実際には何も実際に壊れていない場合、テストは失敗します。
+3. 正しいテンプレートを呼び出すことを確認します。標準のlibのテンプレートライブラリを使用してHTMLを提供します（すぐに説明します）。_thing_ を挿入してHTMLを生成し、その呼び出しをスパイして、正しく実行されていることを確認できます。これはコードの設計に影響を与えますが、実際にはあまりテストしていません。正しいテンプレートファイルを使用して呼び出す場合を除きます。プロジェクトにはテンプレートが1つしかないため、ここで失敗する可能性は低いようです。
 
-So in the book "Learn Go with Tests" for the first time, we're not going to write a test.
+そこで、「テスト駆動開発でGO言語を学びましょう」というサイトの中で、初めてテストを書くことになります。
 
-Put the markup in a file called `game.html`
+マークアップを「`game.html`」というファイルに入れます
 
-Next change the endpoint we just wrote to the following
+次に、先ほど書き込んだエンドポイントを次のように変更します
 
 ```go
 func (p *PlayerServer) game(w http.ResponseWriter, r *http.Request) {
@@ -206,23 +208,25 @@ func (p *PlayerServer) game(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-[`html/template`](https://golang.org/pkg/html/template/) is a Go package for creating HTML. In our case we call `template.ParseFiles`, giving the path of our html file. Assuming there is no error you can then `Execute` the template, which writes it to an `io.Writer`. In our case we want it to `Write` to the internet, so we give it our `http.ResponseWriter`.
+[`html/template`](https://golang.org/pkg/html/template/)は、HTMLを作成するためのGoパッケージです。
+私たちの場合、`template.ParseFiles`を呼び出して、htmlファイルのパスを指定します。
+エラーがなければ、テンプレートを「実行`Execute`」して、それを「`io.Writer`」に書き込みます。この例では、インターネットに「書き込み`Write`」したいので、「`http.ResponseWriter`」を指定します。
 
-As we have not written a test, it would be prudent to manually test our web server just to make sure things are working as we'd hope. Go to `cmd/webserver` and run the `main.go` file. Visit `http://localhost:5000/game`.
+テストを作成していないので、希望どおりに機能していることを確認するためだけにWebサーバーを手動でテストするのが賢明です。 `cmd/webserver`に移動し、`main.go`ファイルを実行します。`http://localhost:5000/game`にアクセスしてください。
 
-You _should_ have got an error about not being able to find the template. You can either change the path to be relative to your folder, or you can have a copy of the `game.html` in the `cmd/webserver` directory. I chose to create a symlink \(`ln -s ../../game.html game.html`\) to the file inside the root of the project so if I make changes they are reflected when running the server.
+テンプレートが見つからないというエラーが発生するはずです。フォルダーに相対的なパスに変更するか、`cmd/webserver`ディレクトリに`game.html`のコピーを置くことができます。プロジェクトのルート内のファイルへのシンボリックリンク（`ln -s ../../game.html game.html`）を作成することを選択したので、変更を加えると、サーバーの実行時に変更が反映されます。
 
-If you make this change and run again you should see our UI.
+この変更を加えて再度実行すると、UIが表示されます。
 
-Now we need to test that when we get a string over a WebSocket connection to our server that we declare it as a winner of a game.
+次に、サーバーへのWebSocket接続を介して文字列を取得したときに、ゲームの勝者として宣言することをテストする必要があります。
 
-## Write the test first
+## 最初にテストを書く
 
-For the first time we are going to use an external library so that we can work with WebSockets.
+初めて、WebSocketで作業できるように外部ライブラリを使用します。
 
-Run `go get github.com/gorilla/websocket`
+`go get github.com/gorilla/websocket`を実行します
 
-This will fetch the code for the excellent [Gorilla WebSocket](https://github.com/gorilla/websocket) library. Now we can update our tests for our new requirement.
+これにより、優れた[Gorilla WebSocket](https://github.com/gorilla/websocket) ライブラリのコードがフェッチされます。これで、新しい要件に合わせてテストを更新できます。
 
 ```go
 t.Run("when we get a message over a websocket it is a winner of a game", func(t *testing.T) {
@@ -247,17 +251,18 @@ t.Run("when we get a message over a websocket it is a winner of a game", func(t 
 })
 ```
 
-Make sure that you have an import for the `websocket` library. My IDE automatically did it for me, so should yours.
+`websocket`ライブラリのインポートがあることを確認してください。
+私のIDEはそれを自動的に行いました。
 
-To test what happens from the browser we have to open up our own WebSocket connection and write to it.
+ブラウザーから何が起こるかをテストするには、独自のWebSocket接続を開いて、それに書き込む必要があります。
 
-Our previous tests around our server just called methods on our server but now we need to have a persistent connection to our server. To do that we use `httptest.NewServer` which takes a `http.Handler` and will spin it up and listen for connections.
+サーバーに関する以前のテストではサーバーのメソッドを呼び出しましたが、サーバーへの永続的な接続が必要です。そのためには、`http.Handler`を受け取り、それを起動して接続を待機する`httptest.NewServer`を使用します。
 
-Using `websocket.DefaultDialer.Dial` we try to dial in to our server and then we'll try and send a message with our `winner`.
+`websocket.DefaultDialer.Dial`を使用してサーバーにダイヤルインしてから、`winner`でメッセージを送信しようとします。
 
-Finally we assert on the player store to check the winner was recorded.
+最後に、勝者が記録されたことを確認するためにプレイヤーストアを評価します。
 
-## Try to run the test
+## テストを実行してみます
 
 ```text
 === RUN   TestGame/when_we_get_a_message_over_a_websocket_it_is_a_winner_of_a_game
@@ -265,17 +270,17 @@ Finally we assert on the player store to check the winner was recorded.
         server_test.go:124: could not open a ws connection on ws://127.0.0.1:55838/ws websocket: bad handshake
 ```
 
-We have not changed our server to accept WebSocket connections on `/ws` so we're not shaking hands yet.
+`/ws`でWebSocket接続を受け入れるようにサーバーを変更していないため、まだ握手はしていません。
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
-Add another listing to our router
+ルーターに別のリストを追加する
 
 ```go
 router.Handle("/ws", http.HandlerFunc(p.webSocket))
 ```
 
-Then add our new `webSocket` handler
+次に、新しい「`webSocket`」ハンドラを追加します
 
 ```go
 func (p *PlayerServer) webSocket(w http.ResponseWriter, r *http.Request) {
@@ -287,7 +292,7 @@ func (p *PlayerServer) webSocket(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-To accept a WebSocket connection we `Upgrade` the request. If you now re-run the test you should move on to the next error.
+WebSocket接続を受け入れるには、リクエストを「`Upgrade`」します。ここでテストを再実行する場合は、次のエラーに進む必要があります。
 
 ```text
 === RUN   TestGame/when_we_get_a_message_over_a_websocket_it_is_a_winner_of_a_game
@@ -295,7 +300,7 @@ To accept a WebSocket connection we `Upgrade` the request. If you now re-run the
         server_test.go:132: got 0 calls to RecordWin want 1
 ```
 
-Now that we have a connection opened, we'll want to listen for a message and then record it as the winner.
+接続を開いたので、メッセージをリッスンして、それを勝者として記録します。
 
 ```go
 func (p *PlayerServer) webSocket(w http.ResponseWriter, r *http.Request) {
@@ -309,30 +314,30 @@ func (p *PlayerServer) webSocket(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-\(Yes, we're ignoring a lot of errors right now!\)
+（はい、現在、多くのエラーを無視しています！）
 
-`conn.ReadMessage()` blocks on waiting for a message on the connection. Once we get one we use it to `RecordWin`. This would finally close the WebSocket connection.
+`conn.ReadMessage()`は、接続でのメッセージの待機をブロックします。取得したら、それを `RecordWin`に使用します。これは最終的にWebSocket接続を閉じます。
 
-If you try and run the test, it's still failing.
+テストを実行すると、まだ失敗します。
 
-The issue is timing. There is a delay between our WebSocket connection reading the message and recording the win and our test finishes before it happens. You can test this by putting a short `time.Sleep` before the final assertion.
+問題はタイミングです。メッセージを読み取るWebSocket接続と勝利の記録の間には遅延があり、テストが完了する前にテストが終了します。これをテストするには、最後のアサーションの前に短い「`time.Sleep`」を配置します。
 
-Let's go with that for now but acknowledge that putting in arbitrary sleeps into tests **is very bad practice**.
+とりあえずそれを続けましょうが、任意のスリープをテストに入れることは**非常に悪い習慣**であることを認めます。
 
 ```go
 time.Sleep(10 * time.Millisecond)
 AssertPlayerWin(t, store, winner)
 ```
 
-## Refactor
+## リファクタリング
 
-We committed many sins to make this test work both in the server code and the test code but remember this is the easiest way for us to work.
+このテストをサーバーコードとテストコードの両方で機能させるために多くの罪を犯しましたが、これが私たちにとって最も簡単な方法であることを覚えておいてください。
 
-We have nasty, horrible, _working_ software backed by a test, so now we are free to make it nice and know we won't break anything accidentally.
+テストに裏打ちされた、厄介で恐ろしい _working_ ソフトウェアがあるので、これを自由に変更して、誤って何も壊さないようにすることができます。
 
-Let's start with the server code.
+サーバーコードから始めましょう。
 
-We can move the `upgrader` to a private value inside our package because we don't need to redeclare it on every WebSocket connection request
+すべてのWebSocket接続リクエストで再宣言する必要がないため、`upgrader`をパッケージ内のプライベート値に移動できます。
 
 ```go
 var wsUpgrader = websocket.Upgrader{
@@ -347,9 +352,11 @@ func (p *PlayerServer) webSocket(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-Our call to `template.ParseFiles("game.html")` will run on every `GET /game` which means we'll go to the file system on every request even though we have no need to re-parse the template. Let's refactor our code so that we parse the template once in `NewPlayerServer` instead. We'll have to make it so this function can now return an error in case we have problems fetching the template from disk or parsing it.
+`template.ParseFiles("game.html")`への呼び出しは、すべての `GET /game`で実行されます。
+つまり、テンプレートを再解析する必要がない場合でも、すべてのリクエストでファイルシステムに移動します。代わりにテンプレートを「`NewPlayerServer`」で一度解析するようにコードをリファクタリングしましょう。
+ディスクからテンプレートをフェッチしたり解析したりするときに問題が発生した場合に、この関数がエラーを返すことができるようにする必要があります。
 
-Here's the relevant changes to `PlayerServer`
+`PlayerServer`に関連する変更は次のとおりです
 
 ```go
 type PlayerServer struct {
@@ -388,9 +395,9 @@ func (p *PlayerServer) game(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-By changing the signature of `NewPlayerServer` we now have compilation problems. Try and fix them yourself or refer to the source code if you struggle.
+`NewPlayerServer`のシグネチャを変更すると、コンパイルの問題が発生します。自分で試して修正するか、苦労している場合はソースコードを参照してください。
 
-For the test code I made a helper called `mustMakePlayerServer(t *testing.T, store PlayerStore) *PlayerServer` so that I could hide the error noise away from the tests.
+テストコードでは、 `mustMakePlayerServer(t *testing.T, store PlayerStore) *PlayerServer`というヘルパーを作成して、エラーノイズをテストから隠せるようにしました。
 
 ```go
 func mustMakePlayerServer(t *testing.T, store PlayerStore) *PlayerServer {
@@ -402,7 +409,7 @@ func mustMakePlayerServer(t *testing.T, store PlayerStore) *PlayerServer {
 }
 ```
 
-Similarly I created another helper `mustDialWS` so that I could hide nasty error noise when creating the WebSocket connection.
+同様に、別のヘルパー`mustDialWS`を作成して、WebSocket接続の作成時に厄介なエラーノイズを隠すことができるようにしました。
 
 ```go
 func mustDialWS(t *testing.T, url string) *websocket.Conn {
@@ -416,7 +423,7 @@ func mustDialWS(t *testing.T, url string) *websocket.Conn {
 }
 ```
 
-Finally in our test code we can create a helper to tidy up sending messages
+最後に、テストコードで、メッセージの送信を整理するヘルパーを作成できます。
 
 ```go
 func writeWSMessage(t *testing.T, conn *websocket.Conn, message string) {
@@ -427,11 +434,11 @@ func writeWSMessage(t *testing.T, conn *websocket.Conn, message string) {
 }
 ```
 
-Now the tests are passing try running the server and declare some winners in `/game`. You should see them recorded in `/league`. Remember that every time we get a winner we _close the connection_, you will need to refresh the page to open the connection again.
+テストがパスし、サーバーを実行して、`/game`で勝者を宣言します。`/league`に記録されているはずです。当選者を獲得するたびに、_接続を閉じる_ ことを思い出してください。接続を再度開くには、ページを更新する必要があります。
 
-We've made a trivial web form that lets users record the winner of a game. Let's iterate on it to make it so the user can start a game by providing a number of players and the server will push messages to the client informing them of what the blind value is as time passes.
+ユーザーがゲームの勝者を記録できる簡単なWebフォームを作成しました。これを繰り返して、ユーザーが多数のプレーヤーを提供することでゲームを開始できるようにします。サーバーはクライアントにメッセージをプッシュし、時間の経過とともにブラインドの値を通知します。
 
-First of all update `game.html` to update our client side code for the new requirements
+まず、`game.html`を更新して、新しい要件に合わせてクライアント側のコードを更新します
 
 ```markup
 <!DOCTYPE html>
@@ -510,11 +517,11 @@ First of all update `game.html` to update our client side code for the new requi
 </html>
 ```
 
-The main changes is bringing in a section to enter the number of players and a section to display the blind value. We have a little logic to show/hide the user interface depending on the stage of the game.
+主な変更点は、プレーヤー数を入力するセクションとブラインド値を表示するセクションを取り込むことです。ゲームのステージに応じて、ユーザーインターフェイスを表示/非表示にするための小さなロジックがあります。
 
-Any message we receive via `conn.onmessage` we assume to be blind alerts and so we set the `blindContainer.innerText` accordingly.
+`conn.onmessage`を介して受信するメッセージはすべてブラインドアラートであると想定するため、それに応じて`blindContainer.innerText`を設定します。
 
-How do we go about sending the blind alerts? In the previous chapter we introduced the idea of `Game` so our CLI code could call a `Game` and everything else would be taken care of including scheduling blind alerts. This turned out to be a good separation of concern.
+ブラインドアラートを送信するにはどうすればよいですか？前の章では、`Game`のアイデアを紹介しました。これにより、CLIコードが`Game`を呼び出すことができるようになり、ブラインドアラートのスケジュール設定など、他のすべての処理が行われます。これは、心配事の良い分離であることがわかりました。
 
 ```go
 type Game interface {
@@ -523,9 +530,9 @@ type Game interface {
 }
 ```
 
-When the user was prompted in the CLI for number of players it would `Start` the game which would kick off the blind alerts and when the user declared the winner they would `Finish`. This is the same requirements we have now, just a different way of getting the inputs; so we should look to re-use this concept if we can.
+ユーザーがCLIでプレーヤーの数を求められると、ゲームを「開始`Start`」してブラインドアラートを開始し、ユーザーが勝者を宣言すると「終了`Finish`」します。これは現在の要件と同じですが、入力を取得する方法が異なります。したがって、可能であれば、この概念を再利用する必要があります。
 
-Our "real" implementation of `Game` is `TexasHoldem`
+`Game`の「実際の」実装は「`TexasHoldem`」です。
 
 ```go
 type TexasHoldem struct {
@@ -534,7 +541,7 @@ type TexasHoldem struct {
 }
 ```
 
-By sending in a `BlindAlerter` `TexasHoldem` can schedule blind alerts to be sent to _wherever_
+`BlindAlerter`を送信することで、`TexasHoldem`は _wherever_ に送信されるブラインドアラートをスケジュールできます
 
 ```go
 type BlindAlerter interface {
@@ -542,7 +549,7 @@ type BlindAlerter interface {
 }
 ```
 
-And as a reminder, here is our implementation of the `BlindAlerter` we use in the CLI.
+また、注意点として、CLIで使用する `BlindAlerter` の実装を以下に示します。
 
 ```go
 func StdOutAlerter(duration time.Duration, amount int) {
@@ -552,11 +559,12 @@ func StdOutAlerter(duration time.Duration, amount int) {
 }
 ```
 
-This works in CLI because we _always want to send the alerts to `os.Stdout`_ but this won't work for our web server. For every request we get a new `http.ResponseWriter` which we then upgrade to `*websocket.Conn`. So we can't know when constructing our dependencies where our alerts need to go.
+常にアラートを「`os.Stdout`」に送信したいので、これはCLIで機能しますが、これはWebサーバーでは機能しません。リクエストごとに新しい`http.ResponseWriter`を取得し、それを`*websocket.Conn`にアップグレードします。
+したがって、アラートを送信する必要がある依存関係を構築するときに、それを知ることはできません。
 
-For that reason we need to change `BlindAlerter.ScheduleAlertAt` so that it takes a destination for the alerts so that we can re-use it in our webserver.
+そのため、 `BlindAlerter.ScheduleAlertAt`を変更してアラートの宛先を取得し、Webサーバーで再利用できるようにする必要があります。
 
-Open BlindAlerter.go and add the parameter `to io.Writer`
+`BlindAlerter.go`を開き、パラメータ「`to io.Writer`」を追加します
 
 ```go
 type BlindAlerter interface {
@@ -570,7 +578,7 @@ func (a BlindAlerterFunc) ScheduleAlertAt(duration time.Duration, amount int, to
 }
 ```
 
-The idea of a `StdoutAlerter` doesn't fit our new model so just rename it to `Alerter`
+`StdoutAlerter`のアイデアは新しいモデルに適合しないため、名前を`Alerter`に変更します
 
 ```go
 func Alerter(duration time.Duration, amount int, to io.Writer) {
@@ -580,11 +588,15 @@ func Alerter(duration time.Duration, amount int, to io.Writer) {
 }
 ```
 
-If you try and compile, it will fail in `TexasHoldem` because it is calling `ScheduleAlertAt` without a destination, to get things compiling again _for now_ hard-code it to `os.Stdout`.
+コンパイルしてみると、宛先なしで`ScheduleAlertAt`を呼び出しているため、`TexasHoldem`で失敗します。これにより、「今すぐ」コンパイルして、`os.Stdout`にハードコードします。
 
-Try and run the tests and they will fail because `SpyBlindAlerter` no longer implements `BlindAlerter`, fix this by updating the signature of `ScheduleAlertAt`, run the tests and we should still be green.
+テストを実行してみてください。
 
-It doesn't make any sense for `TexasHoldem` to know where to send blind alerts. Let's now update `Game` so that when you start a game you declare _where_ the alerts should go.
+`SpyBlindAlerter`は`BlindAlerter`を実装していないため、テストは失敗します。
+これを修正するには、`ScheduleAlertAt`のシグネチャを更新し、テストを実行します。これで緑色のままになります。
+
+`TexasHoldem`がブラインドアラートの送信先を知っていることは意味がありません。
+ここで、`Game`を更新して、ゲームを開始するときにアラートの送信先をどこに宣言するようにします。
 
 ```go
 type Game interface {
@@ -593,19 +605,20 @@ type Game interface {
 }
 ```
 
-Let the compiler tell you what you need to fix. The change isn't so bad:
+修正する必要があることをコンパイラーに指示させます。変更はそれほど悪くありません。
 
-* Update `TexasHoldem` so it properly implements `Game`
-* In `CLI` when we start the game, pass in our `out` property \(`cli.game.Start(numberOfPlayers, cli.out)`\)
-* In `TexasHoldem`'s test i use `game.Start(5, ioutil.Discard)` to fix the compilation problem and configure the alert output to be discarded
+* `TexasHoldem`を更新して、`Game`を適切に実装します。
+* ゲームを開始するときに、`CLI`で`out`プロパティを渡します（`cli.game.Start(numberOfPlayers、cli.out)`）
+* `TexasHoldem`のテストでは、` game.Start(5、ioutil.Discard)`を使用してコンパイルの問題を修正し、アラート出力が破棄されるように設定します
 
-If you've got everything right, everything should be green! Now we can try and use `Game` within `Server`.
+すべてが正しければ、すべてがグリーンになるはずです。
+これで、`Server`内で`Game`を試して使用できます。
 
-## Write the test first
+## 最初にテストを書く
 
-The requirements of `CLI` and `Server` are the same! It's just the delivery mechanism is different.
+`CLI`と`Server`の要件は同じです！配信メカニズムが異なるだけです。
 
-Let's take a look at our `CLI` test for inspiration.
+インスピレーションを得るために、 `CLI`テストを見てみましょう。
 
 ```go
 t.Run("start game with 3 players and finish game with 'Chris' as winner", func(t *testing.T) {
@@ -622,9 +635,9 @@ t.Run("start game with 3 players and finish game with 'Chris' as winner", func(t
 })
 ```
 
-It looks like we should be able to test drive out a similar outcome using `GameSpy`
+`GameSpy`を使用して、同様の結果をテストすることができるはずです
 
-Replace the old websocket test with the following
+古いwebsocketテストを次のものに置き換えます
 
 ```go
 t.Run("start a game with 3 players and declare Ruth the winner", func(t *testing.T) {
@@ -645,13 +658,13 @@ t.Run("start a game with 3 players and declare Ruth the winner", func(t *testing
 })
 ```
 
-* As discussed we create a spy `Game` and pass it into `mustMakePlayerServer` \(be sure to update the helper to support this\).
-* We then send the web socket messages for a game.
-* Finally we assert that the game is started and finished with what we expect. 
+* 議論したように、スパイの`Game`を作成して`mustMakePlayerServer`に渡します（これをサポートするためにヘルパーを更新してください）
+* 次に、ゲームのWebソケットメッセージを送信します。
+* 最後に、ゲームが開始され、期待どおりに終了したと断言します。
 
-## Try to run the test
+## テストを実行してみます
 
-You'll have a number of compilation errors around `mustMakePlayerServer` in other tests. Introduce an unexported variable `dummyGame` and use it through all the tests that aren't compiling
+他のテストでは、`mustMakePlayerServer`の周りにいくつかのコンパイルエラーが発生します。エクスポートされていない変数`dummyGame`を導入し、コンパイルされていないすべてのテストで使用します
 
 ```go
 var (
@@ -659,7 +672,7 @@ var (
 )
 ```
 
-The final error is where we are trying to pass in `Game` to `NewPlayerServer` but it doesn't support it yet
+最後のエラーは、`Game`を`NewPlayerServer`に渡そうとしているところですが、まだサポートしていません。
 
 ```text
 ./server_test.go:21:38: too many arguments in call to "github.com/quii/learn-go-with-tests/WebSockets/v2".NewPlayerServer
@@ -667,15 +680,15 @@ The final error is where we are trying to pass in `Game` to `NewPlayerServer` bu
     want ("github.com/quii/learn-go-with-tests/WebSockets/v2".PlayerStore)
 ```
 
-## Write the minimal amount of code for the test to run and check the failing test output
+## テストを実行するための最小限のコードを記述し、失敗したテスト出力を確認します
 
-Just add it as an argument for now just to get the test running
+今のところ、テストを実行するために引数として追加するだけです
 
 ```go
 func NewPlayerServer(store PlayerStore, game Game) (*PlayerServer, error) {
 ```
 
-Finally!
+最終的に！
 
 ```text
 === RUN   TestGame/start_a_game_with_3_players_and_declare_Ruth_the_winner
@@ -686,9 +699,9 @@ Finally!
 FAIL
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
-We need to add `Game` as a field to `PlayerServer` so that it can use it when it gets requests.
+リクエストを受け取ったときに使用できるように、フィールドとして`Game`を`PlayerServer`に追加する必要があります。
 
 ```go
 type PlayerServer struct {
@@ -699,9 +712,9 @@ type PlayerServer struct {
 }
 ```
 
-\(We already have a method called `game` so rename that to `playGame`\)
+（すでに`game`というメソッドがあるので、名前を`playGame`に変更します）
 
-Next lets assign it in our constructor
+次に、コンストラクタに割り当てます
 
 ```go
 func NewPlayerServer(store PlayerStore, game Game) (*PlayerServer, error) {
@@ -718,7 +731,7 @@ func NewPlayerServer(store PlayerStore, game Game) (*PlayerServer, error) {
     // etc
 ```
 
-Now we can use our `Game` within `webSocket`.
+これで、`webSocket`内で`Game`を使用できます。
 
 ```go
 func (p *PlayerServer) webSocket(w http.ResponseWriter, r *http.Request) {
@@ -733,11 +746,11 @@ func (p *PlayerServer) webSocket(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-Hooray! The tests pass.
+やったー！テストに成功しました。
 
-We are not going to send the blind messages anywhere _just yet_ as we need to have a think about that. When we call `game.Start` we send in `ioutil.Discard` which will just discard any messages written to it.
+それについて考える必要があるので、「まだ」どこにもブラインドメッセージを送信するつもりはありません。`game.Start`を呼び出すと、それに書き込まれたメッセージを破棄する`ioutil.Discard`を送信します。
 
-For now start the web server up. You'll need to update the `main.go` to pass a `Game` to the `PlayerServer`
+ここでは、Webサーバーを起動します。`Game`を`PlayerServer`に渡すには、`main.go`を更新する必要があります
 
 ```go
 func main() {
@@ -767,13 +780,13 @@ func main() {
 }
 ```
 
-Discounting the fact we're not getting blind alerts yet, the app does work! We've managed to re-use `Game` with `PlayerServer` and it has taken care of all the details. Once we figure out how to send our blind alerts through to the web sockets rather than discarding them it _should_ all work.
+ブラインドアラートをまだ取得していないという事実を無視して、アプリは機能します！ `PlayerServer`で`Game`を再利用することに成功し、すべての詳細を処理しました。ブラインドアラートを破棄するのではなく、Webソケットに送信する方法を見つけたら、すべて正常に機能するはずです。
 
-Before that though, let's tidy up some code.
+その前に、いくつかのコードを整理しましょう。
 
-## Refactor
+## リファクタリング
 
-The way we're using WebSockets is fairly basic and the error handling is fairly naive, so I wanted to encapsulate that in a type just to remove that messiness from the server code. We may wish to revisit it later but for now this'll tidy things up a bit
+WebSocketを使用する方法はかなり基本的で、エラー処理はかなり単純なので、サーバーコードからその煩雑さを取り除くためだけにタイプにカプセル化したかったのです。後でもう一度見たいと思うかもしれませんが、今のところこれは少し整理されます
 
 ```go
 type playerServerWS struct {
@@ -799,7 +812,7 @@ func (w *playerServerWS) WaitForMsg() string {
 }
 ```
 
-Now the server code is a bit simplified
+今サーバーコードは少し簡略化されています
 
 ```go
 func (p *PlayerServer) webSocket(w http.ResponseWriter, r *http.Request) {
@@ -814,23 +827,23 @@ func (p *PlayerServer) webSocket(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-Once we figure out how to not discard the blind messages we're done.
+ブラインドメッセージを破棄しない方法を見つけたら、完了です。
 
-### Let's _not_ write a test!
+### テストを書かないようにしよう！
 
-Sometimes when we're not sure how to do something, it's best just to play around and try things out! Make sure your work is committed first because once we've figured out a way we should drive it through a test.
+どうしたらよいかわからないときは、遊んで試してみるのが一番です。作業が最初にコミットされていることを確認してください。方法を見つけたら、テストを実行する必要があります。
 
-The problematic line of code we have is
+私たちが持っている問題のあるコード行は
 
 ```go
 p.game.Start(numberOfPlayers, ioutil.Discard) //todo: Don't discard the blinds messages!
 ```
 
-We need to pass in an `io.Writer` for the game to write the blind alerts to.
+ゲームがブラインドアラートを書き込むには、`io.Writer`を渡す必要があります。
 
-Wouldn't it be nice if we could pass in our `playerServerWS` from before? It's our wrapper around our WebSocket so it _feels_ like we should be able to send that to our `Game` to send messages to.
+以前から`playerServerWS`を渡せたらいいですね。これはWebSocketのラッパーなので、 `Game`に送信してメッセージを送信できるように感じます。
 
-Give it a go:
+試してみてね
 
 ```go
 func (p *PlayerServer) webSocket(w http.ResponseWriter, r *http.Request) {
@@ -842,14 +855,14 @@ func (p *PlayerServer) webSocket(w http.ResponseWriter, r *http.Request) {
     //etc...
 ```
 
-The compiler complains
+コンパイラは以下のような問題を指摘しています。
 
 ```text
 ./server.go:71:14: cannot use ws (type *playerServerWS) as type io.Writer in argument to p.game.Start:
     *playerServerWS does not implement io.Writer (missing Write method)
 ```
 
-It seems the obvious thing to do, would be to make it so `playerServerWS` _does_ implement `io.Writer`. To do so we use the underlying `*websocket.Conn` to use `WriteMessage` to send the message down the websocket
+当然のことのようですが、`playerServerWS`が _does_ に`io.Writer`を実装するようにすることです。そのためには、基になる`*websocket.Conn`を使用して、`WriteMessage`を使用し、メッセージをWebSocketに送信します。
 
 ```go
 func (w *playerServerWS) Write(p []byte) (n int, err error) {
@@ -863,27 +876,28 @@ func (w *playerServerWS) Write(p []byte) (n int, err error) {
 }
 ```
 
-This seems too easy! Try and run the application and see if it works.
+これは簡単すぎるようです！アプリケーションを試して実行し、機能するかどうかを確認します。
 
-Beforehand edit `TexasHoldem` so that the blind increment time is shorter so you can see it in action
+事前に`TexasHoldem`を編集して、ブラインドインクリメント時間を短くし、実際に動作するようにしてください
 
 ```go
 blindIncrement := time.Duration(5+numberOfPlayers) * time.Second // (rather than a minute)
 ```
 
-You should see it working! The blind amount increments in the browser as if by magic.
+あなたはそれが機能するのを見るはずです！ブラインド量は、まるで魔法のようにブラウザで増加します。
 
-Now let's revert the code and think how to test it. In order to _implement_ it all we did was pass through to `StartGame` was `playerServerWS` rather than `ioutil.Discard` so that might make you think we should perhaps spy on the call to verify it works.
+コードを元に戻して、テストする方法を考えましょう。これを _具現化_ するために、`StartGame`へのパススルーは`ioutil.Discard`ではなく`playerServerWS`でしたので、呼び出しをスパイして動作を確認する必要があるかもしれません。
 
-Spying is great and helps us check implementation details but we should always try and favour testing the _real_ behaviour if we can because when you decide to refactor it's often spy tests that start failing because they are usually checking implementation details that you're trying to change.
+スパイは素晴らしく、実装の詳細をチェックするのに役立ちますが、可能であれば _実際_ の動作をテストすることを常に推奨する必要があります。なぜなら、リファクタリングする場合、通常、変更しようとしている実装の詳細をチェックしているため、失敗するスパイテストがよくあるためです。 。
 
-Our test currently opens a websocket connection to our running server and sends messages to make it do things. Equally we should be able to test the messages our server sends back over the websocket connection.
+テストでは現在、実行中のサーバーへのWebソケット接続を開き、メッセージを送信してそれを実行します。
+同様に、サーバーがWebSocket接続を介して送り返すメッセージをテストできるはずです。
 
-## Write the test first
+## 最初にテストを書く
 
-We'll edit our existing test.
+既存のテストを編集します。
 
-Currently our `GameSpy` does not send any data to `out` when you call `Start`. We should change it so we can configure it to send a canned message and then we can check that message gets sent to the websocket. This should give us confidence that we have configured things correctly whilst still exercising the real behaviour we want.
+現在、`GameSpy`は、`Start`を呼び出しても、データを`out`に送信しません。これを変更して、定型メッセージを送信するように設定し、そのメッセージがWebSocketに送信されることを確認できるようにする必要があります。これにより、必要な実際の動作を実行しながら、正しく構成したことを確信できます。
 
 ```go
 type GameSpy struct {
@@ -896,9 +910,9 @@ type GameSpy struct {
 }
 ```
 
-Add `BlindAlert` field.
+`BlindAlert`フィールドを追加します。
 
-Update `GameSpy` `Start` to send the canned message to `out`.
+あらかじめ用意されたメッセージを`out`に送信するように`GameSpy``Start`を更新します。
 
 ```go
 func (g *GameSpy) Start(numberOfPlayers int, out io.Writer) {
@@ -908,9 +922,9 @@ func (g *GameSpy) Start(numberOfPlayers int, out io.Writer) {
 }
 ```
 
-This now means when we exercise `PlayerServer` when it tries to `Start` the game it should end up sending messages through the websocket if things are working right.
+つまり、ゲームを`Start`しようとしたときに`PlayerServer`を実行すると、正常に機能していれば、WebSocketを介してメッセージを送信することになります。
 
-Finally we can update the test
+最後にテストを更新できます
 
 ```go
 t.Run("start a game with 3 players, send some blind alerts down WS and declare Ruth the winner", func(t *testing.T) {
@@ -939,16 +953,16 @@ t.Run("start a game with 3 players, send some blind alerts down WS and declare R
 })
 ```
 
-* We've added a `wantedBlindAlert` and configured our `GameSpy` to send it to `out` if `Start` is called.
-* We hope it gets sent in the websocket connection so we've added a call to `ws.ReadMessage()` to wait for a message to be sent and then check it's the one we expected.
+* `wantedBlindAlert`を追加し、`Start`が呼び出された場合に`out`に送信するように`GameSpy`を設定しました。
+* メッセージがwebsocket接続で送信されることを期待して、`ws.ReadMessage()`への呼び出しを追加して、メッセージが送信されるのを待ってから、メッセージが期待どおりであることを確認します。
 
-## Try to run the test
+## テストを実行してみます
 
-You should find the test hangs forever. This is because `ws.ReadMessage()` will block until it gets a message, which it never will.
+テストが永久にハングすることを確認する必要があります。これは、`ws.ReadMessage()`がメッセージを取得するまでブロックするためです。
 
-## Write the minimal amount of code for the test to run and check the failing test output
+## テストを実行するための最小限のコードを記述し、失敗したテスト出力を確認します
 
-We should never have tests that hang so let's introduce a way of handling code that we want to timeout.
+テストがハングすることは絶対にあってはならないことなので、タイムアウトさせたいコードを処理する方法を紹介します。
 
 ```go
 func within(t *testing.T, d time.Duration, assert func()) {
@@ -969,11 +983,11 @@ func within(t *testing.T, d time.Duration, assert func()) {
 }
 ```
 
-What `within` does is take a function `assert` as an argument and then runs it in a go routine. If/When the function finishes it will signal it is done via the `done` channel.
+`within`が行うことは、関数`assert`を引数として取り、それをgoルーチンで実行することです。関数が完了すると、`完了（done）`チャネルを介して行われたことを通知します。
 
-While that happens we use a `select` statement which lets us wait for a channel to send a message. From here it is a race between the `assert` function and `time.After` which will send a signal when the duration has occurred.
+その間、チャネルがメッセージを送信するのを待機できるようにする`select`ステートメントを使用します。ここからは、`assert`関数と`time.After`の間の競争であり、期間が発生したときに信号を送信します。
 
-Finally I made a helper function for our assertion just to make things a bit neater
+最後に、アサーションのヘルパー関数を作成しました。
 
 ```go
 func assertWebsocketGotMsg(t *testing.T, ws *websocket.Conn, want string) {
@@ -984,7 +998,7 @@ func assertWebsocketGotMsg(t *testing.T, ws *websocket.Conn, want string) {
 }
 ```
 
-Here's how the test reads now
+これがテストの今の読み方です
 
 ```go
 t.Run("start a game with 3 players, send some blind alerts down WS and declare Ruth the winner", func(t *testing.T) {
@@ -1009,7 +1023,7 @@ t.Run("start a game with 3 players, send some blind alerts down WS and declare R
 })
 ```
 
-Now if you run the test...
+テストを実行すると...
 
 ```text
 === RUN   TestGame
@@ -1020,9 +1034,9 @@ Now if you run the test...
         server_test.go:150: got "", want "Blind is 100"
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
-Finally we can now change our server code so it sends our WebSocket connection to the game when it starts
+最後に、サーバーコードを変更して、開始時にWebSocket接続をゲームに送信できるようにします。
 
 ```go
 func (p *PlayerServer) webSocket(w http.ResponseWriter, r *http.Request) {
@@ -1037,13 +1051,14 @@ func (p *PlayerServer) webSocket(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-## Refactor
+## リファクタリング
 
-The server code was a very small change so there's not a lot to change here but the test code still has a `time.Sleep` call because we have to wait for our server to do its work asynchronously.
+サーバーコードは非常に小さな変更でしたので、ここで変更することは多くありませんが、サーバーが非同期で動作するのを待つ必要があるため、テストコードにはまだ`time.Sleep`呼び出しがあります。
 
-We can refactor our helpers `assertGameStartedWith` and `assertFinishCalledWith` so that they can retry their assertions for a short period before failing.
+ヘルパーの`assertGameStartedWith`と`assertFinishCalledWith`をリファクタリングして、失敗する前に短い間アサーションを再試行できます。
 
-Here's how you can do it for `assertFinishCalledWith` and you can use the same approach for the other helper.
+`assertFinishCalledWith`でこれを行う方法を次に示します。
+他のヘルパーにも同じアプローチを使用できます。
 
 ```go
 func assertFinishCalledWith(t *testing.T, game *GameSpy, winner string) {
@@ -1059,7 +1074,7 @@ func assertFinishCalledWith(t *testing.T, game *GameSpy, winner string) {
 }
 ```
 
-Here is how `retryUntil` is defined
+`retryUntil`の定義方法は次のとおりです
 
 ```go
 func retryUntil(d time.Duration, f func() bool) bool {
@@ -1073,24 +1088,24 @@ func retryUntil(d time.Duration, f func() bool) bool {
 }
 ```
 
-## Wrapping up
+## まとめ
 
-Our application is now complete. A game of poker can be started via a web browser and the users are informed of the blind bet value as time goes by via WebSockets. When the game finishes they can record the winner which is persisted using code we wrote a few chapters ago. The players can find out who is the best \(or luckiest\) poker player using the website's `/league` endpoint.
+これでアプリケーションが完成しました。ポーカーゲームはWebブラウザーを介して開始でき、ユーザーはWebSocketを介して時間が経過するにつれてブラインドベットの価値を知らされます。ゲームが終了すると、数章前に書いたコードを使用して永続化された勝者を記録できます。
+プレーヤーは、ウェブサイトの `/league`エンドポイントを使用して、誰が（または最も幸運な）ポーカープレーヤーであるかを見つけることができます。
 
-Through the journey we have made mistakes but with the TDD flow we have never been very far away from working software. We were free to keep iterating and experimenting.
+旅の途中で間違いを犯しましたが、TDDフローを使用して、作業用ソフトウェアから遠く離れたことはありませんでした。私たちは自由に反復して実験を続けることができました。
 
-The final chapter will retrospect on the approach, the design we've arrived at and tie up some loose ends.
+最後の章では、アプローチ、私たちが到達した設計について振り返り、いくつかの緩い目的を結びつけます。
 
-We covered a few things in this chapter
+この章ではいくつかのことを説明しました
 
 ### WebSockets
 
-* Convenient way of sending messages between clients and servers that does not require the client to keep polling the server. Both the client and server code we have is very simple. 
-* Trivial to test, but you have to be wary of the asynchronous nature of the tests 
+* クライアントがサーバーをポーリングし続ける必要がないクライアントとサーバー間でメッセージを送信する便利な方法。私たちが持っているクライアントとサーバーのコードはどちらも非常に単純です。
+* テストは簡単ですが、テストの非同期の性質に注意する必要があります
 
-### Handling code in tests that can be delayed or never finish
+### 遅延する可能性がある、または終了しないテストでのコードの処理
 
-* Create helper functions to retry assertions and add timeouts. 
-* We can use go routines to ensure the assertions don't block anything and then use channels to let them signal that they have finished, or not. 
-* The `time` package has some helpful functions which also send signals via channels about events in time so we can set timeouts
-
+* アサーションを再試行してタイムアウトを追加するヘル​​パー関数を作成します。
+* ゴルーチンを使用して、アサーションが何もブロックしないようにし、チャネルを使用して、終了したかどうかを通知できます。
+* `time`パッケージには、タイムアウトを設定できるように、時間内のイベントに関する信号をチャンネル経由で送信するいくつかの便利な関数があります
