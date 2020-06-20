@@ -41,7 +41,7 @@ $ go version
 go version go1.14 darwin/amd64
 ```
 
-## Go環境
+## Go 環境
 
 ### $GOPATH
 
