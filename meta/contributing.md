@@ -4,36 +4,35 @@ description: Contributing
 
 # 貢献
 
-Contributions are very welcome. I hope for this to become a great home for guides of how to learn Go by writing tests. Consider submitting a PR or creating an issue which you can do [here](https://github.com/quii/learn-go-with-tests/issues).
+貢献は大歓迎です。テストを書いて囲碁を学ぶ方法のガイドのための素晴らしいホームになることを願っています。PRを投稿したり、[ここ](https://github.com/andmorefine/learn-go-with-tests/issues)でできる課題を作成したりすることを検討してみてください。
 
-## What we're looking for
+## 求めているもの
 
-* Teaching Go features \(e.g things like `if`, `select`, structs, methods, etc\).
-* Showcase interesting functionality within the standard library. Show off how easy it is to TDD a HTTP server for instance.
-* Show how Go's tooling, like benchmarking, race detectors, etc can help you arrive at great software.
+* Teaching Go の機能（例：`if`, `select`, `structs`, `methods`, etc.）
+* 標準ライブラリ内の興味深い機能を紹介する。例えば、HTTPサーバのTDDがどれだけ簡単にできるかを見せてください。
+* ベンチマークやレース検出器など、Goのツールがどのように優れたソフトウェアに到達するのに役立つかを紹介してください。
 
-If you don't feel confident to submit your own guide, submitting an issue for something you want to learn is still a valuable contribution.
+自分のガイドを提出する自信がない場合でも、自分が学びたいことの課題を提出することは貴重な貢献になります。
 
-### ⚠️ Get feedback quickly for new content ⚠️
+### ⚠️ 新しいコンテンツのフィードバックを素早く得よう ⚠️
 
-* TDD teaches us to work iteratively and get feedback and I strongly suggest you do the same if you wish to contribute
-  * Open a PR with your first test and implementation, discuss your approach so I can offer feedback and course correct
-* This is of course open-source but I do have strong opinions on the content. The sooner you talk to me the better.
+* TDD は反復的に作業してフィードバックを得ることを教えてくれます。
+  * 私はフィードバックとコースの修正を提供することができますので、あなたの最初のテストと実装でPRを開き、あなたのアプローチを議論する
+* 勿論オープンソースですが、内容については強い意見を持っています。私に相談するのは早ければ早いほど良いです。
 
-## Style guide
+## スタイルガイド
 
-* Always be reinforcing the TDD cycle. Take a look at the [Chapter Template]().
-* Emphasis on iterating over functionality driven by tests. The Hello, world example works well because we gradually make it more sophisticated and learning new techniques _driven_ by the tests. For example:
-  * `Hello()` &lt;- how to write functions, return types.
-  * `Hello(name string)` &lt;- arguments, constants.
-  * `Hello(name string)` &lt;- default to "world" using `if`.
-  * `Hello(name, language string)` &lt;- `switch`.
-* Try and minimise the surface area of required knowledge.
-  * Thinking of examples that showcase what you're trying to teach without confusing the reader with other features is important.
-  * For example you can learn about `struct`s without understanding pointers.
-  * Brevity is king.
-* Follow the [Code Review Comments style guide](https://github.com/golang/go/wiki/CodeReviewComments). It's important for a consistent style across all the sections.
-* Your section should have a runnable application at the end \(e.g `package main` with a `main` func\) so users can see it in action and play with it.
-* All tests should pass.
-* Run `./build.sh` before raising PR.
-
+* TDDサイクルを常に強化しておくこと。[Chapter Template]()を見てみましょう。
+* テストによって駆動される機能を反復することに重点を置いています。`Hello, world`の例は、徐々により洗練されたものにしていき、テストによって駆動される新しいテクニックを学んでいくので、うまくいきます。例えば、以下のようになります。
+  * `Hello()` &lt;- 関数の書き方、戻り値の型.
+  * `Hello(name string)` &lt;- 引数、定数.
+  * `Hello(name string)` &lt;- デフォルトは`if`を使って "world"にする。
+  * `Hello(name, language string)` &lt;- `switch`構文。
+* 必要な知識の表面積を最小限にするようにする。
+  * 他の機能で読者を混乱させることなく、教えようとしていることを示す例を考えることが重要です。
+  * 例えば、ポインタを理解しなくても`struct`について学ぶことができます。
+  * 簡潔であることが重要です。
+* [コードレビューコメントのスタイルガイド](https://github.com/golang/go/wiki/CodeReviewComments)に従ってください。すべてのセクションで一貫したスタイルを保つことが重要です。
+* あなたのセクションは、ユーザーが実際に動作しているのを見て遊べるように、最後に実行可能なアプリケーションを持つべきです。
+* すべてのテストに成功する必要があります。
+* PRを上げる前に`./build.sh`を実行してください。
