@@ -136,7 +136,7 @@ VS Code はほとんどのソフトウェアが有効化された状態で出荷
 code --install-extension ms-vscode.go
 ```
 
-VS Codeで初めて囲碁ファイルを開くと、解析ツールがないことが表示されるので、ボタンをクリックしてインストールする必要があります。VS Codeでインストールされる(使用される)ツールのリストは[こちら](https://github.com/golang/vscode-go/blob/master/docs/tools.md)を参照してください。
+VS Codeで初めてGOファイルを開くと、解析ツールがないことが表示されるので、ボタンをクリックしてインストールする必要があります。VS Codeでインストールされる(使用される)ツールのリストは[こちら](https://github.com/golang/vscode-go/blob/master/docs/tools.md)を参照してください。
 
 ## Go デバッガー
 

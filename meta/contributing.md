@@ -4,7 +4,7 @@ description: Contributing
 
 # 貢献
 
-貢献は大歓迎です。テストを書いて囲碁を学ぶ方法のガイドのための素晴らしいホームになることを願っています。PRを投稿したり、[ここ](https://github.com/andmorefine/learn-go-with-tests/issues)でできる課題を作成したりすることを検討してみてください。
+貢献は大歓迎です。テストを書いてGOを学ぶ方法のガイドのための素晴らしいホームになることを願っています。PRを投稿したり、[ここ](https://github.com/andmorefine/learn-go-with-tests/issues)でできる課題を作成したりすることを検討してみてください。
 
 ## 求めているもの
 
