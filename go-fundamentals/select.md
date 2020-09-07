@@ -11,7 +11,7 @@ description: Select
 これには
 
 * HTTP呼び出しを行うための `net/http`。
-* `net/http/httptest`は、それらをテストするのに役立ちます。
+* `net/http/httptest`はテストを支援するためのものです。
 * ゴルーチン。
 * プロセスを同期するための`select`。
 
