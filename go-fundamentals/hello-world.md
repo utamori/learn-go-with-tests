@@ -4,7 +4,7 @@ description: 'Hello, World'
 
 # Hello, World
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/hello-world)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/hello-world)
 
 新しい言語での最初のプログラムが [Hello, World](https://en.m.wikipedia.org/wiki/%22Hello,_World!%22_program)であるのは伝統的です。
 

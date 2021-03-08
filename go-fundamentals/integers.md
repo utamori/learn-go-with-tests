@@ -4,7 +4,7 @@ description: integers
 
 # 整数
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/integers)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/integers)
 
 整数は期待どおりに機能します。物事を試すために `Add` 関数を書いてみましょう。 `adder_test.go` というテストファイルを作成し、このコードを記述します。
 
@@ -85,7 +85,7 @@ func Add(x, y int) int {
 
 テストを再実行すると、合格するはずです。
 
-## リファクタリング
+## リファクタリング♪
 
 ここで実際に改善できるコードは多くありません。
 

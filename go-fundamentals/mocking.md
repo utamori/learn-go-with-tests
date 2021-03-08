@@ -4,7 +4,7 @@ description: Mocking
 
 # スタブ・モック
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/mocking)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/mocking)
 
 3からカウントダウンするプログラムを作成するように求められました。各数値を新しい行に表示します（1秒の間隔を置いて）、ゼロに達すると「Go！」と表示します。そして終了します。
 
@@ -103,7 +103,7 @@ func Countdown(out *bytes.Buffer) {
 
 `fm.Fprint`を使用しています。これは、`io.Writer`（`* bytes.Buffer`など）を受け取り、それに`string`を送信します。テストは成功するはずです。
 
-## リファクタリング
+## リファクタリング♪
 
 `*bytes.Buffer`は機能しますが、代わりに汎用インターフェースを使用する方がよいことはわかっています。
 
@@ -188,7 +188,7 @@ func Countdown(out io.Writer) {
 ```
 `i--`で逆にカウントする`for`ループを使用し、`fmt.Fprintln`を使用して、番号と改行文字を続けて`out`に出力します。最後に`fmt.Fprint`を使用して終わった後「Go！」を送信します。
 
-## リファクタリング
+## リファクタリング♪
 
 いくつかの魔法の値を名前付き定数にリファクタリングする以外に、リファクタリングすることは多くありません。
 

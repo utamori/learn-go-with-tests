@@ -4,7 +4,7 @@ description: 'Structs, methods & interfaces'
 
 # 構造体、メソッド、インターフェース
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/structs)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/structs)
 
 高さと幅を指定して長方形の周囲を計算するために、いくつかのジオメトリコードが必要だとします。 `Perimeter(width float64, height float64)`関数を記述できます。
 ここで、 `float64`は` 123.45`のような浮動小数点数用です。
@@ -86,7 +86,7 @@ func Area(width float64, height float64) float64 {
 }
 ```
 
-## リファクタリング
+## リファクタリング♪
 
 私たちのコードはその役割を果たしますが、四角形について明示的なものは何も含まれていません。不注意な開発者は、三角形の幅と高さを間違った答えを返すことに気付かずにこれらの関数に提供しようとする場合があります。
 
@@ -325,7 +325,7 @@ func (c Circle) Area() float64  {
 }
 ```
 
-## リファクタリング
+## リファクタリング♪
 
 テストに重複があります。
 
@@ -511,7 +511,7 @@ func (t Triangle) Area() float64 {
 
 そして、テストは成功です！
 
-## リファクタリング
+## リファクタリング♪
 
 繰り返しになりますが、実装は問題ありませんが、テストでは多少の改善が見込めます。
 

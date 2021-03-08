@@ -4,14 +4,14 @@ description: Select
 
 # 選択
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/select)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/select)
 
 2つのURLを取得し、それらをHTTP GETでヒットして最初に返されたURLを返すことで「競合」する`WebsiteRacer`と呼ばれる関数を作成するように求められました。 10秒以内に戻らない場合は、「エラー（`error`）」を返します。
 
 これには
 
 * HTTP呼び出しを行うための `net/http`。
-* `net/http/httptest`は、それらをテストするのに役立ちます。
+* `net/http/httptest`はテストを支援するためのものです。
 * ゴルーチン。
 * プロセスを同期するための`select`。
 
@@ -141,7 +141,7 @@ func TestRacer(t *testing.T) {
 これらの睡眠を試して、意図的にテストを中断します。
 
 
-## リファクタリング
+## リファクタリング♪
 
 製品コードとテストコードの両方に重複があります。
 

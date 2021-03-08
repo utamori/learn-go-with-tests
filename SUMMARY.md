@@ -26,7 +26,7 @@
 
 * [はじめに](build-an-application/app-intro.md)
 * [HTTPサーバー](build-an-application/http-server.md)
-* [JSON, ルーティング、埋め込み](build-an-application/json.md)
+* [JSON、ルーティング、埋め込み](build-an-application/json.md)
 * [IO、並び替え](build-an-application/io.md)
 * [コマンドライン、パッケージ構造](build-an-application/command-line.md)
 * [時間](build-an-application/time.md)

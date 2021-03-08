@@ -4,60 +4,60 @@ description: HTTP server
 
 # HTTPサーバー
 
-[**You can find all the code for this chapter here**](https://github.com/quii/learn-go-with-tests/tree/master/http-server)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/http-server)
 
-You have been asked to create a web server where users can track how many games players have won.
+あなたは、ユーザーがプレーヤーが勝ったゲームの数を追跡できるWebサーバーを作成するように求められました。
 
-* `GET /players/{name}` should return a number indicating the total number of wins
-* `POST /players/{name}` should record a win for that name, incrementing for every subsequent `POST`
+* `GET /players/{name}`は、勝利の合計数を示す数値を返す必要があります
+* `POST /players/{name}`は、その名前の勝利を記録し、後続の`POST`ごとに増分する必要があります
 
-We will follow the TDD approach, getting working software as quickly as we can and then making small iterative improvements until we have the solution. By taking this approach we
+TDDアプローチに従い、できる限り迅速にソフトウェアを動作させ、解決策が見つかるまで小さな反復的な改善を行います。このアプローチを取ることによって
 
-* Keep the problem space small at any given time
-* Don't go down rabbit holes
-* If we ever get stuck/lost, doing a revert wouldn't lose loads of work.
+* 問題のあるスペースを常に小さく保つ
+* なかなか抜け出すことができない状況に陥ってはいけません
+* 行き詰まったり失われたりした場合でも、元に戻しても負荷は減りません。
 
-## Red, green, refactor
+## レッド、グリーン、リファクタリング（Red, green, refactor）
 
-Throughout this book, we have emphasised the TDD process of write a test & watch it fail \(red\), write the _minimal_ amount of code to make it work \(green\) and then refactor.
+この本全体を通して、テストを作成して失敗するのを監視するTDDプロセスを強調し、（red）、それを機能させるための _minimal_ 量のコードを記述し、（green）してリファクタリングします。
 
-This discipline of writing the minimal amount of code is important in terms of the safety TDD gives you. You should be striving to get out of "red" as soon as you can.
+最小限のコードを書くというこの規律は、TDDが与える安全性の観点から重要です。できるだけ早く「赤（red）」から抜け出すように努力する必要があります。
 
-Kent Beck describes it as:
+ケント・ベックは次のように説明しています。
 
-> Make the test work quickly, committing whatever sins necessary in process.
+> テストを迅速に実行し、プロセスで必要なあらゆる罪を犯します。
 
-You can commit these sins because you will refactor afterwards backed by the safety of the tests.
+テストの安全性に後押しされてリファクタリングされるため、これらの罪を犯すことができます。
 
-### What if you don't do this?
+### これを行わないとどうなりますか？
 
-The more changes you make while in red, the more likely you are to add more problems, not covered by tests.
+赤で表示されている変更が多いほど、テストではカバーされない問題を追加する可能性が高くなります。
 
-The idea is to be iteratively writing useful code with small steps, driven by tests so that you don't fall into a rabbit hole for hours.
+アイデアは、ウサギの穴に何時間も陥らないように、テストによって駆動される小さなステップで有用なコードを繰り返し書くことです。
 
-### Chicken and egg
+### 鶏肉と卵
 
-How can we incrementally build this? We can't `GET` a player without having stored something and it seems hard to know if `POST` has worked without the `GET` endpoint already existing.
+これを段階的に構築するにはどうすればよいですか？何かを保存せずにプレーヤーを`GET`することはできず、`GET`エンドポイントがすでに存在しない状態で`POST`が機能したかどうかを知るのは難しいようです。
 
-This is where _mocking_ shines.
+これが _mocking_ の輝きです。
 
-* `GET` will need a `PlayerStore` _thing_ to get scores for a player. This should be an interface so when we test we can create a simple stub to test our code without needing to have implemented any actual storage code.
-* For `POST` we can _spy_ on its calls to `PlayerStore` to make sure it stores players correctly. Our implementation of saving won't be coupled to retrieval.
-* For having some working software quickly we can make a very simple in-memory implementation and then later we can create an implementation backed by whatever storage mechanism we prefer.
+* プレーヤーのスコアを取得するには、`GET`に`PlayerStore` _thing_ が必要です。これはインターフェースである必要があるので、テストするときに、実際のストレージコードを実装する必要なく、コードをテストするための簡単なスタブを作成できます。
+* `POST`の場合、`PlayerStore`への呼び出しを _spy_ して、プレーヤーが正しく保存されていることを確認できます。保存の実装は検索と連動しません。
+* 機能するソフトウェアをすばやく用意するために、非常にシンプルなインメモリ実装を作成し、その後、任意のストレージメカニズムに基づく実装を作成できます。
 
-## Write the test first
+## 最初にテストを書く
 
-We can write a test and make it pass by returning a hard-coded value to get us started. Kent Beck refers this as "Faking it". Once we have a working test we can then write more tests to help us remove that constant.
+テストを作成し、ハードコードされた値を返すことでテストを成功させることができます。ケントベックはこれを「偽造（`Faking it`）」と呼んでいます。動作するテストができたら、その定数を削除するのに役立つテストをさらに記述できます。
 
-By doing this very small step, we can make the important start of getting an overall project structure working correctly without having to worry too much about our application logic.
+この非常に小さなステップを実行することで、アプリケーションロジックをあまり気にすることなく、プロジェクト全体の構造を正しく機能させる重要な出発点を作ることができます。
 
-To create a web server in Go you will typically call [ListenAndServe](https://golang.org/pkg/net/http/#ListenAndServe).
+GoでWebサーバーを作成するには、通常[ListenAndServe](https://golang.org/pkg/net/http/#ListenAndServe)を呼び出します。
 
 ```go
 func ListenAndServe(addr string, handler Handler) error
 ```
 
-This will start a web server listening on a port, creating a goroutine for every request and running it against a [`Handler`](https://golang.org/pkg/net/http/#Handler).
+これにより、ポートでリッスンするWebサーバーが起動し、すべてのリクエストに対してゴルーチンが作成され、[`Handler`](https://golang.org/pkg/net/http/#Handler)に対して実行されます。
 
 ```go
 type Handler interface {
@@ -65,9 +65,9 @@ type Handler interface {
 }
 ```
 
-A type implements the Handler interface by implementing the `ServeHTTP` method which expects two arguments, the first is where we _write our response_ and the second is the HTTP request that was sent to the server.
+タイプは、2つの引数を期待する`ServeHTTP`メソッドを実装することにより、ハンドラーインターフェースを実装します。1つ目は、レスポンスを書き込む場所で、2つ目はサーバーに送信されたHTTPリクエストです。
 
-Let's write a test for a function `PlayerServer` that takes in those two arguments. The request sent in will be to get a player's score, which we expect to be `"20"`.
+これらの2つの引数を受け取る関数`PlayerServer`のテストを書いてみましょう。送信されるリクエストは、プレーヤーのスコアを取得することです。これは`"20"`であると予想されます。
 
 ```go
 func TestGETPlayers(t *testing.T) {
@@ -87,26 +87,26 @@ func TestGETPlayers(t *testing.T) {
 }
 ```
 
-In order to test our server, we will need a `Request` to send in and we'll want to _spy_ on what our handler writes to the `ResponseWriter`.
+サーバーをテストするには、送信する`Request`が必要であり、ハンドラーが`ResponseWriter`に書き込む内容を _spy_ する必要があります。
 
-* We use `http.NewRequest` to create a request. The first argument is the request's method and the second is the request's path. The `nil` argument refers to the request's body, which we don't need to set in this case.
-* `net/http/httptest` has a spy already made for us called `ResponseRecorder` so we can use that. It has many helpful methods to inspect what has been written as a response.
+* `http.NewRequest`を使用してリクエストを作成します。最初の引数はリクエストのメソッドで、2番目はリクエストのパスです。`nil`引数はリクエストの本文を参照します。この場合、設定する必要はありません。
+* `net/http/httptest`には、`ResponseRecorder`というスパイが既に作成されているので、それを使用できます。応答として書き込まれた内容を検査するための多くの便利な方法があります。
 
-## Try to run the test
+## テストを実行してみます
 
 `./server_test.go:13:2: undefined: PlayerServer`
 
-## Write the minimal amount of code for the test to run and check the failing test output
+## テストを実行するための最小限のコードを記述し、失敗したテスト出力を確認します
 
-The compiler is here to help, just listen to it.
+コンパイラーは正常に動いています。耳を傾けてください。
 
-Define `PlayerServer`
+`PlayerServer`を定義します
 
 ```go
 func PlayerServer() {}
 ```
 
-Try again
+再試行
 
 ```text
 ./server_test.go:13:14: too many arguments in call to PlayerServer
@@ -114,7 +114,7 @@ Try again
     want ()
 ```
 
-Add the arguments to our function
+関数に引数を追加します
 
 ```go
 import "net/http"
@@ -124,7 +124,7 @@ func PlayerServer(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-The code now compiles and the test fails
+コードがコンパイルされ、テストが失敗します
 
 ```text
 === RUN   TestGETPlayers/returns_Pepper's_score
@@ -132,9 +132,9 @@ The code now compiles and the test fails
         server_test.go:20: got '', want '20'
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
-From the DI chapter, we touched on HTTP servers with a `Greet` function. We learned that net/http's `ResponseWriter` also implements io `Writer` so we can use `fmt.Fprint` to send strings as HTTP responses.
+DIの章から、`Greet`関数を使用してHTTPサーバーに触れました。 net/httpの`ResponseWriter`もio`Writer`を実装しているため、`fmt.Fprint`を使用して文字列をHTTP応答として送信できることがわかりました。
 
 ```go
 func PlayerServer(w http.ResponseWriter, r *http.Request) {
@@ -142,16 +142,16 @@ func PlayerServer(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-The test should now pass.
+これでテストに成功するはずです。
 
-## Complete the scaffolding
+## 足場を完成させましょう
 
-We want to wire this up into an application. This is important because
+これをアプリケーションに結び付けたいと思います。これは重要です
 
-* We'll have _actual working software_, we don't want to write tests for the sake of it, it's good to see the code in action.
-* As we refactor our code, it's likely we will change the structure of the program. We want to make sure this is reflected in our application too as part of the incremental approach.
+* 実際に動作するソフトウェアを用意します。そのためのテストを記述したくありません。コードの動作を確認することをお勧めします。
+* コードをリファクタリングすると、プログラムの構造が変更される可能性があります。これは、インクリメンタルアプローチの一部として、アプリケーションにも反映されるようにしたいと考えています。
 
-Create a new file for our application and put this code in.
+アプリケーション用の新しいファイルを作成し、このコードを配置します。
 
 ```go
 package main
@@ -169,33 +169,33 @@ func main() {
 }
 ```
 
-So far all of our application code has been in one file, however, this isn't best practice for larger projects where you'll want to separate things into different files.
+これまでのところ、すべてのアプリケーションコードが1つのファイルに含まれていますが、これは、物事を異なるファイルに分離する必要がある大規模なプロジェクトでは、ベストプラクティスではありません。
 
-To run this, do `go build` which will take all the `.go` files in the directory and build you a program. You can then execute it with `./myprogram`.
+これを実行するには、ディレクトリ内のすべての`.go`ファイルを取得してプログラムをビルドする`go build`を実行します。その後、`./myprogram`で実行できます。
 
 ### `http.HandlerFunc`
 
-Earlier we explored that the `Handler` interface is what we need to implement in order to make a server. _Typically_ we do that by creating a `struct` and make it implement the interface by implementing its own ServeHTTP method. However the use-case for structs is for holding data but _currently_ we have no state, so it doesn't feel right to be creating one.
+以前に`Handler`インターフェースがサーバーを作るために実装する必要があるものであることを探りました。 通常は、`struct`を作成してそれを行い、独自のServeHTTPメソッドを実装してインターフェースを実装します。ただし、構造体のユースケースはデータを保持するためのものですが、_currently_ には状態がないため、データを作成するのは適切ではありません。
 
-[HandlerFunc](https://golang.org/pkg/net/http/#HandlerFunc) lets us avoid this.
+[HandlerFunc](https://golang.org/pkg/net/http/#HandlerFunc)を使用すると、これを回避できます。
 
-> The HandlerFunc type is an adapter to allow the use of ordinary functions as HTTP handlers. If f is a function with the appropriate signature, HandlerFunc\(f\) is a Handler that calls f.
+> HandlerFuncタイプは、通常の関数をHTTPハンドラーとして使用できるようにするアダプターです。fが適切なシグネチャを持つ関数である場合、HandlerFunc\(f\) はfを呼び出すハンドラーです。
 
 ```go
 type HandlerFunc func(ResponseWriter, *Request)
 ```
 
-From the documentation, we see that type `HandlerFunc` has already implemented the `ServeHTTP` method. By type casting our `PlayerServer` function with it, we have now implemented the required `Handler`.
+ドキュメントから、タイプ`HandlerFunc`がすでに`ServeHTTP`メソッドを実装していることがわかります。`PlayerServer`関数をタイプキャストすることで、必要な`Handler`を実装しました。
 
 ### `http.ListenAndServe(":5000"...)`
 
-`ListenAndServe` takes a port to listen on a `Handler`. If the port is already being listened to it will return an `error` so we are using an `if` statement to capture that scenario and log the problem to the user.
+`ListenAndServe`は、ポートを使用して`Handler`をリッスンします。ポートがすでにリッスンされている場合は「エラー`error`」が返されるため、`if`ステートメントを使用してそのシナリオをキャプチャし、問題をユーザーに記録します。
 
-What we're going to do now is write _another_ test to force us into making a positive change to try and move away from the hard-coded value.
+これから行うのは、ハードコーディングされた値から離れるようにポジティブな変更を強制する _another_ テストを作成することです。
 
-## Write the test first
+## 最初にテストを書く
 
-We'll add another subtest to our suite which tries to get the score of a different player, which will break our hard-coded approach.
+別のサブテストをスイートに追加して、別のプレーヤーのスコアを取得しようとします。これにより、ハードコーディングされたアプローチが壊れます。
 
 ```go
 t.Run("returns Floyd's score", func(t *testing.T) {
@@ -213,13 +213,13 @@ t.Run("returns Floyd's score", func(t *testing.T) {
 })
 ```
 
-You may have been thinking
+あなたは考えていたかもしれません。
 
-> Surely we need some kind of concept of storage to control which player gets what score. It's weird that the values seem so arbitrary in our tests.
+> 確かに、どのプレイヤーがどのスコアを獲得するかを制御するために、何らかのストレージの概念が必要です。テストで値が非常に恣意的に見えるのは奇妙です。
 
-Remember we are just trying to take as small as steps as reasonably possible, so we're just trying to break the constant for now.
+できる限り小さなステップを実行するように心がけていることを忘れないでください。したがって、今は定数を壊そうとしているだけです。
 
-## Try to run the test
+## テストを実行してみます
 
 ```text
 === RUN   TestGETPlayers/returns_Pepper's_score
@@ -229,7 +229,7 @@ Remember we are just trying to take as small as steps as reasonably possible, so
         server_test.go:34: got '20', want '10'
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
 ```go
 func PlayerServer(w http.ResponseWriter, r *http.Request) {
@@ -247,17 +247,17 @@ func PlayerServer(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-This test has forced us to actually look at the request's URL and make a decision. So whilst in our heads, we may have been worrying about player stores and interfaces the next logical step actually seems to be about _routing_.
+このテストにより、リクエストのURLを実際に確認して決定を迫られました。したがって、頭の中では、プレイヤーのストアとインターフェースについて心配している可能性があります。次の論理的なステップは、実際には _routing_ のようです。
 
-If we had started with the store code the amount of changes we'd have to do would be very large compared to this. **This is a smaller step towards our final goal and was driven by tests**.
+店舗コードから始めた場合、必要な変更の量はこれに比べて非常に大きくなります。 **これは最終目標に向けたより小さなステップであり、テストによって推進されました**。
 
-We're resisting the temptation to use any routing libraries right now, just the smallest step to get our test passing.
+現在、ルーティングライブラリを使用するという誘惑に抵抗しています。テストに合格するための最小のステップにすぎません。
 
-`r.URL.Path` returns the path of the request which we can then use [`strings.TrimPrefix`](https://golang.org/pkg/strings/#TrimPrefix) to trim away `/players/` to get the requested player. It's not very robust but will do the trick for now.
+`r.URL.Path`はリクエストのパスを返すので、[`strings.TrimPrefix`](https://golang.org/pkg/strings/#TrimPrefix)を使用して、 `/players/`を削除します。要求されたプレーヤーを取得します。それほど堅牢ではありませんが、とりあえずはうまくいくでしょう。
 
-## Refactor
+## リファクタリング♪
 
-We can simplify the `PlayerServer` by separating out the score retrieval into a function
+スコアの取得を関数に分離することで、`PlayerServer`を簡略化できます
 
 ```go
 func PlayerServer(w http.ResponseWriter, r *http.Request) {
@@ -279,7 +279,7 @@ func GetPlayerScore(name string) string {
 }
 ```
 
-And we can DRY up some of the code in the tests by making some helpers
+そして、いくつかのヘルパーを作成することで、テストのコードの一部を乾燥させることができます。
 
 ```go
 func TestGETPlayers(t *testing.T) {
@@ -315,13 +315,13 @@ func assertResponseBody(t *testing.T, got, want string) {
 }
 ```
 
-However, we still shouldn't be happy. It doesn't feel right that our server knows the scores.
+しかし、私たちはまだ幸せであってはなりません。私たちのサーバーがスコアを知っていることは正しくありません。
 
-Our refactoring has made it pretty clear what to do.
+私たちのリファクタリングは何をすべきかをかなり明確にしました。
 
-We moved the score calculation out of the main body of our handler into a function `GetPlayerScore`. This feels like the right place to separate the concerns using interfaces.
+スコア計算をハンドラーの本体から関数`GetPlayerScore`に移動しました。これは、インターフェースを使用して懸念事項を分離するのに適切な場所のように感じます。
 
-Let's move our function we re-factored to be an interface instead
+代わりにリファクタリングした関数をインターフェイスに移動してみましょう。
 
 ```go
 type PlayerStore interface {
@@ -329,7 +329,7 @@ type PlayerStore interface {
 }
 ```
 
-For our `PlayerServer` to be able to use a `PlayerStore`, it will need a reference to one. Now feels like the right time to change our architecture so that our `PlayerServer` is now a `struct`.
+`PlayerServer`が`PlayerStore`を使用できるようにするには、それを参照する必要があります。これで、アーキテクチャを変更して、`PlayerServer`が`struct`になるようにする適切なタイミングのように感じられます。
 
 ```go
 type PlayerServer struct {
@@ -337,7 +337,7 @@ type PlayerServer struct {
 }
 ```
 
-Finally, we will now implement the `Handler` interface by adding a method to our new struct and putting in our existing handler code.
+最後に、新しい構造体にメソッドを追加して既存のハンドラーコードを挿入することにより、`Handler`インターフェースを実装します。
 
 ```go
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -346,9 +346,9 @@ func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-The only other change is we now call our `store.GetPlayerScore` to get the score, rather than the local function we defined \(which we can now delete\).
+他の唯一の変更は、定義したローカル関数（これで削除できます）ではなく、`store.GetPlayerScore`を呼び出してスコアを取得することです。
 
-Here is the full code listing of our server
+サーバーの完全なコードリストは次のとおりです。
 
 ```go
 type PlayerStore interface {
@@ -365,13 +365,13 @@ func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-### Fix the issues
+### 問題を修正する
 
-This was quite a few changes and we know our tests and application will no longer compile, but just relax and let the compiler work through it.
+これはかなりの数の変更であり、テストとアプリケーションがコンパイルされなくなることがわかっています。リラックスして、コンパイラーにそれを実行させてください。
 
 `./main.go:9:58: type PlayerServer is not an expression`
 
-We need to change our tests to instead create a new instance of our `PlayerServer` and then call its method `ServeHTTP`.
+テストを変更して、代わりに`PlayerServer`の新しいインスタンスを作成し、そのメソッド`ServeHTTP`を呼び出す必要があります。
 
 ```go
 func TestGETPlayers(t *testing.T) {
@@ -397,13 +397,13 @@ func TestGETPlayers(t *testing.T) {
 }
 ```
 
-Notice we're still not worrying about making stores _just yet_, we just want the compiler passing as soon as we can.
+まだストアを作成することについてはまだ心配していないことに注意してください。できるだけ早くコンパイラーを渡したいだけです。
 
-You should be in the habit of prioritising having code that compiles and then code that passes the tests.
+コンパイルするコードを優先し、次にテストに合格するコードを優先する習慣を身に付ける必要があります。
 
-By adding more functionality \(like stub stores\) whilst the code isn't compiling, we are opening ourselves up to potentially _more_ compilation problems.
+コードがコンパイルされていないときに（スタブストアのような）機能を追加することにより、潜在的に _more_ コンパイルの問題に直面することになります。
 
-Now `main.go` won't compile for the same reason.
+同じ理由で`main.go`はコンパイルされません。
 
 ```go
 func main() {
@@ -415,7 +415,7 @@ func main() {
 }
 ```
 
-Finally, everything is compiling but the tests are failing
+最後に、すべてがコンパイルされていますが、テストは失敗しています
 
 ```text
 === RUN   TestGETPlayers/returns_the_Pepper's_score
@@ -423,7 +423,7 @@ panic: runtime error: invalid memory address or nil pointer dereference [recover
     panic: runtime error: invalid memory address or nil pointer dereference
 ```
 
-This is because we have not passed in a `PlayerStore` in our tests. We'll need to make a stub one up.
+これは、テストで`PlayerStore`を渡していないためです。スタブを1つ作成する必要があります。
 
 ```go
 type StubPlayerStore struct {
@@ -436,7 +436,7 @@ func (s *StubPlayerStore) GetPlayerScore(name string) int {
 }
 ```
 
-A `map` is a quick and easy way of making a stub key/value store for our tests. Now let's create one of these stores for our tests and send it into our `PlayerServer`.
+`map`は、テスト用のスタブ キー/値（key/value）ストアを作成する迅速で簡単な方法です。次に、テスト用にこれらのストアの1つを作成して、`PlayerServer`に送信します。
 
 ```go
 func TestGETPlayers(t *testing.T) {
@@ -468,15 +468,15 @@ func TestGETPlayers(t *testing.T) {
 }
 ```
 
-Our tests now pass and are looking better. The _intent_ behind our code is clearer now due to the introduction of the store. We're telling the reader that because we have _this data in a `PlayerStore`_ that when you use it with a `PlayerServer` you should get the following responses.
+テストは成功し、見た目も良くなっています。ストアの導入により、コードの背後にある _intent_ がより明確になりました。`PlayerStore`にこのデータがあるので、それを`PlayerServer`で使用すると、次の応答が得られるはずであることを読者に伝えています。
 
-### Run the application
+### アプリケーションを実行します
 
-Now our tests are passing the last thing we need to do to complete this refactor is to check if our application is working. The program should start up but you'll get a horrible response if you try and hit the server at `http://localhost:5000/players/Pepper`.
+これで、このリファクタリングを完了するために必要な最後のことは、アプリケーションの動作を確認することです。プログラムは起動するはずですが、 `http://localhost:5000/players/Pepper`でサーバーにアクセスしようとすると、恐ろしい応答が返されます。
 
-The reason for this is that we have not passed in a `PlayerStore`.
+これは、`PlayerStore`を渡していないためです。
 
-We'll need to make an implementation of one, but that's difficult right now as we're not storing any meaningful data so it'll have to be hard-coded for the time being.
+1つの実装を作成する必要がありますが、意味のあるデータを格納していないため、当面はハードコーディングする必要があるため、現時点ではそれは困難です。
 
 ```go
 type InMemoryPlayerStore struct{}
@@ -494,19 +494,19 @@ func main() {
 }
 ```
 
-If you run `go build` again and hit the same URL you should get `"123"`. Not great, but until we store data that's the best we can do.
+`go build`を再度実行して同じURLにアクセスすると、`"123"`が表示されます。すばらしいとは言えませんが、データを保存するまでは、私たちができる最高のことです。
 
-We have a few options as to what to do next
+私たちは次に何をすべきかについていくつかのオプションがあります
 
-* Handle the scenario where the player doesn't exist
-* Handle the `POST /players/{name}` scenario
-* It didn't feel great that our main application was starting up but not actually working. We had to manually test to see the problem.
+* レイヤーが存在しないシナリオを処理します
+* `POST /players/{name}`シナリオを処理します
+* メインアプリケーションが起動していても実際に動作していないのは気分がよくありませんでした。問題を確認するために手動でテストする必要がありました。
 
-Whilst the `POST` scenario gets us closer to the "happy path", I feel it'll be easier to tackle the missing player scenario first as we're in that context already. We'll get to the rest later.
+`POST`シナリオは「ハッピーパス」に近づきますが、すでにそのコンテキストにいるため、最初に不足しているプレーヤーシナリオに取り組む方が簡単だと思います。残りは後で行います。
 
-## Write the test first
+## 最初にテストを書く
 
-Add a missing player scenario to our existing suite
+不足しているプレーヤーのシナリオを既存のスイートに追加する
 
 ```go
 t.Run("returns 404 on missing players", func(t *testing.T) {
@@ -524,7 +524,7 @@ t.Run("returns 404 on missing players", func(t *testing.T) {
 })
 ```
 
-## Try to run the test
+## テストを実行してみます
 
 ```text
 === RUN   TestGETPlayers/returns_404_on_missing_players
@@ -532,7 +532,7 @@ t.Run("returns 404 on missing players", func(t *testing.T) {
         server_test.go:56: got status 200 want 404
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
 ```go
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -544,15 +544,15 @@ func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-Sometimes I heavily roll my eyes when TDD advocates say "make sure you just write the minimal amount of code to make it pass" as it can feel very pedantic.
+TDDの提唱者が「コードを最小限にするだけでコードをパスできるようにする」と言ったとき、私はときどき目を凝らします。
 
-But this scenario illustrates the example well. I have done the bare minimum \(knowing it is not correct\), which is write a `StatusNotFound` on **all responses** but all our tests are passing!
+しかし、このシナリオは例をよく示しています。私は最低限の（正しくないことを知っている）を実行しました。これは**すべての応答**に`StatusNotFound`を書き込むことですが、すべてのテストに成功しています！
 
-**By doing the bare minimum to make the tests pass it can highlight gaps in your tests**. In our case, we are not asserting that we should be getting a `StatusOK` when players _do_ exist in the store.
+**テストに合格するために最低限必要なことを行うことで、テストのギャップを強調できます**。今回のケースでは、プレイヤーがストアに存在するときに`StatusOK`を取得する必要があることを表明していません。
 
-Update the other two tests to assert on the status and fix the code.
+他の2つのテストを更新してステータスを評価し、コードを修正します。
 
-Here are the new tests
+これが新しいテストです
 
 ```go
 func TestGETPlayers(t *testing.T) {
@@ -614,9 +614,9 @@ func assertResponseBody(t *testing.T, got, want string) {
 }
 ```
 
-We're checking the status in all our tests now so I made a helper `assertStatus` to facilitate that.
+現在、すべてのテストでステータスをチェックしているので、これを容易にするヘルパー`assertStatus`を作成しました。
 
-Now our first two tests fail because of the 404 instead of 200, so we can fix `PlayerServer` to only return not found if the score is 0.
+これで、最初の2つのテストは200ではなく404が原因で失敗します。そのため、スコアが0の場合にのみ見つからないことを返すように`PlayerServer`を修正できます。
 
 ```go
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -632,11 +632,11 @@ func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-### Storing scores
+### スコアを保存する
 
-Now that we can retrieve scores from a store it now makes sense to be able to store new scores.
+ストアからスコアを取得できるようになったので、新しいスコアを格納できるようになりました。
 
-## Write the test first
+## 最初にテストを書く
 
 ```go
 func TestStoreWins(t *testing.T) {
@@ -656,9 +656,9 @@ func TestStoreWins(t *testing.T) {
 }
 ```
 
-For a start let's just check we get the correct status code if we hit the particular route with POST. This lets us drive out the functionality of accepting a different kind of request and handling it differently to `GET /players/{name}`. Once this works we can then start asserting on our handler's interaction with the store.
+まず、POSTで特定のルートに到達した場合に正しいステータスコードを取得することを確認します。これにより、異なる種類のリクエストを受け入れ、それを `GET /players/{name}`とは異なる方法で処理する機能を実行できます。これがうまくいったら、ハンドラーとストアの相互作用を評価し始めることができます。
 
-## Try to run the test
+## テストを実行してみます
 
 ```text
 === RUN   TestStoreWins/it_returns_accepted_on_POST
@@ -666,9 +666,9 @@ For a start let's just check we get the correct status code if we hit the partic
         server_test.go:70: did not get correct status, got 404, want 202
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
-Remember we are deliberately committing sins, so an `if` statement based on the request's method will do the trick.
+意図的に罪を犯しているので、リクエストのメソッドに基づく`if`ステートメントでうまくいくことを覚えておいてください。
 
 ```go
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -690,9 +690,9 @@ func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-## Refactor
+## リファクタリング♪
 
-The handler is looking a bit muddled now. Let's break the code up to make it easier to follow and isolate the different functionality into new functions.
+ハンドラーは少し混乱しています。コードを分割して、さまざまな機能を簡単に追跡して分離し、新しい機能に分離しましょう。
 
 ```go
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -723,13 +723,13 @@ func (p *PlayerServer) processWin(w http.ResponseWriter) {
 }
 ```
 
-This makes the routing aspect of `ServeHTTP` a bit clearer and means our next iterations on storing can just be inside `processWin`.
+これにより、`ServeHTTP`のルーティングの側面が少し明確になり、格納に関する次の反復が`processWin`の内部に収まるようになります
 
-Next, we want to check that when we do our `POST /players/{name}` that our `PlayerStore` is told to record the win.
+次に、`POST /players/{name}`を実行するときに、`PlayerStore`が勝利を記録するように指示されていることを確認します。
 
-## Write the test first
+## 最初にテストを書く
 
-We can accomplish this by extending our `StubPlayerStore` with a new `RecordWin` method and then spy on its invocations.
+これは、`StubPlayerStore`を新しい`RecordWin`メソッドで拡張し、その呼び出しをスパイすることで実現できます。
 
 ```go
 type StubPlayerStore struct {
@@ -747,7 +747,7 @@ func (s *StubPlayerStore) RecordWin(name string) {
 }
 ```
 
-Now extend our test to check the number of invocations for a start
+テストを拡張して、開始の呼び出しの数を確認します。
 
 ```go
 func TestStoreWins(t *testing.T) {
@@ -776,16 +776,16 @@ func newPostWinRequest(name string) *http.Request {
 }
 ```
 
-## Try to run the test
+## テストを実行してみます
 
 ```text
 ./server_test.go:26:20: too few values in struct initializer
 ./server_test.go:65:20: too few values in struct initializer
 ```
 
-## Write the minimal amount of code for the test to run and check the failing test output
+## テストを実行するための最小限のコードを記述し、失敗したテスト出力を確認します
 
-We need to update our code where we create a `StubPlayerStore` as we've added a new field
+新しいフィールドを追加したので、`StubPlayerStore`を作成するコードを更新する必要があります
 
 ```go
 store := StubPlayerStore{
@@ -800,11 +800,11 @@ store := StubPlayerStore{
         server_test.go:80: got 0 calls to RecordWin want 1
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
-As we're only asserting the number of calls rather than the specific values it makes our initial iteration a little smaller.
+特定の値ではなく呼び出しの数のみを評価しているため、最初の反復が少し小さくなります。
 
-We need to update `PlayerServer`'s idea of what a `PlayerStore` is by changing the interface if we're going to be able to call `RecordWin`.
+`RecordWin`を呼び出せるようにするには、インターフェイスを変更して、`PlayerStore`が何であるかについての`PlayerServer`の考えを更新する必要があります。
 
 ```go
 type PlayerStore interface {
@@ -813,14 +813,14 @@ type PlayerStore interface {
 }
 ```
 
-By doing this `main` no longer compiles
+これを行うことにより、`main`はコンパイルされなくなります
 
 ```text
 ./main.go:17:46: cannot use InMemoryPlayerStore literal (type *InMemoryPlayerStore) as type PlayerStore in field value:
     *InMemoryPlayerStore does not implement PlayerStore (missing RecordWin method)
 ```
 
-The compiler tells us what's wrong. Let's update `InMemoryPlayerStore` to have that method.
+コンパイラは何が悪いのかを教えてくれます。そのメソッドを持つように`InMemoryPlayerStore`を更新しましょう。
 
 ```go
 type InMemoryPlayerStore struct{}
@@ -828,9 +828,9 @@ type InMemoryPlayerStore struct{}
 func (i *InMemoryPlayerStore) RecordWin(name string) {}
 ```
 
-Try and run the tests and we should be back to compiling code - but the test is still failing.
+テストを試して実行すると、コードのコンパイルに戻るはずですが、テストはまだ失敗しています。
 
-Now that `PlayerStore` has `RecordWin` we can call it within our `PlayerServer`
+`PlayerStore`に`RecordWin`があるので、`PlayerServer`内で呼び出すことができます。
 
 ```go
 func (p *PlayerServer) processWin(w http.ResponseWriter) {
@@ -839,9 +839,9 @@ func (p *PlayerServer) processWin(w http.ResponseWriter) {
 }
 ```
 
-Run the tests and it should be passing! Obviously `"Bob"` isn't exactly what we want to send to `RecordWin`, so let's further refine the test.
+テストを実行すれば合格です。明らかに、`"Bob"`は、`RecordWin`に送信したいものではないので、テストをさらに改良してみましょう。
 
-## Write the test first
+## 最初にテストを書く
 
 ```go
 t.Run("it records wins on POST", func(t *testing.T) {
@@ -864,9 +864,9 @@ t.Run("it records wins on POST", func(t *testing.T) {
 })
 ```
 
-Now that we know there is one element in our `winCalls` slice we can safely reference the first one and check it is equal to `player`.
+`winCalls`スライスに1つの要素があることがわかったので、最初の要素を安全に参照して、それが`player`と等しいことを確認できます。
 
-## Try to run the test
+## テストを実行してみます
 
 ```text
 === RUN   TestStoreWins/it_records_wins_on_POST
@@ -874,7 +874,7 @@ Now that we know there is one element in our `winCalls` slice we can safely refe
         server_test.go:86: did not store correct winner got 'Bob' want 'Pepper'
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
 ```go
 func (p *PlayerServer) processWin(w http.ResponseWriter, r *http.Request) {
@@ -884,11 +884,11 @@ func (p *PlayerServer) processWin(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-We changed `processWin` to take `http.Request` so we can look at the URL to extract the player's name. Once we have that we can call our `store` with the correct value to make the test pass.
+`processWin`を`http.Request`に変更して、URLを見てプレーヤーの名前を抽出できるようにしました。それができたら、正しい値で`store`を呼び出してテストに合格することができます。
 
-## Refactor
+## リファクタリング♪
 
-We can DRY up this code a bit as we're extracting the player name the same way in two places
+2つの場所で同じ方法でプレイヤー名を抽出しているので、このコードを少しDRYにすることができます。
 
 ```go
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -918,25 +918,25 @@ func (p *PlayerServer) processWin(w http.ResponseWriter, player string) {
 }
 ```
 
-Even though our tests are passing we don't really have working software. If you try and run `main` and use the software as intended it doesn't work because we haven't got round to implementing `PlayerStore` correctly. This is fine though; by focusing on our handler we have identified the interface that we need, rather than trying to design it up-front.
+テストは成功していますが、実際に機能するソフトウェアはありません。`main`を実行して、意図したとおりにソフトウェアを使用すると、`PlayerStore`を正しく実装するためのラウンドがないため、機能しません。これは問題ありません。ハンドラーに焦点を当てることで、事前に設計するのではなく、必要なインターフェースを特定しました。
 
-We _could_ start writing some tests around our `InMemoryPlayerStore` but it's only here temporarily until we implement a more robust way of persisting player scores \(i.e. a database\).
+`InMemoryPlayerStore`の周りにいくつかのテストを書き始めることができましたが、これは、プレーヤーのスコアを永続化するためのより堅牢な方法を実装するまで一時的にのみです（つまり、データベース）。
 
-What we'll do for now is write an _integration test_ between our `PlayerServer` and `InMemoryPlayerStore` to finish off the functionality. This will let us get to our goal of being confident our application is working, without having to directly test `InMemoryPlayerStore`. Not only that, but when we get around to implementing `PlayerStore` with a database, we can test that implementation with the same integration test.
+ここでは、`PlayerServer`と`InMemoryPlayerStore`の間に _統合テスト_ を記述して、機能を完成させます。これにより、`InMemoryPlayerStore`を直接テストする必要なく、アプリケーションが機能していると確信できるという目標を達成できます。それだけでなく、データベースでの`PlayerStore`の実装に取り​​掛かると、同じ統合テストでその実装をテストできます。
 
-### Integration tests
+### 統合テスト
 
-Integration tests can be useful for testing that larger areas of your system work but you must bear in mind:
+統合テストは、システムのより広い領域が機能することをテストするのに役立ちますが、次の点に注意する必要があります。
 
-* They are harder to write
-* When they fail, it can be difficult to know why \(usually it's a bug within a component of the integration test\) and so can be harder to fix
-* They are sometimes slower to run \(as they often are used with "real" components, like a database\)
+* 書くのが難しい
+* 失敗すると、なぜ（通常、統合テストのコンポーネント内のバグであるか）を理解するのが難しくなるため、修正が困難になる可能性があります。
+* 実行に時間がかかる場合があります（データベースなどの「実際の」コンポーネントで使用されることが多いため）。
 
-For that reason, it is recommended that you research _The Test Pyramid_.
+そのためにも、_テストピラミッド（The Test Pyramid）_ をリサーチしておくことをお勧めします。
 
-## Write the test first
+## 最初にテストを書く
 
-In the interest of brevity, I am going to show you the final refactored integration test.
+簡潔にするために、最後のリファクタリングされた統合テストを紹介します。
 
 ```go
 func TestRecordingWinsAndRetrievingThem(t *testing.T) {
@@ -956,24 +956,24 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 }
 ```
 
-* We are creating our two components we are trying to integrate with: `InMemoryPlayerStore` and `PlayerServer`.
-* We then fire off 3 requests to record 3 wins for `player`. We're not too concerned about the status codes in this test as it's not relevant to whether they are integrating well.
-* The next response we do care about \(so we store a variable `response`\) because we are going to try and get the `player`'s score.
+* 統合しようとしている2つのコンポーネント、`InMemoryPlayerStore`と`PlayerServer`を作成しています。
+* 次に、`player`の3つの勝利を記録するために3つのリクエストを発行します。このテストのステータスコードは、それらがうまく統合されているかどうかには関係がないので、あまり心配していません。
+* 次に注意するのは変数`response`を格納することなので、`player`のスコアを取得しようとするためです。
 
-## Try to run the test
+## テストを実行してみます
 
 ```text
 --- FAIL: TestRecordingWinsAndRetrievingThem (0.00s)
     server_integration_test.go:24: response body is wrong, got '123' want '3'
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
-I am going to take some liberties here and write more code than you may be comfortable with without writing a test.
+私はここでいくつかの自由を取り、テストを書かずに慣れるよりも多くのコードを書きます。
 
-_This is allowed_! We still have a test checking things should be working correctly but it is not around the specific unit we're working with \(`InMemoryPlayerStore`\).
+これは許可されています！正常に機能していることを確認するテストはまだありますが、`InMemoryPlayerStore`で使用している特定のユニットの周りではありません。
 
-If I were to get stuck in this scenario, I would revert my changes back to the failing test and then write more specific unit tests around `InMemoryPlayerStore` to help me drive out a solution.
+このシナリオで行き詰まった場合は、変更を失敗したテストに戻し、`InMemoryPlayerStore`に関連するより具体的な単体テストを記述して、ソリューションを実行できるようにします。
 
 ```go
 func NewInMemoryPlayerStore() *InMemoryPlayerStore {
@@ -993,11 +993,11 @@ func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
 }
 ```
 
-* We need to store the data so I've added a `map[string]int` to the `InMemoryPlayerStore` struct
-* For convenience I've made `NewInMemoryPlayerStore` to initialise the store, and updated the integration test to use it \(`store := NewInMemoryPlayerStore()`\)
-* The rest of the code is just wrapping around the `map`
+* データを保存する必要があるので、`map[string]int`を`InMemoryPlayerStore`構造体に追加しました
+* 便宜上、ストアを初期化するために`NewInMemoryPlayerStore`を作成し、それを使用するように統合テストを更新しました（`store := NewInMemoryPlayerStore()`）
+* 残りのコードは、`map`をラップするだけです
 
-The integration test passes, now we just need to change `main` to use `NewInMemoryPlayerStore()`
+統合テストに合格したので、`main`を変更して` NewInMemoryPlayerStore()`を使用するだけです。
 
 ```go
 package main
@@ -1016,48 +1016,47 @@ func main() {
 }
 ```
 
-Build it, run it and then use `curl` to test it out.
+ビルドして実行し、`curl`を使用してテストします。
 
-* Run this a few times, change the player names if you like `curl -X POST http://localhost:5000/players/Pepper`
-* Check scores with `curl http://localhost:5000/players/Pepper`
+* これを数回実行し、 `curl -X POST http://localhost:5000/players/Pepper`のようにプレーヤー名を変更します
+* `curl http://localhost:5000/players/Pepper`でスコアを確認してください
 
-Great! You've made a REST-ish service. To take this forward you'd want to pick a data store to persist the scores longer than the length of time the program runs.
+すごい！ REST風のサービスを作成しました。これを進めるには、データストアを選択して、プログラムの実行時間よりも長いスコアを保持する必要があります。
 
-* Pick a store \(Bolt? Mongo? Postgres? File system?\)
-* Make `PostgresPlayerStore` implement `PlayerStore`
-* TDD the functionality so you're sure it works
-* Plug it into the integration test, check it's still ok
-* Finally plug it into `main`
+* ストアを選択してください （Bolt? Mongo? Postgres? File system?）
+* `PostgresPlayerStore`に` PlayerStore`を実装させる
+* TDDの機能により、確実に機能します
+* 統合テストに接続し、問題がないことを確認します
+* 最後に`main`に接続します
 
-## Refactor
+## リファクタリング♪
 
-We are almost there! Lets take some effort to prevent concurrency errors like these
+私たちは、ほぼ、そこにいる！このような同時実行エラーを防ぐために少し努力しましょう
 
 ```text
 fatal error: concurrent map read and map write
 ```
 
-By adding mutexes, we enforce concurrency safety especially for the counter in our `RecordWin` function. Read more about mutexes in the sync chapter.
+ミューテックスを追加することで、特に`RecordWin`関数のカウンターに同時実行の安全性を適用します。 mutexの詳細については、同期の章をご覧ください。
 
-## Wrapping up
+## まとめ
 
 ### `http.Handler`
 
-* Implement this interface to create web servers
-* Use `http.HandlerFunc` to turn ordinary functions into `http.Handler`s
-* Use `httptest.NewRecorder` to pass in as a `ResponseWriter` to let you spy on the responses your handler sends
-* Use `http.NewRequest` to construct the requests you expect to come in to your system
+* このインターフェースを実装してWebサーバーを作成する
+* 通常の関数を`http.Handler`に変換するには、`http.HandlerFunc`を使用します
+* `httptest.NewRecorder`を使用して`ResponseWriter`として渡し、ハンドラーが送信する応答をスパイできるようにします
+* `http.NewRequest`を使用して、システムに入ると予想されるリクエストを作成します
 
-### Interfaces, Mocking and DI
+### インターフェース、モッキング、DI
 
-* Lets you iteratively build the system up in smaller chunks
-* Allows you to develop a handler that needs a storage without needing actual storage
-* TDD to drive out the interfaces you need
+* 小さなチャンクでシステムを繰り返し構築できます
+* 実際のストレージを必要とせずにストレージを必要とするハンドラーを開発できます
+* TDDは必要なインターフェースを駆動します
 
-### Commit sins, then refactor \(and then commit to source control\)
+### 罪を犯して、リファクタリング（そして、ソースコントロールにコミットして）
 
-* You need to treat having failing compilation or failing tests as a red situation that you need to get out of as soon as you can.
-* Write just the necessary code to get there. _Then_ refactor and make the code nice.
-* By trying to do too many changes whilst the code isn't compiling or the tests are failing puts you at risk of compounding the problems.
-* Sticking to this approach forces you to write small tests, which means small changes, which helps keep working on complex systems manageable.
-
+* コンパイルに失敗したり、テストに失敗したりすることは、できるだけ早く脱出しなければならない赤信号として扱う必要があります。
+* そのために必要なコードだけを書いてください。その後、リファクタリングをしてコードを良くしてください。
+* コードがコンパイルされていなかったり、テストが失敗している間に多くの変更をしようとすると、問題を悪化させる危険性があります。
+* このアプローチに固執すると、小さなテストを書くことを強制され、小さな変更を意味し、複雑なシステムでの作業を管理しやすくします。

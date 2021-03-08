@@ -4,7 +4,7 @@ description: Maps
 
 # マップ
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/maps)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/maps)
 
 [配列とスライス](arrays-and-slices.md)では、値を順番に格納する方法を見ました。
 では、`key`でアイテムを保存し、すばやく検索する方法を見てみましょう。
@@ -77,7 +77,7 @@ func Search(dictionary map[string]string, word string) string {
 
 マップから値を取得することは、配列 `map[key]`から値を取得することと同じです。
 
-## リファクタリング
+## リファクタリング♪
 
 ```go
 func TestSearch(t *testing.T) {
@@ -210,7 +210,7 @@ func (d Dictionary) Search(word string) (string, error) {
 
 このプロパティにより、存在しない単語と定義がない単語を区別できます。
 
-## リファクタリング
+## リファクタリング♪
 
 ```go
 var ErrNotFound = errors.New("could not find the word you were looking for")
@@ -323,7 +323,7 @@ var dictionary = make(map[string]string)
 
 どちらのアプローチでも空の`hash map`を作成し、`dictionary`を指し示します。これにより、ランタイムパニックが発生することはありません。
 
-## リファクタリング
+## リファクタリング♪
 
 私たちの実装ではリファクタリングするものは多くありませんが、テストでは少し単純化を使用できます。
 
@@ -456,7 +456,7 @@ func (d Dictionary) Add(word, definition string) error {
 
 ここでは、エラーを照合するために `switch`ステートメントを使用しています。このような`switch`があると、`Search`が`ErrNotFound`以外のエラーを返す場合に備えて、追加の安全策が提供されます。
 
-## リファクタリング
+## リファクタリング♪
 
 リファクタリングするものはあまりありませんが、エラーの使用が増えるにつれて、いくつかの変更を加えることができます。
 

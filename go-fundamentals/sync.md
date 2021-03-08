@@ -4,7 +4,7 @@ description: Sync
 
 # 同期
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/sync)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/sync)
 
 安全に併用できる並行処理を作りたい。
 
@@ -94,7 +94,7 @@ func (c *Counter) Value() int {
 }
 ```
 
-## リファクタリング
+## リファクタリング♪
 
 リファクタリングすることはそれほど多くありませんが、`Counter`を中心にさらに多くのテストを作成するので、テストが少し明確に読み取れるように、小さなアサーション関数`assertCount`を作成します。
 

@@ -4,27 +4,28 @@ description: Revisiting HTTP Handlers
 
 # HTTPハンドラーの再検討
 
-[**You can find all the code here**](https://github.com/quii/learn-go-with-tests/tree/master/q-and-a/http-handlers-revisited)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/q-and-a/http-handlers-revisited)
 
-This book already has a chapter on [testing a HTTP handler](../build-an-application/http-server.md) but this will feature a broader discussion on designing them, so they are simple to test.
+このサイトにはすでに[HTTPハンドラーのテスト](../build-an-application/http-server.md) に関する章がありますが、これはそれらの設計に関する幅広い議論を特徴とするため、テストは簡単です。
 
-We'll take a look at a real example and how we can improve how it's designed by applying principles such as single responsibility principle and separation of concerns. These principles can be realised by using [interfaces](../go-fundamentals/structs-methods-and-interfaces.md) and [dependency injection](../go-fundamentals/dependency-injection.md). By doing this we'll show how testing handlers is actually quite trivial.
+実際の例を見て、単一責任の原則や懸念の分離などの原則を適用することによって、それがどのように設計されるかを改善する方法を見ていきます。これらの原則は、[インターフェース（interfaces）](../go-fundamentals/structs-methods-and-interfaces.md) and [依存性注入（dependency injection）](../go-fundamentals/dependency-injection.md)を使用して実現できます。これを行うことで、ハンドラーのテストが実際に非常に簡単であることを示します。
 
-![Common question in Go community illustrated](../.gitbook/assets/amazing-art.png)
+![Goコミュニティのよくある質問の図解](../.gitbook/assets/amazing-art.png)
 
-Testing HTTP handlers seems to be a recurring question in the Go community, and I think it points to a wider problem of people misunderstanding how to design them.
+HTTPハンドラーのテストはGoコミュニティで繰り返し発生する問題のようです。
+私は、HTTPハンドラーの設計方法を誤解している人々のより広い問題を指摘していると思います。
 
-So often people's difficulties with testing stems from the design of their code rather than the actual writing of tests. As I stress so often in this book:
+そのため、テストの難しさは、実際にテストを書くことよりも、コードの設計に起因することがよくあります。この本の中で、私はしばしば強調しています。
 
-> If your tests are causing you pain, listen to that signal and think about the design of your code.
+> テストがあなたを苦しめているなら、そのシグナルに耳を傾け、コードの設計について考えてみてください。
 
-## An example
+## 例
 
-[Santosh Kumar tweeted me](https://twitter.com/sntshk/status/1255559003339284481)
+[Santosh・Kumarがツイートしてくれた](https://twitter.com/sntshk/status/1255559003339284481)
 
-> How do I test a http handler which has mongodb dependency?
+> mongodbに依存するHTTPハンドラをテストするにはどうすればよいですか？
 
-Here is the code
+これがコードです
 
 ```go
 func Registration(w http.ResponseWriter, r *http.Request) {
@@ -95,62 +96,62 @@ func Registration(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-Let's just list all the things this one function has to do:
+この1つの関数が実行しなければならないすべてのことをリストしましょう。
 
-1. Write HTTP responses, send headers, status codes, etc.
-2. Decode the request's body into a `User`
-3. Connect to a database \(and all the details around that\)
-4. Query the database and applying some business logic depending on the result
-5. Generate a password
-6. Insert a record
+1. HTTP応答を記述し、ヘッダー、ステータスコードなどを送信します。
+2. リクエストの本文を`User`にデコードします。
+3. データベースに接続します（およびその周辺のすべての詳細）
+4. データベースにクエリを実行し、結果に応じていくつかのビジネスロジックを適用する
+5. パスワードを生成する
+6. レコードを挿入する
 
-This is too much.
+これはやりすぎです。
 
-## What is a HTTP Handler and what should it do ?
+## HTTPハンドラーとは何ですか？
 
-Forgetting specific Go details for a moment, no matter what language I've worked in what has always served me well is thinking about the [separation of concerns](https://en.wikipedia.org/wiki/Separation_of_concerns) and the [single responsibility principle](https://en.wikipedia.org/wiki/Single-responsibility_principle).
+特定のGoの詳細を一瞬忘れてしまいますが、私が常にうまく機能してきた言語で働いていても、[懸念の分離](https://en.wikipedia.org/wiki/Separation_of_concerns)と[単一責任原則](https://en.wikipedia.org/wiki/Single-responsibility_principle).
 
-This can be quite tricky to apply depending on the problem you're solving. What exactly _is_ a responsibility?
+これは、あなたが解決しようとしている問題によっては、適用するにはかなり厄介なことになります。責任とは何か？
 
-The lines can blur depending on how abstractly you're thinking and sometimes your first guess might not be right.
+どれだけ抽象的に考えているかによって線がぼやけてしまうこともありますし、最初の推測が正しいとは限らないこともあります。
 
-Thankfully with HTTP handlers I feel like I have a pretty good idea what they should do, no matter what project I've worked on:
+ありがたいことに、HTTPハンドラを使うと、どのようなプロジェクトであっても、何をすべきかは大体わかっているような気がします。
 
-1. Accept a HTTP request, parse and validate it.
-2. Call some `ServiceThing` to do `ImportantBusinessLogic` with the data I got from step 1.
-3. Send an appropriate `HTTP` response depending on what `ServiceThing` returns.
+1. HTTPリクエストを受け入れ、それを解析して検証する。
+2. ステップ1で得たデータを使って`ServiceThing`を呼び出して`ImportantBusinessLogic`を実行する。
+3. `ServiceThing`が返す内容に応じて、適切な`HTTP`レスポンスを送信する。
 
-I'm not saying every HTTP handler _ever_ should have roughly this shape, but 99 times out of 100 that seems to be the case for me.
+すべてのHTTPハンドラがこのような形をしているべきだと言っているわけではありませんが、私の場合は 100回中99回はこのような形をしているようです。
 
-When you separate these concerns:
+これらの問題を切り離すと、以下のようになります。
 
-* Testing handlers becomes a breeze and is focused a small number of concerns.
-* Importantly testing `ImportantBusinessLogic` no longer has to concern itself with `HTTP`, you can test the business logic cleanly.
-* You can use `ImportantBusinessLogic` in other contexts without having to modify it.
-* If `ImportantBusinessLogic` changes what it does, so long as the interface remains the same you don't have to change your handlers.
+* ハンドラのテストは簡単になり、少数の懸念事項に集中することができます。
+* 重要なことは、`ImportantBusinessLogic`をテストする際に、`HTTP`を気にする必要がなくなり、ビジネスロジックをきれいにテストできるようになることです。
+* ビジネスロジックをきれいにテストすることができます。
+* `ImportantBusinessLogic`が動作を変更しても、インターフェイスが同じである限り、ハンドラーを変更する必要はありません。
 
-## Go's Handlers
+## Go'sのハンドラ
 
 [`http.HandlerFunc`](https://golang.org/pkg/net/http/#HandlerFunc)
 
-> The HandlerFunc type is an adapter to allow the use of ordinary functions as HTTP handlers.
+> HandlerFunc型は、通常の関数をHTTPハンドラとして利用できるようにするためのアダプタです。
 
 `type HandlerFunc func(ResponseWriter, *Request)`
 
-Reader, take a breath and look at the code above. What do you notice?
+読者の皆さん、一呼吸おいて上のコードを見てください。何に気がつきましたか？
 
-**It is a function that takes some arguments**
+**いくつかの引数を取る関数です**
 
-There's no framework magic, no annotations, no magic beans, nothing.
+フレームワークの魔法もアノテーションも魔法の豆も何もありません。
 
-It's just a function, _and we know how to test functions_.
+ただの関数であり、関数のテスト方法は知っています。
 
-It fits in nicely with the commentary above:
+これは上の解説とうまく一致しています。
 
-* It takes a [`http.Request`](https://golang.org/pkg/net/http/#Request) which is just a bundle of data for us to inspect, parse and validate.
-* > [A `http.ResponseWriter` interface is used by an HTTP handler to construct an HTTP response.](https://golang.org/pkg/net/http/#ResponseWriter)
+* [`http.Request`](https://golang.org/pkg/net/http/#Request)を取得して、それを検査、解析、検証するためのデータの束にしています。
+* > [`http.ResponseWriter`インターフェイスは、HTTPレスポンスを構築するためにHTTPハンドラによって使用されます](https://golang.org/pkg/net/http/#ResponseWriter)
 
-### Super basic example test
+### 超基本的な例題テスト
 
 ```go
 func Teapot(res http.ResponseWriter, req *http.Request) {
@@ -169,37 +170,37 @@ func TestTeapotHandler(t *testing.T) {
 }
 ```
 
-To test our function, we _call_ it.
+関数をテストするために、関数を呼び出します。
 
-For our test we pass a `httptest.ResponseRecorder` as our `http.ResponseWriter` argument, and our function will use it to write the `HTTP` response. The recorder will record \(or _spy_ on\) what was sent, and then we can make our assertions.
+テストのために`httptest.ResponseRecorder`を`http.ResponseWriter`の引数に渡し、この関数はこれを使って`HTTP`レスポンスを書きます。レコーダーは何が送られてきたかを記録します。
 
-## Calling a `ServiceThing` in our handler
+## ハンドラでの`ServiceThing`の呼び出し
 
-A common complaint about TDD tutorials is that they're always "too simple" and not "real world enough". My answer to that is:
+TDDチュートリアルについてよくある苦情は、いつも「シンプルすぎて」「現実世界では十分ではない」というものです。それに対する私の答えは次のとおりです。
 
-> Wouldn't it be nice if all your code was simple to read and test like the examples you mention?
+> あなたが言及している例のように、すべてのコードが読みやすく、テストしやすいものであればいいのではないでしょうか？
 
-This is one of the biggest challenges we face but need to keep striving for. It _is possible_ \(although not necessarily easy\) to design code, so it can be simple to read and test if we practice and apply good software engineering principles.
+これは、私たちが直面している最大の課題の一つですが、努力し続ける必要があります。コードを設計することは可能だし、良いソフトウェア工学の原則を実践して適用すれば、読みやすく、テストしやすいものになるでしょう。
 
-Recapping what the handler from earlier does:
+先ほどのハンドラの動作を復習します。
 
-1. Write HTTP responses, send headers, status codes, etc.
-2. Decode the request's body into a `User`
-3. Connect to a database \(and all the details around that\)
-4. Query the database and applying some business logic depending on the result
-5. Generate a password
-6. Insert a record
+1. HTTPレスポンスを書いて、ヘッダやステータスコードなどを送る。
+2. リクエストの本文を`User`にデコードする。
+3. データベースに接続する（その辺の細かいことも含めて）
+4. データベースに問い合わせ、結果に応じていくつかのビジネスロジックを適用する
+5. パスワードを生成する
+6. レコードを挿入する
 
-Taking the idea of a more ideal separation of concerns I'd want it to be more like:
+より理想的な懸念の分離のアイデアを取って、私はそれがより多くのようにしたいと思います。
 
-1. Decode the request's body into a `User`
-2. Call a `UserService.Register(user)` \(this is our `ServiceThing`\)
-3. If there's an error act on it \(the example always sends a `400 BadRequest` which I don't think is right, I'll just have a catch-all handler of a `500 Internal Server Error` _for now_. I must stress that returning `500` for all errors makes for a terrible API! Later on we can make the error handling more sophisticated, perhaps with [error types](error-types.md).
-4. If there's no error, `201 Created` with the ID as the response body \(again for terseness/laziness\)
+1. リクエストのボディを`User`にデコードする。
+2. `UserService.Register(user)`を呼び出します（これは`ServiceThing`）
+3. エラーが発生した場合はそれに対処する（例では常に`400 BadRequest`を送信しているが、これは正しいとは思えないので、`500 Internal Server Error`のキャッチオールハンドラを用意しておくことにする。すべてのエラーに対して`500`を返すと、ひどいAPIになってしまうことを強調しておかなければなりません。後でエラー処理をもっと洗練させて、おそらく[error types](error-types.md)を使うことができるでしょう。
+4. エラーがなければ、`201 Created`のIDをレスポンスボディにします（これもまた緊張感と面白さのためです）
 
-For the sake of brevity I won't go over the usual TDD process, check all the other chapters for examples.
+簡潔にするために、通常のTDDプロセスについては説明しません。
 
-### New design
+### 新しいデザイン
 
 ```go
 type UserService interface {
@@ -241,17 +242,18 @@ func (u *UserServer) RegisterUser(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-Our `RegisterUser` method matches the shape of `http.HandlerFunc` so we're good to go. We've attached it as a method on a new type `UserServer` which contains a dependency on a `UserService` which is captured as an interface.
+この`RegisterUser`メソッドは`http.HandlerFunc`の形と一致しているので、これで問題ない。これを新しいタイプの`UserServer`のメソッドとしてアタッチしていますが、これには`UserService`への依存関係が含まれています。
 
-Interfaces are a fantastic way to ensure our `HTTP` concerns are decoupled from any specific implementation; we can just call the method on the dependency, and we don't have to care _how_ a user gets registered.
+インターフェースは`HTTP`の問題を特定の実装から切り離すための素晴らしい方法です。
+依存関係にあるメソッドを呼び出すだけで、ユーザがどのように登録されるかを気にする必要はありません。
 
-If you wish to explore this approach in more detail following TDD read the [Dependency Injection](../go-fundamentals/dependency-injection.md) chapter and the [HTTP Server chapter of the "Build an application" section](../build-an-application/http-server.md).
+TDDに続いてこのアプローチをより詳しく知りたい場合は、[依存性注入（Dependency Injection）](../go-fundamentals/dependency-injection.md)の章と[HTTPサーバー](../build-an-application/http-server.md)の章を参照してください。
 
-Now that we've decoupled ourselves from any specific implementation detail around registration writing the code for our handler is straightforward and follows the responsibilities described earlier.
+これで、登録に関する特定の実装の詳細から切り離すことができたので、ハンドラのコードを書くのは簡単で、先に説明した責任に従うことになります。
 
-### The tests!
+### さぁテストだ！
 
-This simplicity is reflected in our tests.
+このシンプルさがテストに反映されています。
 
 ```go
 type MockUserService struct {
@@ -327,15 +329,16 @@ func TestRegisterUser(t *testing.T) {
 }
 ```
 
-Now our handler isn't coupled to a specific implementation of storage it is trivial for us to write a `MockUserService` to help us write simple, fast unit tests to exercise the specific responsibilities it has.
+このハンドラは特定のストレージの実装とは結合されていないので、`MockUserService`を書くことで、シンプルで高速なユニットテストを書くことができます。
 
-### What about the database code? You're cheating!
+### データベースのコードはどうでしょうか? データベースのコードはどうですか?
 
-This is all very deliberate. We don't want HTTP handlers concerned with our business logic, databases, connections, etc.
+これはすべて意図的なものです。ビジネスロジックやデータベース、接続などに関係するHTTPハンドラは必要ありません。
 
-By doing this we have liberated the handler from messy details, we've _also_ made it easier to test our persistence layer and business logic as it is also no longer coupled to irrelevant HTTP details.
+このようにすることで、ハンドラを面倒な詳細から解放することができました。
+また、無関係なHTTPの詳細に結合されることがなくなるので、永続化レイヤやビジネスロジックのテストがより簡単になりました。
 
-All we need to do is now implement our `UserService` using whatever database we want to use
+あとは、使いたいデータベースを使って`UserService`を実装するだけです。
 
 ```go
 type MongoUserService struct {
@@ -353,7 +356,7 @@ func (m MongoUserService) Register(user User) (insertedID string, err error) {
 }
 ```
 
-We can test this separately and once we're happy in `main` we can snap these two units together for our working application.
+これを別々にテストして、`main`で満足したら、作業用アプリケーションのためにこの2つのユニットを一緒にスナップすることができます。
 
 ```go
 func main() {
@@ -363,21 +366,21 @@ func main() {
 }
 ```
 
-### A more robust and extensible design with little effort
+### 少ない労力で、より堅牢で拡張性の高いデザインを実現
 
-These principles not only make our lives easier in the short-term they make the system easier to extend in the future.
+これらの原則は、短期的に私たちの生活を楽にするだけでなく、将来的にシステムを拡張しやすくします。
 
-It wouldn't be surprising that further iterations of this system we'd want to email the user a confirmation of registration.
+このシステムをさらに改良していくと、登録確認のメールをユーザーに送るようになっても不思議ではありません。
 
-With the old design we'd have to change the handler _and_ the surrounding tests. This is often how parts of code become unmaintainable, more and more functionality creeps in because it's already _designed_ that way; for the "HTTP handler" to handle... everything!
+古い設計では、ハンドラとその周辺のテストを変更しなければなりませんでした。これは、コードの一部がメンテナンス不可能になることがよくあることです。
 
-By separating concerns using an interface we don't have to edit the handler _at all_ because it's not concerned with the business logic around registration.
+インターフェイスを使って問題を分離することで、登録に関するビジネスロジックには関係ないので、ハンドラを編集する必要は全くありません。
 
-## Wrapping up
+## まとめ
 
-Testing Go's HTTP handlers is not challenging, but designing good software can be!
+GoのHTTPハンドラのテストは難しくありませんが、優れたソフトウェアの設計は難しくなります。
 
-People make the mistake of thinking HTTP handlers are special and throw out good software engineering practices when writing them which then makes testing them challenging.
+人々はHTTPハンドラを特別なものだと勘違いして、それを書くときに優れたソフトウェアエンジニアリングのプラクティスを捨ててしまい、テストが難しくなってしまうのです。
 
-Reiterating again; **Go's http handlers are just functions**. If you write them like you would other functions, with clear responsibilities, and a good separation of concerns you will have no trouble testing them, and your codebase will be healthier for it.
-
+もう一度言いますが、**GoのHTTPハンドラは単なる関数**です。
+他の関数と同じように、責任を明確にして、懸念事項をしっかりと分離して書けば、テストに問題はなく、コードベースはより健全なものになります。

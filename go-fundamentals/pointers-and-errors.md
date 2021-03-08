@@ -4,7 +4,7 @@ description: Pointers & errors
 
 # ポインタとエラー
 
-[**この章のすべてのコードはここにあります**](https://github.com/quii/learn-go-with-tests/tree/master/pointers)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/pointers)
 
 前のセクションでコンセプトに関連する、いくつかの値を取得できる「構造体」について学びました。
 
@@ -193,7 +193,7 @@ func (w *Wallet) Balance() int {
 技術的には、バランスのコピーを取ることは問題ないので、ポインターレシーバーを使用するために`Balance`を変更する必要はありません。
 ただし、慣例では、一貫性を保つために、メソッドレシーバーのタイプを同じに保つ必要があります。
 
-## リファクタリング
+## リファクタリング♪
 
 私たちはビットコインの財布を作っていると述べましたが、これまでのところ言及していません。
 `int`を使用しているのは、物事を数えるのに適したタイプだからです。
@@ -336,7 +336,7 @@ func (w *Wallet) Withdraw(amount Bitcoin) {
 }
 ```
 
-## リファクタリング
+## リファクタリング♪
 
 テストには重複があります。それをリファクタリングしましょう。
 
@@ -441,7 +441,7 @@ func (w *Wallet) Withdraw(amount Bitcoin) error {
 
 `errors.New`は、選択したメッセージで新しい`error`を作成します。
 
-## リファクタリング
+## リファクタリング♪
 
 テストを読みやすくするために、エラーチェック用のクイックテストヘルパーを作成しましょう。
 
@@ -522,7 +522,7 @@ func (w *Wallet) Withdraw(amount Bitcoin) error {
 }
 ```
 
-## リファクタリング
+## リファクタリング♪
 
 テストコードと `Withdraw`コードの両方でエラーメッセージが重複しています。
 

@@ -4,26 +4,26 @@ description: Time
 
 # 時間
 
-[**You can find all the code for this chapter here**](https://github.com/quii/learn-go-with-tests/tree/master/time)
+[**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/time)
 
-The product owner wants us to expand the functionality of our command line application by helping a group of people play Texas-Holdem Poker.
+製品の所有者は、[テキサス・ホールデム・ポーカー](https://ja.wikipedia.org/wiki/%E3%83%86%E3%82%AD%E3%82%B5%E3%82%B9%E3%83%BB%E3%83%9B%E3%83%BC%E3%83%AB%E3%83%87%E3%83%A0)をプレイする人々のグループを支援することで、コマンドラインアプリケーションの機能を拡張することを望んでいます。
 
-## Just enough information on poker
+## ポーカーに関する十分な情報
 
-You won't need to know much about poker, only that at certain time intervals all the players need to be informed of a steadily increasing "blind" value.
+ポーカーについて多くのことを知る必要はありません。一定の時間間隔で、すべてのプレーヤーに着実に増加する「ブラインド（強制bet）」値を通知する必要があるということだけです。
 
-Our application will help keep track of when the blind should go up, and how much it should be.
+私たちのアプリケーションは、ブラインドがいつ上がるべきか、そしてどれくらいあるべきかを追跡するのに役立ちます。
 
-* When it starts it asks how many players are playing. This determines the amount of time there is before the "blind" bet goes up.
-  * There is a base amount of time of 5 minutes.
-  * For every player, 1 minute is added.
-  * e.g 6 players equals 11 minutes for the blind.
-* After the blind time expires the game should alert the players the new amount the blind bet is.
-* The blind starts at 100 chips, then 200, 400, 600, 1000, 2000 and continue to double until the game ends \(our previous functionality of "Ruth wins" should still finish the game\)
+* 開始すると、何人のプレイヤーがプレイしているかを尋ねます。これは、「ブラインド」ベットが上がるまでの時間を決定します。
+  * 基本時間は5分です。
+  * すべてのプレーヤーについて、1分が追加されます。
+  * 例：6人のプレーヤーは、ブラインドでは11分に相当します。
+* ブラインドタイムが終了した後、ゲームはプレイヤーにブラインドベットの新しい金額を警告する必要があります。
+* ブラインドは100チップから始まり、その後200、400、600、1000、2000となり、ゲームが終了するまで2倍になります（「ルース勝利」の以前の機能は、ゲームを終了するはずです）。
 
-## Reminder of the code
+## コードの注意
 
-In the previous chapter we made our start to the command line application which already accepts a command of `{name} wins`. Here is what the current `CLI` code looks like, but be sure to familiarise yourself with the other code too before starting.
+前の章では、`{name} wins`のコマンドを既に受け入れているコマンドラインアプリケーションを開始しました。これが現在の`CLI`コードの外観ですが、開始する前に他のコードについてもよく理解してください。
 
 ```go
 type CLI struct {
@@ -55,31 +55,32 @@ func (cli *CLI) readLine() string {
 
 ### `time.AfterFunc`
 
-We want to be able to schedule our program to print the blind bet values at certain durations dependant on the number of players.
+プレーヤーの数に応じて特定の期間にブラインドベット値を印刷するようにプログラムをスケジュールできるようにしたいと考えています。
 
-To limit the scope of what we need to do, we'll forget about the number of players part for now and just assume there are 5 players so we'll test that _every 10 minutes the new value of the blind bet is printed_.
+必要なことの範囲を制限するために、ここではプレーヤーの数を忘れて5人のプレーヤーがいると仮定し、_ブラインドベットの新しい値が10分ごとに出力されるかどうかをテストします_。
 
-As usual the standard library has us covered with [`func AfterFunc(d Duration, f func()) *Timer`](https://golang.org/pkg/time/#AfterFunc)
+いつものように、標準ライブラリは[`func AfterFunc(d Duration, f func()) *Timer`](https://golang.org/pkg/time/#AfterFunc)でカバーされています。
 
-> `AfterFunc` waits for the duration to elapse and then calls f in its own goroutine. It returns a `Timer` that can be used to cancel the call using its Stop method.
+> `AfterFunc`は継続時間が経過するのを待ってから、独自のgoroutineでfを呼び出します。これは、Stopメソッドを使用して呼び出しをキャンセルするために使用できる`Timer`を返します。
 
 ### [`time.Duration`](https://golang.org/pkg/time/#Duration)
 
-> A Duration represents the elapsed time between two instants as an int64 nanosecond count.
+> 期間は、2つの瞬間間の経過時間をint64ナノ秒カウントとして表します。
 
-The time library has a number of constants to let you multiply those nanoseconds so they're a bit more readable for the kind of scenarios we'll be doing
+タイムライブラリには、これらのナノ秒を乗算できるようにする定数がいくつかあります。これにより、これらの定数は、私たちが行うシナリオの種類に対して、より読みやすくなります。
 
 ```go
 5 * time.Second
 ```
 
-When we call `PlayPoker` we'll schedule all of our blind alerts.
+「`PlayPoker`」を呼び出すと、すべてのブラインドアラートをスケジュールします。
 
-Testing this may be a little tricky though. We'll want to verify that each time period is scheduled with the correct blind amount but if you look at the signature of `time.AfterFunc` its second argument is the function it will run. You cannot compare functions in Go so we'd be unable to test what function has been sent in. So we'll need to write some kind of wrapper around `time.AfterFunc` which will take the time to run and the amount to print so we can spy on that.
+これをテストするのは少し難しいかもしれません。各期間が正しいブラインド量でスケジュールされていることを確認する必要がありますが、`time.AfterFunc`のシグネチャを見ると、2番目の引数は実行される関数です。
+Goでは関数を比較できないため、送信された関数をテストすることはできません。そのため、実行に時間と印刷する量を必要とする、`time.AfterFunc`の周りにある種のラッパーを書く必要があります。私たちはそれをスパイすることができます。
 
-## Write the test first
+## 最初にテストを書く
 
-Add a new test to our suite
+スイートに新しいテストを追加する
 
 ```go
 t.Run("it schedules printing of blind values", func(t *testing.T) {
@@ -96,11 +97,11 @@ t.Run("it schedules printing of blind values", func(t *testing.T) {
 })
 ```
 
-You'll notice we've made a `SpyBlindAlerter` which we are trying to inject into our `CLI` and then checking that after we call `PlayerPoker` that an alert is scheduled.
+`SpyBlindAlerter`を作成し、それを`CLI`に挿入しようとしています。次に、 `PlayerPoker`を呼び出した後、アラートがスケジュールされていることを確認します。
 
-\(Remember we are just going for the simplest scenario first and then we'll iterate.\)
+（最初に最も単純なシナリオを実行することを思い出して、次に反復します。）
 
-Here's the definition of `SpyBlindAlerter`
+ここに`SpyBlindAlerter`の定義があります
 
 ```go
 type SpyBlindAlerter struct {
@@ -118,7 +119,7 @@ func (s *SpyBlindAlerter) ScheduleAlertAt(duration time.Duration, amount int) {
 }
 ```
 
-## Try to run the test
+## テストを実行してみます
 
 ```text
 ./CLI_test.go:32:27: too many arguments in call to poker.NewCLI
@@ -126,9 +127,10 @@ func (s *SpyBlindAlerter) ScheduleAlertAt(duration time.Duration, amount int) {
     want (poker.PlayerStore, io.Reader)
 ```
 
-## Write the minimal amount of code for the test to run and check the failing test output
+## テストを実行するための最小限のコードを記述し、失敗したテスト出力を確認します
 
-We have added a new argument and the compiler is complaining. _Strictly speaking_ the minimal amount of code is to make `NewCLI` accept a `*SpyBlindAlerter` but let's cheat a little and just define the dependency as an interface.
+新しい引数を追加しましたが、コンパイラは不満を言っています。
+厳密に言えば、最小限のコードは`NewCLI`が`*SpyBlindAlerter`を受け入れるようにすることですが、少し騙して、依存関係をインターフェイスとして定義しましょう。
 
 ```go
 type BlindAlerter interface {
@@ -136,25 +138,26 @@ type BlindAlerter interface {
 }
 ```
 
-And then add it to the constructor
+そして、それをコンストラクタに追加します。
 
 ```go
 func NewCLI(store PlayerStore, in io.Reader, alerter BlindAlerter) *CLI
 ```
 
-Your other tests will now fail as they don't have a `BlindAlerter` passed in to `NewCLI`.
+他のテストは`NewCLI`に`BlindAlerter`が渡されていないので失敗します。
 
-Spying on BlindAlerter is not relevant for the other tests so in the test file add
+`BlindAlerter`をスパイすることは他のテストには関係ないので、テストファイルに追加します。
 
 ```go
 var dummySpyAlerter = &SpyBlindAlerter{}
 ```
 
-Then use that in the other tests to fix the compilation problems. By labelling it as a "dummy" it is clear to the reader of the test that it is not important.
+そして、コンパイルの問題を修正するために他のテストでそれを使ってください。
+これを「ダミー`"dummy"`」と表記することで、テストの読者には重要ではないことが明らかになります。
 
-[&gt; Dummy objects are passed around but never actually used. Usually they are just used to fill parameter lists.](https://martinfowler.com/articles/mocksArentStubs.html)
+[ダミーオブジェクトは渡されますが、実際に使われることはありません。通常はパラメータリストを埋めるために使われるだけです](https://martinfowler.com/articles/mocksArentStubs.html)
 
-The tests should now compile and our new test fails.
+これでテストはコンパイルされ、新しいテストは失敗します。
 
 ```text
 === RUN   TestCLI
@@ -164,9 +167,9 @@ The tests should now compile and our new test fails.
         CLI_test.go:38: expected a blind alert to be scheduled
 ```
 
-## Write enough code to make it pass
+## 通過するのに十分なコードを書く
 
-We'll need to add the `BlindAlerter` as a field on our `CLI` so we can reference it in our `PlayPoker` method.
+これを`PlayPoker`メソッドで参照できるようにするために`BlindAlerter`を`CLI`のフィールドとして追加する必要があります。
 
 ```go
 type CLI struct {
@@ -184,7 +187,7 @@ func NewCLI(store PlayerStore, in io.Reader, alerter BlindAlerter) *CLI {
 }
 ```
 
-To make the test pass, we can call our `BlindAlerter` with anything we like
+テストを通過させるために、`BlindAlerter`を好きなもので呼び出すことができます。
 
 ```go
 func (cli *CLI) PlayPoker() {
@@ -194,9 +197,9 @@ func (cli *CLI) PlayPoker() {
 }
 ```
 
-Next we'll want to check it schedules all the alerts we'd hope for, for 5 players
+次は、5人のプレイヤーのために、私たちが望むすべてのアラートのスケジュールを確認したいと思います。
 
-## Write the test first
+## 最初にテストを書く
 
 ```go
     t.Run("it schedules printing of blind values", func(t *testing.T) {
@@ -247,11 +250,11 @@ Next we'll want to check it schedules all the alerts we'd hope for, for 5 player
     })
 ```
 
-Table-based test works nicely here and clearly illustrate what our requirements are. We run through the table and check the `SpyBlindAlerter` to see if the alert has been scheduled with the correct values.
+テーブルベースのテストはここではうまく機能し、要件が何であるかを明確に示しています。テーブルを実行し、`SpyBlindAlerter`をチェックして、アラートが正しい値でスケジュールされているかどうかを確認します。
 
-## Try to run the test
+## テストを実行してみる
 
-You should have a lot of failures looking like this
+こんな感じで失敗を重ねるといいですよ。
 
 ```go
 === RUN   TestCLI
@@ -266,7 +269,7 @@ You should have a lot of failures looking like this
             CLI_test.go:59: alert 1 was not scheduled [{5000000000 100}]
 ```
 
-## Write enough code to make it pass
+## 通過するのに十分なコードを書く
 
 ```go
 func (cli *CLI) PlayPoker() {
@@ -283,11 +286,12 @@ func (cli *CLI) PlayPoker() {
 }
 ```
 
-It's not a lot more complicated than what we already had. We're just now iterating over an array of `blinds` and calling the scheduler on an increasing `blindTime`
+それは、私たちがすでに持っていたものよりもそれほど複雑ではありません。
+私たちは今、`blinds`の配列を反復処理し、増加する`blindTime`でスケジューラを呼び出しています
 
-## Refactor
+## リファクタリング♪
 
-We can encapsulate our scheduled alerts into a method just to make `PlayPoker` read a little clearer.
+「`PlayPoker`」を少し明確にするために、スケジュールされたアラートをメソッドにカプセル化できます。
 
 ```go
 func (cli *CLI) PlayPoker() {
@@ -306,7 +310,7 @@ func (cli *CLI) scheduleBlindAlerts() {
 }
 ```
 
-Finally our tests are looking a little clunky. We have two anonymous structs representing the same thing, a `ScheduledAlert`. Let's refactor that into a new type and then make some helpers to compare them.
+最後に、テストは少し不格好に見えます。同じものを表す2つの匿名構造体、`ScheduledAlert`があります。それを新しい型にリファクタリングして、いくつかのヘルパーを比較してみましょう。
 
 ```go
 type scheduledAlert struct {
@@ -327,9 +331,9 @@ func (s *SpyBlindAlerter) ScheduleAlertAt(at time.Duration, amount int) {
 }
 ```
 
-We've added a `String()` method to our type so it prints nicely if the test fails
+タイプに `String()`メソッドを追加したので、テストが失敗した場合にうまく表示されます。
 
-Update our test to use our new type
+新しいタイプを使用するようにテストを更新します。
 
 ```go
 t.Run("it schedules printing of blind values", func(t *testing.T) {
@@ -368,15 +372,15 @@ t.Run("it schedules printing of blind values", func(t *testing.T) {
 })
 ```
 
-Implement `assertScheduledAlert` yourself.
+自分で「`assertScheduledAlert`」を実装します。
 
-We've spent a fair amount of time here writing tests and have been somewhat naughty not integrating with our application. Let's address that before we pile on any more requirements.
+ここではかなりの時間をかけてテストを作成しており、アプリケーションと統合しないことはややエッチです。これ以上の要件に取り掛かる前に、その問題に取り組みましょう。
 
-Try running the app and it won't compile, complaining about not enough args to `NewCLI`.
+アプリを実行してみてください。アプリがコンパイルされず、「`NewCLI`」への引数が足りないという不満があります。
 
-Let's create an implementation of `BlindAlerter` that we can use in our application.
+アプリケーションで使用できる`BlindAlerter`の実装を作成してみましょう。
 
-Create `BlindAlerter.go` and move our `BlindAlerter` interface and add the new things below
+`BlindAlerter.go`を作成し、`BlindAlerter`インターフェースを移動して、以下の新しいものを追加します
 
 ```go
 package poker
@@ -404,31 +408,34 @@ func StdOutAlerter(duration time.Duration, amount int) {
 }
 ```
 
-Remember that any _type_ can implement an interface, not just `structs`. If you are making a library that exposes an interface with one function defined it is a common idiom to also expose a `MyInterfaceFunc` type.
+_type_ は、`struct`だけでなく、インターフェイスを実装できることに注意してください。 1つの関数が定義されたインターフェースを公開するライブラリを作成する場合、`MyInterfaceFunc`タイプも公開することは一般的な慣用法です。
 
-This type will be a `func` which will also implement your interface. That way users of your interface have the option to implement your interface with just a function; rather than having to create an empty `struct` type.
+このタイプはあなたのインターフェースも実装する`func`になります。こうすることで、インターフェイスのユーザーは、関数だけでインターフェイスを実装することができます。
+空の`struct`タイプを作成する必要はありません。
 
-We then create the function `StdOutAlerter` which has the same signature as the function and just use `time.AfterFunc` to schedule it to print to `os.Stdout`.
+次に、関数と同じシグネチャを持つ関数`StdOutAlerter`を作成し、`time.AfterFunc`を使用して、それを`os.Stdout`に出力するようにスケジュールします。
 
-Update `main` where we create `NewCLI` to see this in action
+この動作を確認するには、`NewCLI`を作成する`main`を更新します。
 
 ```go
 poker.NewCLI(store, os.Stdin, poker.BlindAlerterFunc(poker.StdOutAlerter)).PlayPoker()
 ```
 
-Before running you might want to change the `blindTime` increment in `CLI` to be 10 seconds rather than 10 minutes just so you can see it in action.
+実行する前に、「`CLI`」の「`blindTime`」の増分を10分ではなく10秒に変更すると、実際の動作を確認できます。
 
-You should see it print the blind values as we'd expect every 10 seconds. Notice how you can still type `Shaun wins` into the CLI and it will stop the program how we'd expect.
+10秒ごとに予想されるように、ブラインド値が出力されるはずです。 CLIに「`Shaun wins`」と入力すると、プログラムが予期したとおりに停止することに注意してください。
 
-The game won't always be played with 5 people so we need to prompt the user to enter a number of players before the game starts.
+ゲームは常に5人でプレイされるとは限らないため、ゲームを開始する前に、ユーザー数を入力するようユーザーに促す必要があります。
 
-## Write the test first
+## 最初にテストを書く
 
-To check we are prompting for the number of players we'll want to record what is written to StdOut. We've done this a few times now, we know that `os.Stdout` is an `io.Writer` so we can check what is written if we use dependency injection to pass in a `bytes.Buffer` in our test and see what our code will write.
+確認するために、StdOutに書き込まれた内容を記録するプレーヤーの数を入力するように求めています。
+これを数回実行しました。`os.Stdout`は`io.Writer`であることを知っているので、テストで依存性注入を使用して`bytes.Buffer`を渡し、私たちのコードが何を書くか見てください。
 
-We don't care about our other collaborators in this test just yet so we've made some dummies in our test file.
+このテストでは、他の共同編集者についてはまだ気にしていないため、テストファイルでダミーを作成しました。
 
-We should be a little wary that we now have 4 dependencies for `CLI`, that feels like maybe it is starting to have too many responsibilities. Let's live with it for now and see if a refactoring emerges as we add this new functionality.
+`CLI`に4つの依存関係があることに少し注意する必要があります。
+これは、多すぎる責任を持ち始めているように思われます。とりあえずそれと共存して、この新しい機能を追加するときにリファクタリングが出現するかどうか見てみましょう。
 
 ```go
 var dummyBlindAlerter = &SpyBlindAlerter{}
@@ -437,7 +444,7 @@ var dummyStdIn = &bytes.Buffer{}
 var dummyStdOut = &bytes.Buffer{}
 ```
 
-Here is our new test
+これが新しいテストです。
 
 ```go
 t.Run("it prompts the user to enter the number of players", func(t *testing.T) {
@@ -454,9 +461,9 @@ t.Run("it prompts the user to enter the number of players", func(t *testing.T) {
 })
 ```
 
-We pass in what will be `os.Stdout` in `main` and see what is written.
+`main`で`os.Stdout`になるものを渡し、何が書き込まれるかを確認します。
 
-## Try to run the test
+## テストを実行してみます
 
 ```text
 ./CLI_test.go:38:27: too many arguments in call to poker.NewCLI
@@ -464,19 +471,19 @@ We pass in what will be `os.Stdout` in `main` and see what is written.
     want (poker.PlayerStore, io.Reader, poker.BlindAlerter)
 ```
 
-## Write the minimal amount of code for the test to run and check the failing test output
+## テストを実行するための最小限のコードを記述し、失敗したテスト出力を確認します
 
-We have a new dependency so we'll have to update `NewCLI`
+新しい依存関係があるため、`NewCLI`を更新する必要があります
 
 ```go
 func NewCLI(store PlayerStore, in io.Reader, out io.Writer, alerter BlindAlerter) *CLI
 ```
 
-Now the _other_ tests will fail to compile because they don't have an `io.Writer` being passed into `NewCLI`.
+その他のテストは、`NewCLI`に渡される`io.Writer`がないため、コンパイルに失敗します。
 
-Add `dummyStdout` for the other tests.
+他のテスト用に「`dummyStdout`」を追加します。
 
-The new test should fail like so
+新しいテストはそのように失敗するはずです。
 
 ```text
 === RUN   TestCLI
@@ -487,9 +494,9 @@ The new test should fail like so
 FAIL
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
-We need to add our new dependency to our `CLI` so we can reference it in `PlayPoker`
+`CLI`に新しい依存関係を追加して、`PlayPoker`で参照できるようにする必要があります。
 
 ```go
 type CLI struct {
@@ -509,7 +516,7 @@ func NewCLI(store PlayerStore, in io.Reader, out io.Writer, alerter BlindAlerter
 }
 ```
 
-Then finally we can write our prompt at the start of the game
+最後に、ゲームの開始時にプロンプ​​トを書き込むことができます。
 
 ```go
 func (cli *CLI) PlayPoker() {
@@ -520,19 +527,20 @@ func (cli *CLI) PlayPoker() {
 }
 ```
 
-## Refactor
+## リファクタリング♪
 
-We have a duplicate string for the prompt which we should extract into a constant
+定数に抽出する必要があるプロンプトの重複文字列があります。
 
 ```go
 const PlayerPrompt = "Please enter the number of players: "
 ```
 
-Use this in both the test code and `CLI`.
+テストコードと`CLI`の両方でこれを使用してください。
 
-Now we need to send in a number and extract it out. The only way we'll know if it has had the desired effect is by seeing what blind alerts were scheduled.
+次に、番号を送信して抽出する必要があります。
+目的の効果があったかどうかを確認する唯一の方法は、スケジュールされたブラインドアラートを確認することです。
 
-## Write the test first
+## 最初にテストを書く
 
 ```go
 t.Run("it prompts the user to enter the number of players", func(t *testing.T) {
@@ -571,15 +579,15 @@ t.Run("it prompts the user to enter the number of players", func(t *testing.T) {
 })
 ```
 
-Ouch! A lot of changes.
+いたたたた！たくさんの変更。。
 
-* We remove our dummy for StdIn and instead send in a mocked version representing our user entering 7
-* We also remove our dummy on the blind alerter so we can see that the number of players has had an effect on the scheduling
-* We test what alerts are scheduled
+* StdInのダミーを削除し、代わりに、7を入力するユーザーを表すモックバージョンを送信します。
+* また、ブラインドアラートでダミーを削除して、プレーヤー数がスケジュールに影響を与えていることを確認できるようにしました
+* スケジュールされているアラートをテストします
 
-## Try to run the test
+## テストを実行してみます
 
-The test should still compile and fail reporting that the scheduled times are wrong because we've hard-coded for the game to be based on having 5 players
+テストはコンパイルされ、失敗するはずですが、5人のプレーヤーに基づいてゲームをハードコーディングしているため、スケジュールされた時間が間違っていると報告されます。
 
 ```text
 === RUN   TestCLI
@@ -591,9 +599,10 @@ The test should still compile and fail reporting that the scheduled times are wr
 === RUN   TestCLI/it_prompts_the_user_to_enter_the_number_of_players/200_chips_at_12m0s
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
-Remember, we are free to commit whatever sins we need to make this work. Once we have working software we can then work on refactoring the mess we're about to make!
+この作業を行うために必要なすべての罪を自由に犯すことを忘れないでください。
+作業用ソフトウェアができたら、作成しようとしている混乱のリファクタリングに取り掛かることができます。
 
 ```go
 func (cli *CLI) PlayPoker() {
@@ -619,30 +628,33 @@ func (cli *CLI) scheduleBlindAlerts(numberOfPlayers int) {
 }
 ```
 
-* We read in the `numberOfPlayersInput` into a string
-* We use `cli.readLine()` to get the input from the user and then call `Atoi` to convert it into an integer - ignoring any error scenarios. We'll need to write a test for that scenario later.
-* From here we change `scheduleBlindAlerts` to accept a number of players. We then calculate a `blindIncrement` time to use to add to `blindTime` as we iterate over the blind amounts
+* `numberOfPlayersInput`を文字列に読み込みます
+* ユーザーから入力を取得するために `cli.readLine()`を使用し、次にエラーシナリオを無視して、`Atoi`を呼び出して整数に変換します。後でそのシナリオのテストを作成する必要があります。
+* ここから、`scheduleBlindAlerts`を変更して、多数のプレーヤーを受け入れます。次に、ブラインド量を反復するときに「`blindTime`」に追加するために使用する「`blindIncrement`」時間を計算します
 
-While our new test has been fixed, a lot of others have failed because now our system only works if the game starts with a user entering a number. You'll need to fix the tests by changing the user inputs so that a number followed by a newline is added \(this is highlighting yet more flaws in our approach right now\).
+新しいテストは修正されましたが、システムが機能するのは、ユーザーが数字を入力してゲームを開始した場合に限られるためです。
+ユーザー入力を変更してテストを修正する必要があります。
+これにより、番号とそれに続く改行が追加されます（これは、現在のアプローチのさらに多くの欠陥を強調しています）。
 
-## Refactor
+## リファクタリング♪
 
-This all feels a bit horrible right? Let's **listen to our tests**.
+これは少し恐ろしいことだと思いますか？ **テストを聞いてみましょう**。
 
-* In order to test that we are scheduling some alerts we set up 4 different dependencies. Whenever you have a lot of dependencies for a _thing_ in your system, it implies it's doing too much. Visually we can see it in how cluttered our test is.
-* To me it feels like **we need to make a cleaner abstraction between reading user input and the business logic we want to do** 
-* A better test would be _given this user input, do we call a new type `Game` with the correct number of players_. 
-* We would then extract the testing of the scheduling into the tests for our new `Game`.
+* いくつかのアラートをスケジュールしていることをテストするために、4つの異なる依存関係を設定しました。システムに _thing_ の依存関係がたくさんある場合、それは多すぎることを意味します。視覚的には、テストが雑然としていることがわかります。
+* 私には、**ユーザー入力の読み取りと、実行したいビジネスロジックとの間をより明確に抽象化する必要があるように感じます**
+* より適切なテストは、_このユーザー入力が与えられた場合、正しいタイプのプレーヤーで新しいタイプ`Game`を呼び出すかどうかです。
+* 次に、スケジューリングのテストを新しい`Game`のテストに抽出します。
 
-We can refactor toward our `Game` first and our test should continue to pass. Once we've made the structural changes we want we can think about how we can refactor the tests to reflect our new separation of concerns
+最初に「`Game`」に向けてリファクタリングでき、テストは引き続き成功します。必要な構造変更を行ったら、懸念の分離を反映するためにテストをリファクタリングする方法について考えることができます
 
-Remember when making changes in refactoring try to keep them as small as possible and keep re-running the tests.
+リファクタリングに変更を加えるときは、それらをできるだけ小さくして、テストを再実行し続けるようにしてください。
 
-Try it yourself first. Think about the boundaries of what a `Game` would offer and what our `CLI` should be doing.
+まず自分で試してください。 「`Game`」が提供するものと「`CLI`」が行うべきことの境界について考えてください。
 
-For now **don't** change the external interface of `NewCLI` as we don't want to change the test code and the client code at the same time as that is too much to juggle and we could end up breaking things.
+今のところは、`NewCLI`の外部インターフェースを**変更しないでください**。
+テストコードとクライアントコードを同時に変更したくないからです。
 
-This is what I came up with:
+これは私が思いついたものです。
 
 ```go
 // game.go
@@ -710,25 +722,29 @@ func (cli *CLI) readLine() string {
 }
 ```
 
-From a "domain" perspective:
+「ドメイン」の観点から
 
-* We want to `Start` a `Game`, indicating how many people are playing
-* We want to `Finish` a `Game`, declaring the winner
+* 何人がプレイしているかを示す「`Game`」を「開始`Start`」したい
+* 勝者を宣言して「`Game`」を「終了`Finish`」したい
 
-The new `Game` type encapsulates this for us.
+新しい`Game`タイプはこれをカプセル化します。
 
-With this change we've passed `BlindAlerter` and `PlayerStore` to `Game` as it is now responsible for alerting and storing results.
+この変更により、`BlindAlerter`と`PlayerStore`が`Game`に渡されました。
+これは、結果のアラートと保存を担当するためです。
 
-Our `CLI` is now just concerned with:
+私たちの`CLI`は今ちょうど関係しています
 
-* Constructing `Game` with its existing dependencies \(which we'll refactor next\)
-* Interpreting user input as method invocations for `Game`
+* 既存の依存関係を使用して`Game`を構築します（これは次にリファクタリングします）
+* ユーザー入力を`Game`のメソッド呼び出しとして解釈する
 
-We want to try to avoid doing "big" refactors which leave us in a state of failing tests for extended periods as that increases the chances of mistakes. \(If you are working in a large/distributed team this is extra important\)
+「大きな」リファクタリングを行わないようにしたいと考えています。
+これにより、長期間にわたってテストが失敗し、ミスの可能性が高まるためです。
+（大規模な分散型チームで作業している場合、これは非常に重要です）
 
-The first thing we'll do is refactor `Game` so that we inject it into `CLI`. We'll do the smallest changes in our tests to facilitate that and then we'll see how we can break up the tests into the themes of parsing user input and game management.
+まず最初に、`Game`をリファクタリングして、`CLI`に注入します。
+テストを最小限に変更してそれを容易にし、次に、テストをユーザー入力の解析とゲーム管理のテーマに分割する方法を確認します。
 
-All we need to do right now is change `NewCLI`
+今必要なのは、`NewCLI`を変更することだけです。
 
 ```go
 func NewCLI(in io.Reader, out io.Writer, game *Game) *CLI {
@@ -740,11 +756,13 @@ func NewCLI(in io.Reader, out io.Writer, game *Game) *CLI {
 }
 ```
 
-This feels like an improvement already. We have less dependencies and _our dependency list is reflecting our overall design goal_ of CLI being concerned with input/output and delegating game specific actions to a `Game`.
+これはすでに改善のように感じられます。
+依存関係は少なく、私たちの依存関係リストは、CLIが入出力に関係し、ゲーム固有のアクションを`Game`に委任するという、全体的な設計目標を反映しています。
 
-If you try and compile there are problems. You should be able to fix these problems yourself. Don't worry about making any mocks for `Game` right now, just initialise _real_ `Game`s just to get everything compiling and tests green.
+コンパイルしてみると問題があります。これらの問題は自分で修正できるはずです。
+今すぐ`Game`のモックを作成する必要はありません。すべてをコンパイルしてテストするために「実際の」`Game`を初期化するだけです。
 
-To do this you'll need to make a constructor
+これを行うには、コンストラクタを作成する必要があります。
 
 ```go
 func NewGame(alerter BlindAlerter, store PlayerStore) *Game {
@@ -755,7 +773,7 @@ func NewGame(alerter BlindAlerter, store PlayerStore) *Game {
 }
 ```
 
-Here's an example of one of the setups for the tests being fixed
+これは、修正されたテストの設定の1つの例です。
 
 ```go
 stdout := &bytes.Buffer{}
@@ -767,7 +785,8 @@ cli := poker.NewCLI(in, stdout, game)
 cli.PlayPoker()
 ```
 
-It shouldn't take much effort to fix the tests and be back to green again \(that's the point!\) but make sure you fix `main.go` too before the next stage.
+テストを修正して再び緑に戻るのにそれほどの労力は必要ありませんが、それがポイントです！
+次の段階の前に`main.go`も修正するようにしてください。
 
 ```go
 // main.go
@@ -776,9 +795,9 @@ cli := poker.NewCLI(os.Stdin, os.Stdout, game)
 cli.PlayPoker()
 ```
 
-Now that we have extracted out `Game` we should move our game specific assertions into tests separate from CLI.
+「ゲーム`Game`」を抽出したので、ゲーム固有のアサーションをCLIとは別のテストに移動する必要があります。
 
-This is just an exercise in copying our `CLI` tests but with less dependencies
+これは、`CLI`テストをコピーするための単なる練習ですが、依存関係は少なくなっています。
 
 ```go
 func TestGame_Start(t *testing.T) {
@@ -833,19 +852,20 @@ func TestGame_Finish(t *testing.T) {
 }
 ```
 
-The intent behind what happens when a game of poker starts is now much clearer.
+ポーカーのゲームが始まったときに何が起きるかの背後にある意図が今やはるかに明確になりました。
 
-Make sure to also move over the test for when the game ends.
+ゲームがいつ終了するかについても、テストの上を移動してください。
 
-Once we are happy we have moved the tests over for game logic we can simplify our CLI tests so they reflect our intended responsibilities clearer
+満足したら、ゲームロジックのテストを移行しました。
+CLIテストを簡略化して、意図した責任をより明確に反映できます。
 
-* Process user input and call `Game`'s methods when appropriate
-* Send output
-* Crucially it doesn't know about the actual workings of how games work
+* ユーザー入力を処理し、必要に応じて`Game`のメソッドを呼び出します
+* 出力を送信
+* 重要なのは、ゲームがどのように機能するかについての実際の仕組みについて知らない
 
-To do this we'll have to make it so `CLI` no longer relies on a concrete `Game` type but instead accepts an interface with `Start(numberOfPlayers)` and `Finish(winner)`. We can then create a spy of that type and verify the correct calls are made.
+これを行うには、`CLI`が具体的な`Game`タイプに依存しないようにする必要がありますが、代わりに`Start(numberOfPlayers)`および`Finish(winner)`のインターフェースを受け入れます。次に、そのタイプのスパイを作成し、正しい呼び出しが行われたことを確認できます。
 
-It's here we realise that naming is awkward sometimes. Rename `Game` to `TexasHoldem` \(as that's the _kind_ of game we're playing\) and the new interface will be called `Game`. This keeps faithful to the notion that our CLI is oblivious to the actual game we're playing and what happens when you `Start` and `Finish`.
+ここに、ネーミングが時々厄介であることがわかります。`Game`の名前を`TexasHoldem`に変更します（これが現在プレイしているゲームの _種類_ であるため）。新しいインターフェイスは`Game`と呼ばれます。これは、CLIが私たちがプレイしている実際のゲームに気づいていないという概念と、「`Start`」および「`Finish`」したときに何が起こるかを忠実に保ちます。
 
 ```go
 type Game interface {
@@ -854,11 +874,13 @@ type Game interface {
 }
 ```
 
-Replace all references to `*Game` inside `CLI` and replace them with `Game` \(our new interface\). As always keep re-running tests to check everything is green while we are refactoring.
 
-Now that we have decoupled `CLI` from `TexasHoldem` we can use spies to check that `Start` and `Finish` are called when we expect them to, with the correct arguments.
+`CLI`内の`*Game`へのすべての参照を置き換え、それらを`Game`（our new interface）に置き換えます。
+いつものように、リファクタリングしている間は、テストを再実行してすべてが緑色であることを確認します。
 
-Create a spy that implements `Game`
+`TexasHoldem`から`CLI`を分離したので、スパイを使用して、正しい引数で、期待どおりに`Start`と`Finish`が呼び出されることを確認できます。
+
+`Game`を実装するスパイを作成する
 
 ```go
 type GameSpy struct {
@@ -875,9 +897,10 @@ func (g *GameSpy) Finish(winner string) {
 }
 ```
 
-Replace any `CLI` test which is testing any game specific logic with checks on how our `GameSpy` is called. This will then reflect the responsibilities of CLI in our tests clearly.
+ゲーム固有のロジックをテストするすべての`CLI`テストを、`GameSpy`の呼び出し方法のチェックに置き換えます。これは、テストにおけるCLIの責任を明確に反映します。
 
-Here is an example of one of the tests being fixed; try and do the rest yourself and check the source code if you get stuck.
+これは、修正されたテストの1つの例です。
+残りを自分で試して、行き詰まった場合はソースコードを確認してください。
 
 ```go
     t.Run("it prompts the user to enter the number of players and starts the game", func(t *testing.T) {
@@ -901,15 +924,16 @@ Here is an example of one of the tests being fixed; try and do the rest yourself
     })
 ```
 
-Now that we have a clean separation of concerns, checking edge cases around IO in our `CLI` should be easier.
+懸念事項を明確に分離したので、`CLI`でIOの周辺のケースをチェックするのが簡単になります。
 
-We need to address the scenario where a user puts a non numeric value when prompted for the number of players:
+プレイヤー数の入力を求められたときにユーザーが非数値を入力するシナリオに対処する必要があります。
 
-Our code should not start the game and it should print a handy error to the user and then exit.
+私たちのコードはゲームを開始してはならず、ユーザーに便利なエラーを出力して終了します。
 
-## Write the test first
 
-We'll start by making sure the game doesn't start
+## 最初にテストを書く
+
+ゲームが開始しないことを確認することから始めます
 
 ```go
 t.Run("it prints an error when a non numeric value is entered and does not start the game", func(t *testing.T) {
@@ -926,9 +950,9 @@ t.Run("it prints an error when a non numeric value is entered and does not start
     })
 ```
 
-You'll need to add to our `GameSpy` a field `StartCalled` which only gets set if `Start` is called
+「`GameSpy`」にフィールド「`StartCalled`」を追加する必要があります。これは「`Start`」が呼び出された場合にのみ設定されます
 
-## Try to run the test
+## テストを実行してみます
 
 ```text
 === RUN   TestCLI/it_prints_an_error_when_a_non_numeric_value_is_entered_and_does_not_start_the_game
@@ -936,9 +960,9 @@ You'll need to add to our `GameSpy` a field `StartCalled` which only gets set if
         CLI_test.go:62: game should not have started
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
-Around where we call `Atoi` we just need to check for the error
+`Atoi`と呼ぶところは、エラーをチェックするだけです
 
 ```go
 numberOfPlayers, err := strconv.Atoi(cli.readLine())
@@ -948,11 +972,11 @@ if err != nil {
 }
 ```
 
-Next we need to inform the user of what they did wrong so we'll assert on what is printed to `stdout`.
+次に、ユーザーが間違ったことをユーザーに通知する必要があるため、`stdout`に出力される内容を評価します。
 
-## Write the test first
+## 最初にテストを書く
 
-We've asserted on what was printed to `stdout` before so we can copy that code for now
+前に「`stdout`」に出力されたものをアサートしたので、今のところそのコードをコピーできます
 
 ```go
 gotPrompt := stdout.String()
@@ -964,9 +988,11 @@ if gotPrompt != wantPrompt {
 }
 ```
 
-We are storing _everything_ that gets written to stdout so we still expect the `poker.PlayerPrompt`. We then just check an additional thing gets printed. We're not too bothered about the exact wording for now, we'll address it when we refactor.
+`stdout`に書き込まれる _常に_ を保存しているので、`poker.PlayerPrompt`がまだ必要です。
+次に、追加のものが表示されることを確認します。
+今のところ、正確な表現についてあまり気にせず、リファクタリングするときに対処します。
 
-## Try to run the test
+## テストを実行してみます
 
 ```text
 === RUN   TestCLI/it_prints_an_error_when_a_non_numeric_value_is_entered_and_does_not_start_the_game
@@ -974,9 +1000,9 @@ We are storing _everything_ that gets written to stdout so we still expect the `
         CLI_test.go:70: got 'Please enter the number of players: ', want 'Please enter the number of players: you're so silly'
 ```
 
-## Write enough code to make it pass
+## 成功させるのに十分なコードを書く
 
-Change the error handling code
+エラー処理コードを変更する
 
 ```go
 if err != nil {
@@ -985,21 +1011,21 @@ if err != nil {
 }
 ```
 
-## Refactor
+## リファクタリング♪
 
-Now refactor the message into a constant like `PlayerPrompt`
+次に、メッセージを「`PlayerPrompt`」のような定数にリファクタリングします
 
 ```go
 wantPrompt := poker.PlayerPrompt + poker.BadPlayerInputErrMsg
 ```
 
-and put in a more appropriate message
+より適切なメッセージを入れます
 
 ```go
 const BadPlayerInputErrMsg = "Bad value received for number of players, please try again with a number"
 ```
 
-Finally our testing around what has been sent to `stdout` is quite verbose, let's write an assert function to clean it up.
+最後に、`stdout`に送信されたものに関するテストは非常に詳細です。クリーンアップするアサート関数を作成しましょう。
 
 ```go
 func assertMessagesSentToUser(t *testing.T, stdout *bytes.Buffer, messages ...string) {
@@ -1012,15 +1038,17 @@ func assertMessagesSentToUser(t *testing.T, stdout *bytes.Buffer, messages ...st
 }
 ```
 
-Using the vararg syntax \(`...string`\) is handy here because we need to assert on varying amounts of messages.
+可変長の構文（`...string`）を使用すると、さまざまな量のメッセージに対してアサートする必要があるため、ここでは便利です。
 
-Use this helper in both of the tests where we assert on messages sent to the user.
+このヘルパーは、ユーザーに送信されるメッセージに対してアサートする両方のテストで使用します。
 
-There are a number of tests that could be helped with some `assertX` functions so practice your refactoring by cleaning up our tests so they read nicely.
+一部の「`assertX`」関数で役立つ可能性のあるテストがいくつかあるので、テストをクリーンアップして読みやすくすることでリファクタリングを練習してください。
 
-Take some time and think about the value of some of the tests we've driven out. Remember we don't want more tests than necessary, can you refactor/remove some of them _and still be confident it all works_ ?
+時間をかけて、私たちが追い出したいくつかのテストの価値について考えてください。
+必要以上のテストは必要ありません。
+それらの一部をリファクタリング/削除しても、すべてが機能することを確信できますか？
 
-Here is what I came up with
+これが私が思いついたものです。
 
 ```go
 func TestCLI(t *testing.T) {
@@ -1066,53 +1094,59 @@ func TestCLI(t *testing.T) {
 }
 ```
 
-The tests now reflect the main capabilities of CLI, it is able to read user input in terms of how many people are playing and who won and handles when a bad value is entered for number of players. By doing this it is clear to the reader what `CLI` does, but also what it doesn't do.
+テストはCLIの主な機能を反映するようになり、何人のプレイヤーに不正な値が入力されたときに何人がプレイし、誰が勝って処理するかという観点からユーザー入力を読み取ることができます。
+これを行うことにより、`CLI`が何をするかを読者に明らかにするだけでなく、何をしないかもわかります。
 
-What happens if instead of putting `Ruth wins` the user puts in `Lloyd is a killer` ?
+「ルースが勝つ`Ruth wins`」の代わりに「ロイドはキラー`Lloyd is a killer`」にユーザーが入れるとどうなりますか？
 
-Finish this chapter by writing a test for this scenario and making it pass.
+このシナリオのテストを記述して成功させることにより、この章を終了します。
 
-## Wrapping up
+## まとめ
 
-### A quick project recap
+### プロジェクトの簡単な要約
 
-For the past 5 chapters we have slowly TDD'd a fair amount of code
+過去5つの章については、かなりの量のコードをゆっくりTDDしました
 
-* We have two applications, a command line application and a web server. 
-* Both these applications rely on a `PlayerStore` to record winners
-* The web server can also display a league table of who is winning the most games
-* The command line app helps players play a game of poker by tracking what the current blind value is.
+* コマンドラインアプリケーションとWebサーバーの2つのアプリケーションがあります。
+* これらのアプリケーションは両方とも、勝者を記録するために「`PlayerStore`」に依存しています
+* Webサーバーは、最も多くのゲームに勝っている人のリーグテーブルを表示することもできます
+* コマンドラインアプリは、プレーヤーが現在のブラインド値を追跡することでポーカーゲームをプレイするのに役立ちます。
 
 ### time.Afterfunc
 
-A very handy way of scheduling a function call after a specific duration. It is well worth investing time [looking at the documentation for `time`](https://golang.org/pkg/time/) as it has a lot of time saving functions and methods for you to work with.
+特定の期間後に関数呼び出しをスケジュールする非常に便利な方法。時間を費やす価値があります[`time`のドキュメントを見る](https://golang.org/pkg/time/)。時間を節約するための関数やメソッドがたくさんあるので、作業するのに役立ちます。
 
-Some of my favourites are
+私のお気に入りのいくつかは
 
-* `time.After(duration)` returns a `chan Time` when the duration has expired. So if you wish to do something _after_ a specific time, this can help. 
-* `time.NewTicker(duration)` returns a `Ticker` which is similar to the above in that it returns a channel but this one "ticks" every duration, rather than just once. This is very handy if you want to execute some code every `N duration`.  
+* 期間が終了すると、`time.After(duration)`は`chan Time`を返します。したがって、特定の時間の後に何かをしたい場合は、これが役立ちます。
+* `time.NewTicker(duration)`は、チャネルを返すという点で上記と同様の `Ticker`を返しますが、これは1回だけではなく、すべての期間を「ティック`("ticks")`」します。これは、`N duration`ごとにコードを実行する場合に非常に便利です。
 
-### More examples of good separation of concerns
+### 懸念事項の適切な分離のその他の例
 
-_Generally_ it is good practice to separate the responsibilities of dealing with user input and responses away from domain code. You see that here in our command line application and also our web server.
+一般的には、ユーザー入力と応答の処理の責任をドメインコードから分離することをお勧めします。
+コマンドラインアプリケーションとWebサーバーで確認できます。
 
-Our tests got messy. We had too many assertions \(check this input, schedules these alerts, etc\) and too many dependencies. We could visually see it was cluttered; it is **so important to listen to your tests**.
+テストが乱雑になりました。アサーションが多すぎ、この入力を確認し、これらのアラートをスケジュールなどをして、依存関係が多すぎた。
+散らかっていることを視覚的に確認できました。 **テストに耳を傾けることはとても重要です**。
 
-* If your tests look messy try and refactor them.
-* If you've done this and they're still a mess it is very likely pointing to a flaw in your design
-* This is one of the real strengths of tests.
+* テストが乱雑に見える場合は、リファクタリングしてみてください。
+* これを行ってもまだ混乱している場合は、デザインの欠陥を指摘している可能性が高いです。
+* これはテストの真の強みの1つです。
 
-Even though the tests and the production code was a bit cluttered we could freely refactor backed by our tests.
+テストと製品コードは少し雑然としていましたが、テストに基づいて自由にリファクタリングできました。
 
-Remember when you get into these situations to always take small steps and re-run the tests after every change.
+これらの状況に陥ったときは、常に小さなステップを踏んで、変更のたびにテストを再実行することを忘れないでください。
 
-It would've been dangerous to refactor both the test code _and_ the production code at the same time, so we first refactored the production code \(in the current state we couldn't improve the tests much\) without changing its interface so we could rely on our tests as much as we could while changing things. _Then_ we refactored the tests after the design improved.
+テストコードと本番コードの両方を同時にリファクタリングするのは危険でした。
+そのため、インターフェースを変更せずに、最初に本番コードをリファクタリングしました（現在の状態では、テストを大幅に改善することはできませんでした）。
+物事を変えている間、私たちができる限りテストに依存することができました。 _そして_ デザインが改善された後、テストをリファクタリングしました。
 
-After refactoring the dependency list reflected our design goal. This is another benefit of DI in that it often documents intent. When you rely on global variables responsibilities become very unclear.
+依存関係リストをリファクタリングした後、設計目標を反映しました。
+これは、意図を文書化することが多いという点で、DIのもう1つの利点です。グローバル変数に依存すると、責任が非常に不明確になります。
 
-## An example of a function implementing an interface
+## インターフェースを実装する関数の例
 
-When you define an interface with one method in it you might want to consider defining a `MyInterfaceFunc` type to complement it so users can implement your interface with just a function
+1つのメソッドでインターフェースを定義するとき、ユーザーが関数だけでインターフェースを実装できるように、それを補完するために「`MyInterfaceFunc`」型を定義することを検討することができます
 
 ```go
 type BlindAlerter interface {
