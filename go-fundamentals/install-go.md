@@ -23,7 +23,7 @@ xcode-select --install
 そして、以下を実行してhomebrewをインストールします。
 
 ```bash
-/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 ```
 
 この時点でGoをインストールすることができます。
@@ -130,13 +130,13 @@ brew cask install visual-studio-code
 code .
 ```
 
-VS Code はほとんどのソフトウェアが有効化された状態で出荷されています。Goのサポートを追加するには、拡張機能をインストールする必要があります。VS Codeには様々な種類のものがありますが、例外的なものとして[Luke Hoban's package](https://github.com/golang/vscode-go)があります。これは以下のようにインストールすることができます。
+VS Codeはほとんどソフトウェアが有効になっていない状態で出荷されます。拡張機能をインストールすることで新しいソフトウェアを有効にできます。 Goサポートを追加するには、拡張機能をインストールする必要があります。VSCodeにはさまざまなものがありますが、例外は[Luke Hobanのパッケージ](https://github.com/golang/vscode-go)です。これは次のようにインストールできます。
 
 ```bash
-code --install-extension ms-vscode.go
+code --install-extension golang.go
 ```
 
-VS Codeで初めてGOファイルを開くと、解析ツールがないことが表示されるので、ボタンをクリックしてインストールする必要があります。VS Codeでインストールされる(使用される)ツールのリストは[こちら](https://github.com/golang/vscode-go/blob/master/docs/tools.md)を参照してください。
+VS Codeで初めてGoファイルを開くと、分析ツールが見つからないことが示されます。これらをインストールするには、ボタンをクリックする必要があります。 VS Codeによってインストールされるツールのリストは、[こちら](https://github.com/golang/vscode-go/blob/master/docs/tools.md)。
 
 ## Go デバッガー
 
@@ -147,11 +147,11 @@ Goのデバッグ（VS Codeと統合されている）に良いオプション�
 go get -u github.com/go-delve/delve/cmd/dlv
 ```
 
-VSCodeでの Goデバッガーの設定と実行に関する追加のヘルプは、[VS Code デバッギング・ドキュメント](https://github.com/golang/vscode-go/blob/master/docs/debugging.md) を参照してください。
+VS CodeでGoデバッガーを構成および実行するための追加のヘルプについては、[VS Codeデバッグドキュメント](https://github.com/golang/vscode-go/blob/master/docs/debugging.md)を参照してください。
 
 ## Go リンター
 
-デフォルトのリンターよりも改良されたものは、[GolangCI-Lint](https://golangci-lint.run)を使用して設定することができます。
+デフォルトのリンターに対する改良は、[GolangCI-Lint](https://golangci-lint.run)を使用して構成できます。
 
 以下のようにインストールすることができます。
 
