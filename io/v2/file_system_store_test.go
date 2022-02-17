@@ -7,7 +7,7 @@ import (
 
 func TestFileSystemStore(t *testing.T) {
 
-	t.Run("/league from a reader", func(t *testing.T) {
+	t.Run("league from a reader", func(t *testing.T) {
 		database := strings.NewReader(`[
 			{"Name": "Cleo", "Wins": 10},
 			{"Name": "Chris", "Wins": 33}]`)
@@ -41,7 +41,7 @@ func TestFileSystemStore(t *testing.T) {
 	})
 }
 
-func assertScoreEquals(t *testing.T, got, want int) {
+func assertScoreEquals(t testing.TB, got, want int) {
 	t.Helper()
 	if got != want {
 		t.Errorf("got %d want %d", got, want)
