@@ -19,6 +19,7 @@ package main
 import (
     "fmt"
     "net/http"
+	"strings"
 )
 
 type PlayerStore interface {
@@ -31,7 +32,7 @@ type PlayerServer struct {
 }
 
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-    player := r.URL.Path[len("/players/"):]
+	player := strings.TrimPrefix(r.URL.Path, "/players/")
 
     switch r.Method {
     case http.MethodPost:
@@ -58,7 +59,7 @@ func (p *PlayerServer) processWin(w http.ResponseWriter, player string) {
 ```
 
 ```go
-// InMemoryPlayerStore.go
+// in_memory_player_store.go
 package main
 
 func NewInMemoryPlayerStore() *InMemoryPlayerStore {
@@ -90,9 +91,7 @@ import (
 func main() {
     server := &PlayerServer{NewInMemoryPlayerStore()}
 
-    if err := http.ListenAndServe(":5000", server); err != nil {
-        log.Fatalf("could not listen on port 5000 %v", err)
-    }
+	log.Fatal(http.ListenAndServe(":5000", server))
 }
 ```
 
@@ -105,6 +104,7 @@ func main() {
 いくつかの便利なテスト関数と偽の`PlayerStore`を使用するため、既存のスイートを拡張します。
 
 ```go
+//server_test.go
 func TestLeague(t *testing.T) {
     store := StubPlayerStore{}
     server := &PlayerServer{&store}
@@ -125,26 +125,20 @@ func TestLeague(t *testing.T) {
 ## テストを実行してみます
 
 ```text
-=== RUN   TestLeague/it_returns_200_on_/league
-panic: runtime error: slice bounds out of range [recovered]
-    panic: runtime error: slice bounds out of range
-
-goroutine 6 [running]:
-testing.tRunner.func1(0xc42010c3c0)
-    /usr/local/Cellar/go/1.10/libexec/src/testing/testing.go:742 +0x29d
-panic(0x1274d60, 0x1438240)
-    /usr/local/Cellar/go/1.10/libexec/src/runtime/panic.go:505 +0x229
-github.com/quii/learn-go-with-tests/json-and-io/v2.(*PlayerServer).ServeHTTP(0xc420048d30, 0x12fc1c0, 0xc420010940, 0xc420116000)
-    /Users/quii/go/src/github.com/quii/learn-go-with-tests/json-and-io/v2/server.go:20 +0xec
+    --- FAIL: TestLeague/it_returns_200_on_/league (0.00s)
+        server_test.go:101: status code is wrong: got 404, want 200
+FAIL
+FAIL	playerstore	0.221s
+FAIL
 ```
 
-あなたの`PlayerServer`はこのようにパニックになるはずです。`server.go`を指しているスタックトレースのコード行に移動します。
+私たちの `PlayerServer` は `404 Not Found` を返し、まるで未知のプレイヤーの勝利を得ようとしているかのようです。`server.go` がどのように `ServeHTTP` を実装しているかを見てみると、常に特定のプレイヤーを指す URL で呼び出されることを想定していることが分かります。
 
 ```go
-player := r.URL.Path[len("/players/"):]
+player := strings.TrimPrefix(r.URL.Path, "/players/")
 ```
 
-前の章で、これはルーティングを行うためのかなり単純な方法であると述べました。何が起こっているかというと、 `/league`を超えたインデックスから始まるパスの文字列を分割しようとしているため、`範囲外のスライス境界(slice bounds out of range)`になります。
+前章で、これはかなり素朴なルーティングの方法であると述べました。このテストは、異なるリクエストの経路をどのように扱うかについての概念が必要であることを正しく知らせてくれています。
 
 ## 成功させるのに十分なコードを書く
 
@@ -153,6 +147,7 @@ Goには[`ServeMux`](https://golang.org/pkg/net/http/#ServeMux) (request multipl
 いくつかの罪を犯して、テストをできる限り迅速に通過させましょう。テストに成功したら、安全にリファクタリングできます。
 
 ```go
+//server.go
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
     router := http.NewServeMux()
@@ -162,7 +157,7 @@ func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     }))
 
     router.Handle("/players/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        player := r.URL.Path[len("/players/"):]
+		player := strings.TrimPrefix(r.URL.Path, "/players/")
 
         switch r.Method {
         case http.MethodPost:
@@ -188,6 +183,7 @@ func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 `ServeHTTP`はかなり大きく見えます。ハンドラを別のメソッドにリファクタリングすることで、物事を少し分離することができます。
 
 ```go
+//server.go
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
     router := http.NewServeMux()
@@ -202,7 +198,7 @@ func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
-    player := r.URL.Path[len("/players/"):]
+	player := strings.TrimPrefix(r.URL.Path, "/players/")
 
     switch r.Method {
     case http.MethodPost:
@@ -216,6 +212,7 @@ func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
 リクエストが来てからルータの設定をして、それを呼び出すというのは、なんだか変な感じがします。理想的には、ある種の`NewPlayerServer`関数を持っていて、依存関係を取り込んで、 ルータを作成するための一度きりのセットアップを行うことです。それぞれのリクエストはそのルーターのインスタンスを使うだけです。
 
 ```go
+//server.go
 type PlayerServer struct {
     store  PlayerStore
     router *http.ServeMux
@@ -266,6 +263,8 @@ func NewPlayerServer(store PlayerStore) *PlayerServer {
     return p
 }
 ```
+
+そして、`server_test.go`, `server_integration_test.go`, `main.go` 内の `server := &PlayerServer{&store}` を `server := NewPlayerServer(&store)` に置き換えてみてください。
 
 最後に、`func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request)`が不要になったので、**delete** が不要になったので、**削除**してください。
 
@@ -326,6 +325,7 @@ type Animal interface {
 まず、応答を意味のあるものに解析することから始めます。
 
 ```go
+//server_test.go
 func TestLeague(t *testing.T) {
     store := StubPlayerStore{}
     server := NewPlayerServer(&store)
@@ -367,6 +367,7 @@ func TestLeague(t *testing.T) {
 JSONデータモデルを考えると、いくつかのフィールドを持つ`Player`の配列が必要なようですので、これをキャプチャする新しいタイプを作成しました。
 
 ```go
+//server.go
 type Player struct {
     Name string
     Wins int
@@ -376,6 +377,7 @@ type Player struct {
 ### JSONデコード
 
 ```go
+//server_test.go
 var got []Player
 err := json.NewDecoder(response.Body).Decode(&got)
 ```
@@ -399,6 +401,7 @@ JSONの解析が失敗する可能性があるため、`Decode`が`error`を返�
 ## 成功させるのに十分なコードを書く
 
 ```go
+//server.go
 func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
     leagueTable := []Player{
         {"Chris", 20},
@@ -426,6 +429,7 @@ func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
 ハンドラーと`leagueTable`を取得することの間に懸念の分離を導入すると、すぐにはハードコードしないことになるので便利です。
 
 ```go
+//server.go
 func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
     json.NewEncoder(w).Encode(p.getLeagueTable())
     w.WriteHeader(http.StatusOK)
@@ -447,6 +451,7 @@ func (p *PlayerServer) getLeagueTable() []Player {
 `League`を保存できるように、`StubPlayerStore`を更新します。これは、`Player`のスライスにすぎません。そこに期待されるデータを保存します。
 
 ```go
+//server_test.go
 type StubPlayerStore struct {
     scores   map[string]int
     winCalls []string
@@ -457,6 +462,7 @@ type StubPlayerStore struct {
 次に、スタブの`League`プロパティに一部のプレーヤーを配置して現在のテストを更新し、サーバーから返されることを評価します。
 
 ```go
+//server_test.go
 func TestLeague(t *testing.T) {
 
     t.Run("it returns the league table as JSON", func(t *testing.T) {
@@ -515,6 +521,7 @@ func TestLeague(t *testing.T) {
 データが`StubPlayerStore`にあることを知っており、それをインターフェイス` PlayerStore`に抽象化しました。`PlayerStore`で私たちを渡す誰もがリーグのデータを提供できるように、これを更新する必要があります。
 
 ```go
+//server.go
 type PlayerStore interface {
     GetPlayerScore(name string) int
     RecordWin(name string)
@@ -525,6 +532,7 @@ type PlayerStore interface {
 これで、ハードコードされたリストを返すのではなく、ハンドラーコードを更新してそれを呼び出すことができます。メソッド`getLeagueTable()`を削除してから、`leagueHandler`を更新して`GetLeague()`を呼び出します。
 
 ```go
+//server.go
 func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
     json.NewEncoder(w).Encode(p.store.GetLeague())
     w.WriteHeader(http.StatusOK)
@@ -552,6 +560,7 @@ func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
 `StubPlayerStore`の場合は非常に簡単です。先ほど追加した`league`フィールドを返すだけです。
 
 ```go
+//server_test.go
 func (s *StubPlayerStore) GetLeague() []Player {
     return s.league
 }
@@ -560,6 +569,7 @@ func (s *StubPlayerStore) GetLeague() []Player {
 ここでは、`InMemoryStore`の実装方法について説明します。
 
 ```go
+//in_memory_player_store.go
 type InMemoryPlayerStore struct {
     store map[string]int
 }
@@ -570,6 +580,7 @@ type InMemoryPlayerStore struct {
 それでは、コンパイラーを今のところ幸せにして、`InMemoryStore`での実装が不完全であるという不快な気持ちに耐えてみましょう。
 
 ```go
+//in_memory_player_store.go
 func (i *InMemoryPlayerStore) GetLeague() []Player {
     return nil
 }
@@ -584,6 +595,7 @@ func (i *InMemoryPlayerStore) GetLeague() []Player {
 テストコードは意図をうまく伝えておらず、リファクタリングできる定型文がたくさんあります。
 
 ```go
+//server_test.go
 t.Run("it returns the league table as JSON", func(t *testing.T) {
     wantedLeague := []Player{
         {"Cleo", 32},
@@ -608,7 +620,8 @@ t.Run("it returns the league table as JSON", func(t *testing.T) {
 ここに新しいヘルパーがあります
 
 ```go
-func getLeagueFromResponse(t *testing.T, body io.Reader) (league []Player) {
+//server_test.go
+func getLeagueFromResponse(t testing.TB, body io.Reader) (league []Player) {
     t.Helper()
     err := json.NewDecoder(body).Decode(&league)
 
@@ -619,7 +632,7 @@ func getLeagueFromResponse(t *testing.T, body io.Reader) (league []Player) {
     return
 }
 
-func assertLeague(t *testing.T, got, want []Player) {
+func assertLeague(t testing.TB, got, want []Player) {
     t.Helper()
     if !reflect.DeepEqual(got, want) {
         t.Errorf("got %v want %v", got, want)
@@ -639,6 +652,7 @@ func newLeagueRequest() *http.Request {
 このアサーションを既存のテストに追加します
 
 ```go
+//server_test.go
 if response.Result().Header.Get("content-type") != "application/json" {
     t.Errorf("response did not have content-type of application/json, got %v", response.Result().Header)
 }
@@ -657,6 +671,7 @@ if response.Result().Header.Get("content-type") != "application/json" {
 `leagueHandler`を更新します
 
 ```go
+//server.go
 func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("content-type", "application/json")
     json.NewEncoder(w).Encode(p.store.GetLeague())
@@ -667,12 +682,23 @@ func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
 
 ## リファクタリング♪
 
-`assertContentType`のヘルパーを追加します。
+`application/json` の定数を作成し、それを `leagueHandler` で使用します。
 
 ```go
+//server.go
 const jsonContentType = "application/json"
 
-func assertContentType(t *testing.T, response *httptest.ResponseRecorder, want string) {
+func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("content-type", jsonContentType)
+	json.NewEncoder(w).Encode(p.store.GetLeague())
+}
+```
+
+それから `assertContentType`のヘルパーを追加します
+
+```go
+//server_test.go
+func assertContentType(t testing.TB, response *httptest.ResponseRecorder, want string) {
     t.Helper()
     if response.Result().Header.Get("content-type") != want {
         t.Errorf("response did not have content-type of %s, got %v", want, response.Result().Header)
@@ -683,6 +709,7 @@ func assertContentType(t *testing.T, response *httptest.ResponseRecorder, want s
 テストで使用してください。
 
 ```go
+//server_test.go
 assertContentType(t, response, jsonContentType)
 ```
 
@@ -695,6 +722,7 @@ assertContentType(t, response, jsonContentType)
 `t.Run`を使用してこのテストを少し分解し、サーバーテストのヘルパーを再利用できます。これもリファクタリングテストの重要性を示しています。
 
 ```go
+//server_integration_test.go
 func TestRecordingWinsAndRetrievingThem(t *testing.T) {
     store := NewInMemoryPlayerStore()
     server := NewPlayerServer(store)
@@ -739,6 +767,7 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 `GetLeague()`を呼び出すと、`InMemoryPlayerStore`は`nil`を返すため、修正する必要があります。
 
 ```go
+//in_memory_player_store.go
 func (i *InMemoryPlayerStore) GetLeague() []Player {
     var league []Player
     for name, wins := range i.store {
