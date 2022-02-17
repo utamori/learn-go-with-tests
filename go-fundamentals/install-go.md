@@ -6,78 +6,12 @@ description: Install Go
 
 Goの公式インストール手順は、[こちら](https://golang.org/doc/install)から入手できます。
 
-このガイドでは、パッケージマネージャーを使用していることを前提としています。 [Homebrew](https://brew.sh), [Chocolatey](https://chocolatey.org), [Apt](https://help.ubuntu.com/community/AptGet/Howto) or [yum](https://access.redhat.com/solutions/9934).
-
-デモのために、Homebrewを使用したOSXのインストール手順を紹介します。
-
-## インストール
-
-インストールの手順はとても簡単です。
-
-まず、やるべきことは、このコマンドを実行してhomebrewをインストールすることです。これはXcodeに依存しているので、最初にこれがインストールされていることを確認してください。
-
-```bash
-xcode-select --install
-```
-
-そして、以下を実行してhomebrewをインストールします。
-
-```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
-```
-
-この時点でGoをインストールすることができます。
-
-```bash
-brew install go
-```
-
-※ パッケージマネージャが推奨する指示に従ってください。**注意** これらはホストOS固有のものかもしれません。
-
-インストールを確認することができます。
-
-```bash
-$ go version
-go version go1.14 darwin/amd64
-```
-
 ## Go 環境
 
-### $GOPATH
+### Go Modules
 
-Goは意見があります。
-
-慣例では、すべてのGoコードは1つのワークスペース (フォルダ) に格納されています。
-
-このワークスペースはマシンのどこにでもあります。指定しない場合、Go はデフォルトのワークスペースとして`$HOME/go`を想定します。ワークスペースは、環境変数[GOPATH](https://golang.org/cmd/go/#hdr-GOPATH_environment_variable)によって識別され(変更され)ます。
-
-環境変数を設定しておくと、後でスクリプトやシェルなどで使えるようになります。
-
-`.bash_profile`を以下のエクスポートを含むように更新してください。
-
-```bash
-export GOPATH=$HOME/go
-export PATH=$PATH:$GOPATH/bin
-```
-
-*注意* これらの環境変数を拾うためには、新しいシェルを開く必要があります。
-
-Goは、ワークスペースに特定のディレクトリ構造が含まれていることを前提としています。
-
-Goはファイルを3つのディレクトリに配置します。すべてのソースコードは`src`に、パッケージオブジェクトは`pkg`に、コンパイルされたプログラムは`bin`に置かれます。
-
-これらのディレクトリは、次のように作成できます。
-
-```bash
-mkdir -p $GOPATH/src $GOPATH/pkg $GOPATH/bin
-```
-
-この時点で`go get`ができ、`src/package/bin`が適切な`$GOPATH/xxx`ディレクトリに正しくインストールされます。
-
-### Go モジュール
-
-Go1.11では [モジュール](https://github.com/golang/go/wiki/Modules)が導入され、代替のワークフローが可能になりました。
-この新しいアプローチは徐々に [デフォルト](https://blog.golang.org/modules2019)モードになり、`GOPATH`の使用は廃止されます。
+Go 1.11から[Modules](https://github.com/golang/go/wiki/Modules)が導入されました。
+この方法は Go 1.16 以降のデフォルトのビルドモードなので、`GOPATH` の使用は推奨されません。
 
 モジュールは、依存関係管理、バージョン選択、再現性のあるビルドに関連する問題を解決することを目的としており、ユーザは `GOPATH` の外で Go コードを実行することもできます。
 
@@ -98,13 +32,7 @@ go mod init <modulepath>
 ```
 module cmd
 
-go 1.14
-
-require (
-        github.com/google/pprof v0.0.0-20190515194954-54271f7e092f
-        golang.org/x/arch v0.0.0-20190815191158-8a70ba74b3a1
-        golang.org/x/tools v0.0.0-20190611154301-25a4f137592f
-)
+go 1.16
 ```
 
 組み込みのドキュメントには、利用可能なすべての`go mod`コマンドの概要が記載されています。
@@ -113,41 +41,6 @@ require (
 go help mod
 go help mod init
 ```
-
-## Go エディター
-
-エディタの好みは非常に個人的なものなので、Goをサポートしているエディタをすでにお持ちかもしれません。もしそうでない場合は、[Visual Studio Code](https://code.visualstudio.com)のような、例外的にGoをサポートしているエディタを検討する必要があります。
-
-以下のコマンドでインストールできます。
-
-```bash
-brew cask install visual-studio-code
-```
-
-あなたは、あなたのシェルで次のように実行することができます`VS Code`が正しくインストールされていることを確認することができます。
-
-```bash
-code .
-```
-
-VS Codeはほとんどソフトウェアが有効になっていない状態で出荷されます。拡張機能をインストールすることで新しいソフトウェアを有効にできます。 Goサポートを追加するには、拡張機能をインストールする必要があります。VSCodeにはさまざまなものがありますが、例外は[Luke Hobanのパッケージ](https://github.com/golang/vscode-go)です。これは次のようにインストールできます。
-
-```bash
-code --install-extension golang.go
-```
-
-VS Codeで初めてGoファイルを開くと、分析ツールが見つからないことが示されます。これらをインストールするには、ボタンをクリックする必要があります。 VS Codeによってインストールされるツールのリストは、[こちら](https://github.com/golang/vscode-go/blob/master/docs/tools.md)。
-
-## Go デバッガー
-
-Goのデバッグ（VS Codeと統合されている）に良いオプションは`Delve`です。
-これは以下のようにインストールすることができます。
-
-```bash
-go get -u github.com/go-delve/delve/cmd/dlv
-```
-
-VS CodeでGoデバッガーを構成および実行するための追加のヘルプについては、[VS Codeデバッグドキュメント](https://github.com/golang/vscode-go/blob/master/docs/debugging.md)を参照してください。
 
 ## Go リンター
 
