@@ -67,7 +67,7 @@ type Handler interface {
 
 タイプは、2つの引数を期待する`ServeHTTP`メソッドを実装することにより、ハンドラーインターフェースを実装します。1つ目は、レスポンスを書き込む場所で、2つ目はサーバーに送信されたHTTPリクエストです。
 
-これらの2つの引数を受け取る関数`PlayerServer`のテストを書いてみましょう。送信されるリクエストは、プレーヤーのスコアを取得することです。これは`"20"`であると予想されます。
+`server_test.go`というファイルを作成し、これらの2つの引数を受け取る関数`PlayerServer`のテストを書いてみましょう。送信されるリクエストは、プレーヤーのスコアを取得することです。これは`"20"`であると予想されます。
 
 ```go
 func TestGETPlayers(t *testing.T) {
@@ -100,7 +100,7 @@ func TestGETPlayers(t *testing.T) {
 
 コンパイラーは正常に動いています。耳を傾けてください。
 
-`PlayerServer`を定義します
+`server.go`というファイルを作成し、`PlayerServer`を定義します
 
 ```go
 func PlayerServer() {}
@@ -151,7 +151,7 @@ func PlayerServer(w http.ResponseWriter, r *http.Request) {
 * 実際に動作するソフトウェアを用意します。そのためのテストを記述したくありません。コードの動作を確認することをお勧めします。
 * コードをリファクタリングすると、プログラムの構造が変更される可能性があります。これは、インクリメンタルアプローチの一部として、アプリケーションにも反映されるようにしたいと考えています。
 
-アプリケーション用の新しいファイルを作成し、このコードを配置します。
+アプリケーション用の新しいファイル`main.go`を作成し、このコードを配置します。
 
 ```go
 package main
@@ -163,9 +163,7 @@ import (
 
 func main() {
     handler := http.HandlerFunc(PlayerServer)
-    if err := http.ListenAndServe(":5000", handler); err != nil {
-        log.Fatalf("could not listen on port 5000 %v", err)
-    }
+	log.Fatal(http.ListenAndServe(":5000", handler))
 }
 ```
 
@@ -189,7 +187,7 @@ type HandlerFunc func(ResponseWriter, *Request)
 
 ### `http.ListenAndServe(":5000"...)`
 
-`ListenAndServe`は、ポートを使用して`Handler`をリッスンします。ポートがすでにリッスンされている場合は「エラー`error`」が返されるため、`if`ステートメントを使用してそのシナリオをキャプチャし、問題をユーザーに記録します。
+`ListenAndServe` はリッスンするポートを `Handler` に受け取ります。問題がある場合、ウェブサーバーはエラーを返します。エラーの一例として、ポートがすでにリッスンされていることが考えられます。そのため、この呼び出しを `log.Fatal` でラップして、ユーザーのために、エラーをログに出力します。
 
 これから行うのは、ハードコーディングされた値から離れるようにポジティブな変更を強制する _another_ テストを作成することです。
 
@@ -232,6 +230,7 @@ t.Run("returns Floyd's score", func(t *testing.T) {
 ## 成功させるのに十分なコードを書く
 
 ```go
+//server.go
 func PlayerServer(w http.ResponseWriter, r *http.Request) {
     player := strings.TrimPrefix(r.URL.Path, "/players/")
 
@@ -260,6 +259,7 @@ func PlayerServer(w http.ResponseWriter, r *http.Request) {
 スコアの取得を関数に分離することで、`PlayerServer`を簡略化できます
 
 ```go
+//server.go
 func PlayerServer(w http.ResponseWriter, r *http.Request) {
     player := strings.TrimPrefix(r.URL.Path, "/players/")
 
@@ -279,9 +279,10 @@ func GetPlayerScore(name string) string {
 }
 ```
 
-そして、いくつかのヘルパーを作成することで、テストのコードの一部を乾燥させることができます。
+そして、いくつかのヘルパーを作成することで、テストのコードの一部をDRYにすることができます。
 
 ```go
+//server_test.go
 func TestGETPlayers(t *testing.T) {
     t.Run("returns Pepper's score", func(t *testing.T) {
         request := newGetScoreRequest("Pepper")
@@ -307,7 +308,7 @@ func newGetScoreRequest(name string) *http.Request {
     return req
 }
 
-func assertResponseBody(t *testing.T, got, want string) {
+func assertResponseBody(t testing.TB, got, want string) {
     t.Helper()
     if got != want {
         t.Errorf("response body is wrong, got %q want %q", got, want)
@@ -351,6 +352,7 @@ func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 サーバーの完全なコードリストは次のとおりです。
 
 ```go
+//server.go
 type PlayerStore interface {
     GetPlayerScore(name string) int
 }
@@ -374,6 +376,7 @@ func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 テストを変更して、代わりに`PlayerServer`の新しいインスタンスを作成し、そのメソッド`ServeHTTP`を呼び出す必要があります。
 
 ```go
+//server_test.go
 func TestGETPlayers(t *testing.T) {
     server := &PlayerServer{}
 
@@ -409,9 +412,7 @@ func TestGETPlayers(t *testing.T) {
 func main() {
     server := &PlayerServer{}
 
-    if err := http.ListenAndServe(":5000", server); err != nil {
-        log.Fatalf("could not listen on port 5000 %v", err)
-    }
+	log.Fatal(http.ListenAndServe(":5000", server))
 }
 ```
 
@@ -426,6 +427,7 @@ panic: runtime error: invalid memory address or nil pointer dereference [recover
 これは、テストで`PlayerStore`を渡していないためです。スタブを1つ作成する必要があります。
 
 ```go
+//server_test.go
 type StubPlayerStore struct {
     scores map[string]int
 }
@@ -439,6 +441,7 @@ func (s *StubPlayerStore) GetPlayerScore(name string) int {
 `map`は、テスト用のスタブ キー/値（key/value）ストアを作成する迅速で簡単な方法です。次に、テスト用にこれらのストアの1つを作成して、`PlayerServer`に送信します。
 
 ```go
+//server_test.go
 func TestGETPlayers(t *testing.T) {
     store := StubPlayerStore{
         map[string]int{
@@ -479,6 +482,7 @@ func TestGETPlayers(t *testing.T) {
 1つの実装を作成する必要がありますが、意味のあるデータを格納していないため、当面はハードコーディングする必要があるため、現時点ではそれは困難です。
 
 ```go
+//main.go
 type InMemoryPlayerStore struct{}
 
 func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
@@ -488,19 +492,18 @@ func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
 func main() {
     server := &PlayerServer{&InMemoryPlayerStore{}}
 
-    if err := http.ListenAndServe(":5000", server); err != nil {
-        log.Fatalf("could not listen on port 5000 %v", err)
-    }
+	log.Fatal(http.ListenAndServe(":5000", server))
 }
 ```
 
 `go build`を再度実行して同じURLにアクセスすると、`"123"`が表示されます。すばらしいとは言えませんが、データを保存するまでは、私たちができる最高のことです。
+また、メインのアプリケーションが起動しても実際には動かないというのも、あまり気分のいいものではありませんでした。問題を確認するために、手動でテストする必要がありました。
+
 
 私たちは次に何をすべきかについていくつかのオプションがあります
 
 * レイヤーが存在しないシナリオを処理します
 * `POST /players/{name}`シナリオを処理します
-* メインアプリケーションが起動していても実際に動作していないのは気分がよくありませんでした。問題を確認するために手動でテストする必要がありました。
 
 `POST`シナリオは「ハッピーパス」に近づきますが、すでにそのコンテキストにいるため、最初に不足しているプレーヤーシナリオに取り組む方が簡単だと思います。残りは後で行います。
 
@@ -509,6 +512,7 @@ func main() {
 不足しているプレーヤーのシナリオを既存のスイートに追加する
 
 ```go
+//server_test.go
 t.Run("returns 404 on missing players", func(t *testing.T) {
     request := newGetScoreRequest("Apollo")
     response := httptest.NewRecorder()
@@ -535,6 +539,7 @@ t.Run("returns 404 on missing players", func(t *testing.T) {
 ## 成功させるのに十分なコードを書く
 
 ```go
+//server.go
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     player := strings.TrimPrefix(r.URL.Path, "/players/")
 
@@ -555,6 +560,7 @@ TDDの提唱者が「コードを最小限にするだけでコードをパス�
 これが新しいテストです
 
 ```go
+//server_test.go
 func TestGETPlayers(t *testing.T) {
     store := StubPlayerStore{
         map[string]int{
@@ -594,7 +600,7 @@ func TestGETPlayers(t *testing.T) {
     })
 }
 
-func assertStatus(t *testing.T, got, want int) {
+func assertStatus(t testing.TB, got, want int) {
     t.Helper()
     if got != want {
         t.Errorf("did not get correct status, got %d, want %d", got, want)
@@ -606,7 +612,7 @@ func newGetScoreRequest(name string) *http.Request {
     return req
 }
 
-func assertResponseBody(t *testing.T, got, want string) {
+func assertResponseBody(t testing.TB, got, want string) {
     t.Helper()
     if got != want {
         t.Errorf("response body is wrong, got %q want %q", got, want)
@@ -619,6 +625,7 @@ func assertResponseBody(t *testing.T, got, want string) {
 これで、最初の2つのテストは200ではなく404が原因で失敗します。そのため、スコアが0の場合にのみ見つからないことを返すように`PlayerServer`を修正できます。
 
 ```go
+//server.go
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     player := strings.TrimPrefix(r.URL.Path, "/players/")
 
@@ -639,6 +646,7 @@ func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 ## 最初にテストを書く
 
 ```go
+//server_test.go
 func TestStoreWins(t *testing.T) {
     store := StubPlayerStore{
         map[string]int{},
@@ -671,6 +679,7 @@ func TestStoreWins(t *testing.T) {
 意図的に罪を犯しているので、リクエストのメソッドに基づく`if`ステートメントでうまくいくことを覚えておいてください。
 
 ```go
+//server.go
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
     if r.Method == http.MethodPost {
@@ -695,6 +704,7 @@ func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 ハンドラーは少し混乱しています。コードを分割して、さまざまな機能を簡単に追跡して分離し、新しい機能に分離しましょう。
 
 ```go
+//server.go
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
     switch r.Method {
@@ -732,6 +742,7 @@ func (p *PlayerServer) processWin(w http.ResponseWriter) {
 これは、`StubPlayerStore`を新しい`RecordWin`メソッドで拡張し、その呼び出しをスパイすることで実現できます。
 
 ```go
+//server_test.go
 type StubPlayerStore struct {
     scores   map[string]int
     winCalls []string
@@ -750,6 +761,7 @@ func (s *StubPlayerStore) RecordWin(name string) {
 テストを拡張して、開始の呼び出しの数を確認します。
 
 ```go
+//server_test.go
 func TestStoreWins(t *testing.T) {
     store := StubPlayerStore{
         map[string]int{},
@@ -788,6 +800,7 @@ func newPostWinRequest(name string) *http.Request {
 新しいフィールドを追加したので、`StubPlayerStore`を作成するコードを更新する必要があります
 
 ```go
+//server_test.go
 store := StubPlayerStore{
     map[string]int{},
     nil,
@@ -807,6 +820,7 @@ store := StubPlayerStore{
 `RecordWin`を呼び出せるようにするには、インターフェイスを変更して、`PlayerStore`が何であるかについての`PlayerServer`の考えを更新する必要があります。
 
 ```go
+//server.go
 type PlayerStore interface {
     GetPlayerScore(name string) int
     RecordWin(name string)
@@ -823,6 +837,7 @@ type PlayerStore interface {
 コンパイラは何が悪いのかを教えてくれます。そのメソッドを持つように`InMemoryPlayerStore`を更新しましょう。
 
 ```go
+//main.go
 type InMemoryPlayerStore struct{}
 
 func (i *InMemoryPlayerStore) RecordWin(name string) {}
@@ -833,6 +848,7 @@ func (i *InMemoryPlayerStore) RecordWin(name string) {}
 `PlayerStore`に`RecordWin`があるので、`PlayerServer`内で呼び出すことができます。
 
 ```go
+//server.go
 func (p *PlayerServer) processWin(w http.ResponseWriter) {
     p.store.RecordWin("Bob")
     w.WriteHeader(http.StatusAccepted)
@@ -844,6 +860,7 @@ func (p *PlayerServer) processWin(w http.ResponseWriter) {
 ## 最初にテストを書く
 
 ```go
+//server_test.go
 t.Run("it records wins on POST", func(t *testing.T) {
     player := "Pepper"
 
@@ -877,6 +894,7 @@ t.Run("it records wins on POST", func(t *testing.T) {
 ## 成功させるのに十分なコードを書く
 
 ```go
+//server.go
 func (p *PlayerServer) processWin(w http.ResponseWriter, r *http.Request) {
     player := strings.TrimPrefix(r.URL.Path, "/players/")
     p.store.RecordWin(player)
@@ -891,6 +909,7 @@ func (p *PlayerServer) processWin(w http.ResponseWriter, r *http.Request) {
 2つの場所で同じ方法でプレイヤー名を抽出しているので、このコードを少しDRYにすることができます。
 
 ```go
+//server.go
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     player := strings.TrimPrefix(r.URL.Path, "/players/")
 
@@ -939,6 +958,7 @@ func (p *PlayerServer) processWin(w http.ResponseWriter, player string) {
 簡潔にするために、最後のリファクタリングされた統合テストを紹介します。
 
 ```go
+//server_integration_test.go
 func TestRecordingWinsAndRetrievingThem(t *testing.T) {
     store := InMemoryPlayerStore{}
     server := PlayerServer{&store}
@@ -971,11 +991,12 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 
 私はここでいくつかの自由を取り、テストを書かずに慣れるよりも多くのコードを書きます。
 
-これは許可されています！正常に機能していることを確認するテストはまだありますが、`InMemoryPlayerStore`で使用している特定のユニットの周りではありません。
+_これは許可されています!_ 正常に機能していることを確認するテストはまだありますが、`InMemoryPlayerStore`で使用している特定のユニットの周りではありません。
 
 このシナリオで行き詰まった場合は、変更を失敗したテストに戻し、`InMemoryPlayerStore`に関連するより具体的な単体テストを記述して、ソリューションを実行できるようにします。
 
 ```go
+//in_memory_player_store.go
 func NewInMemoryPlayerStore() *InMemoryPlayerStore {
     return &InMemoryPlayerStore{map[string]int{}}
 }
@@ -995,11 +1016,17 @@ func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
 
 * データを保存する必要があるので、`map[string]int`を`InMemoryPlayerStore`構造体に追加しました
 * 便宜上、ストアを初期化するために`NewInMemoryPlayerStore`を作成し、それを使用するように統合テストを更新しました（`store := NewInMemoryPlayerStore()`）
+    ```go
+    //server_integration_test.go
+    store := NewInMemoryPlayerStore()
+    server := PlayerServer{store}
+    ```
 * 残りのコードは、`map`をラップするだけです
 
 統合テストに合格したので、`main`を変更して` NewInMemoryPlayerStore()`を使用するだけです。
 
 ```go
+//main.go
 package main
 
 import (
@@ -1010,9 +1037,7 @@ import (
 func main() {
     server := &PlayerServer{NewInMemoryPlayerStore()}
 
-    if err := http.ListenAndServe(":5000", server); err != nil {
-        log.Fatalf("could not listen on port 5000 %v", err)
-    }
+	log.Fatal(http.ListenAndServe(":5000", server))
 }
 ```
 
