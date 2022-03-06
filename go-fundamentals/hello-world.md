@@ -8,15 +8,8 @@ description: 'Hello, World'
 
 新しい言語での最初のプログラムが [Hello, World](https://en.m.wikipedia.org/wiki/%22Hello,_World!%22_program)であるのは伝統的です。
 
-[前の章](install-go.md#go-environment) では、ファイルの配置場所についてGoがどのように考えられているかを説明しました。
-
-次のパス `$GOPATH/src/github.com/{your-user-id}/hello`にディレクトリを作成します。
-
-したがって、UNIXベースのOSを使用していて、 `$GOPATH` を設定している場合は、次のコマンドでディレクトリを作成できます。 `mkdir -p $GOPATH/src/github.com/$USER/hello`.
-
-以降の章では、コードを好きな名前で新しいフォルダーを作成できます。たとえば、次の章では `$GOPATH/src/github.com/{your-user-id}/integers` にコードを配置することをお勧めします。 このサイトの一部のユーザーは、`learn-go-with-tests/hello`. などのすべての作業用のフォルダーを作成することを好みます。 つまり、フォルダをどのように構成するかはあなた次第です。
-
-このディレクトリに`hello.go`というファイルを作成し、このコードを記述します。実行するには`go run hello.go`と入力します。
+- 好きな場所にフォルダを作成します。
+- その中に `hello.go` という名前の新しいファイルを作り、その中に以下のコードを記述します。
 
 ```go
 package main
@@ -27,6 +20,8 @@ func main() {
     fmt.Println("Hello, world")
 }
 ```
+
+次のように実行します。 `go run hello.go`
 
 ## 使い方
 
@@ -75,7 +70,29 @@ func TestHello(t *testing.T) {
 }
 ```
 
-説明する前に、コードを実行してみましょう。 端末で`go test`を実行します。合格したはずです！ 確認するために、`want`文字列を変更して、意図的にテストを中断してみてください。
+## Go Modulesってなに？
+
+次は、テストを実行します。ターミナルで `go test` と入力してください。テストが成功したら、おそらく以前のバージョンの Go を使っているのでしょう。しかし、Go 1.16 以降を使っている場合は、テストがまったく実行されない可能性があります。その代わり、ターミナルに次のようなエラーメッセージが表示されます。
+
+```shell
+$ go test
+go: cannot find main module; see 'go help modules'
+```
+
+何が問題なのか？一言で言えば、[モジュール](https://blog.golang.org/go116-module-changes)です。幸いなことに、この問題は簡単に解決することができます。ターミナルで `go mod init hello` と入力してください。そうすると、次のような内容の新しいファイルが作成されます。
+
+```
+module hello
+go 1.16
+```
+
+このファイルは `go` ツールに、あなたのコードに関する重要な情報を伝えます。もし、アプリケーションを配布する予定があるなら、コードがダウンロードできる場所や、依存関係の情報も含めるでしょう。今のところ、モジュールファイルは最小限のものであり、そのままにしておいても構いません。モジュールについて詳しく知りたいなら、[Golangドキュメントのリファレンスを参照してください](https://golang.org/doc/modules/gomod-ref)。これでGo 1.16 でもテストは実行されるはずなので、テストと Go の学習に戻ることができます。
+
+今後の章では、`go test` や `go build` といったコマンドを実行する前に、それぞれの新しいフォルダで `go mod init SOMENAME` を実行する必要があります。
+
+## テストに戻ります
+
+ターミナルで`go test`を実行します。合格したはずです！ 確認するために、`want`文字列を変更して、意図的にテストを中断してみてください。
 
 複数のテストフレームワークを選択する必要がなく、インストール方法を理解する必要がないことに注意してください。 必要なものはすべて言語に組み込まれており、構文は、これから記述する残りのコードと同じです。
 
@@ -86,6 +103,7 @@ func TestHello(t *testing.T) {
 * `xxx_test.go`のような名前のファイルにある必要があります。
 * テスト関数は`Test`という単語で始まる必要があります。
 * テスト関数は1つの引数のみをとります。 `t *testing.T`
+* `*testing.T` 型を使うには、他のファイルの `fmt` と同じように `import "testing"` が必要です。
 
 とりあえず、 `* testing.T`タイプの`t`がテストフレームワークへの`hook`\(フック\)であることを知っていれば十分なので、失敗したいときに `t.Fail()`のようなことを実行できます。
 
@@ -160,7 +178,7 @@ func Hello(name string) string {
 }
 ```
 
-もう一度テストを実行すると、引数を渡していないため、 `main.go`はコンパイルに失敗します。それを通過させるために`"world"`を送ってください。
+もう一度テストを実行すると、引数を渡していないため、 `hello.go`はコンパイルに失敗します。コンパイルできるように`"world"`を渡してください。
 
 ```go
 func main() {
@@ -226,7 +244,6 @@ func Hello(name string) string {
 
 ```go
 func TestHello(t *testing.T) {
-
     t.Run("saying hello to people", func(t *testing.T) {
         got := Hello("Chris")
         want := "Hello, Chris"
@@ -235,7 +252,6 @@ func TestHello(t *testing.T) {
             t.Errorf("got %q want %q", got, want)
         }
     })
-
     t.Run("say 'Hello, World' when an empty string is supplied", func(t *testing.T) {
         got := Hello("")
         want := "Hello, World"
@@ -244,7 +260,6 @@ func TestHello(t *testing.T) {
             t.Errorf("got %q want %q", got, want)
         }
     })
-
 }
 ```
 
@@ -262,26 +277,22 @@ func TestHello(t *testing.T) {
 
 ```go
 func TestHello(t *testing.T) {
-
-    assertCorrectMessage := func(t *testing.T, got, want string) {
+	assertCorrectMessage := func(t testing.TB, got, want string) {
         t.Helper()
         if got != want {
             t.Errorf("got %q want %q", got, want)
         }
     }
-
     t.Run("saying hello to people", func(t *testing.T) {
         got := Hello("Chris")
         want := "Hello, Chris"
         assertCorrectMessage(t, got, want)
     })
-
     t.Run("empty string defaults to 'World'", func(t *testing.T) {
         got := Hello("")
         want := "Hello, World"
         assertCorrectMessage(t, got, want)
     })
-
 }
 ```
 
@@ -289,7 +300,9 @@ func TestHello(t *testing.T) {
 
 アサーションを関数にリファクタリングしました。 これにより、重複が削減され、テストの可読性が向上します。 Goでは、他の関数内で関数を宣言して、変数に割り当てることができます。 その後、通常の関数と同じようにそれらを呼び出すことができます。 `t * testing.T`を渡す必要があるので、必要なときにテストコードを失敗させることができます。
 
-このメソッドがヘルパーであることをテストスイートに伝えるには、 `t.Helper()`が必要です。失敗したときにこれを行うと、レポートされる行番号はテストヘルパー内ではなく、`関数呼び出し`内にあります。これにより、他の開発者が問題を簡単に追跡できるようになります。それでも理解できない場合は、コメントアウトし、テストを失敗させて、テスト出力を観察します。
+ヘルパー関数については、 `*testing.T` と `*testing.B` の両方が満たすインターフェースである `testing.TB` を受け入れると、テストやベンチマークからヘルパー関数を呼び出すことができるため、便利です。
+
+`t.Helper()`は、このメソッドがヘルパーであることをテストスイートに伝えるために必要です。こうすることで、テストが失敗したときに報告される行番号は、テストヘルパーの中ではなく _呼び出された関数_ の中を示します。これにより、他の開発者が問題を追跡しやすくなります。それでも理解できない場合は、コメントアウトし、テストを失敗させて、テスト出力を観察してください。Goのコメントは、コードに追加情報を加えるのに最適な方法です。この場合は、コンパイラに特定の行を無視するように指示する手っ取り早い方法です。`t.Helper()` のコードをコメントアウトするには、行頭に2つのフォワードスラッシュ `//` を追加してください。その行がグレーになるか、他のコードとは別の色に変わることで、コメントアウトされたことがわかるはずです。
 
 うまく書かれた不合格のテストができたので、 `if`を使用してコードを修正しましょう。
 
@@ -390,7 +403,6 @@ func Hello(name string, language string) string {
     if language == "Spanish" {
         return "Hola, " + name
     }
-
     return englishHelloPrefix + name
 }
 ```
@@ -412,7 +424,6 @@ func Hello(name string, language string) string {
     if language == spanish {
         return spanishHelloPrefix + name
     }
-
     return englishHelloPrefix + name
 }
 ```
@@ -434,11 +445,9 @@ func Hello(name string, language string) string {
     if language == spanish {
         return spanishHelloPrefix + name
     }
-
     if language == french {
         return frenchHelloPrefix + name
     }
-
     return englishHelloPrefix + name
 }
 ```
@@ -498,7 +507,7 @@ func greetingPrefix(language string) (prefix string) {
 
 * 関数のシグネチャでは、 _named return value_ `(prefix string)`を作成しました。
 * これにより、関数に `prefix` という変数が作成されます。
-  * "zero" 値が割り当てられます。これはタイプによって異なります。たとえば、`int`は`0`で、文字列の場合は`""`です。
+  * "zero" 値が割り当てられます。これはタイプによって異なります。たとえば、`int`は`0`で、`string`の場合は`""`です。
     * `return prefix`ではなく`return`を呼び出すだけで、設定されているものを返すことができます。
   * これは関数のGo Docに表示されるので、コードの意図をより明確にすることができます。
 * switchケースの`default` は、他の`case`ステートメントのいずれも一致しない場合に分岐します。
