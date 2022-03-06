@@ -69,7 +69,7 @@ func (cli *CLI) readLine() string {
 
 タイムライブラリには、これらのナノ秒を乗算できるようにする定数がいくつかあります。これにより、これらの定数は、私たちが行うシナリオの種類に対して、より読みやすくなります。
 
-```go
+```
 5 * time.Second
 ```
 
@@ -97,7 +97,7 @@ t.Run("it schedules printing of blind values", func(t *testing.T) {
 })
 ```
 
-`SpyBlindAlerter`を作成し、それを`CLI`に挿入しようとしています。次に、 `PlayerPoker`を呼び出した後、アラートがスケジュールされていることを確認します。
+`SpyBlindAlerter`を作成し、それを`CLI`に挿入しようとしています。次に、 `PlayPoker`を呼び出した後、アラートがスケジュールされていることを確認します。
 
 （最初に最も単純なシナリオを実行することを思い出して、次に反復します。）
 
@@ -105,16 +105,16 @@ t.Run("it schedules printing of blind values", func(t *testing.T) {
 
 ```go
 type SpyBlindAlerter struct {
-    alerts []struct{
+    alerts []struct {
         scheduledAt time.Duration
-        amount int
+        amount      int
     }
 }
 
 func (s *SpyBlindAlerter) ScheduleAlertAt(duration time.Duration, amount int) {
     s.alerts = append(s.alerts, struct {
         scheduledAt time.Duration
-        amount int
+        amount      int
     }{duration,  amount})
 }
 ```
@@ -191,7 +191,7 @@ func NewCLI(store PlayerStore, in io.Reader, alerter BlindAlerter) *CLI {
 
 ```go
 func (cli *CLI) PlayPoker() {
-    cli.alerter.ScheduleAlertAt(5 * time.Second, 100)
+    cli.alerter.ScheduleAlertAt(5*time.Second, 100)
     userInput := cli.readLine()
     cli.playerStore.RecordWin(extractWinner(userInput))
 }
@@ -210,10 +210,10 @@ func (cli *CLI) PlayPoker() {
         cli := poker.NewCLI(playerStore, in, blindAlerter)
         cli.PlayPoker()
 
-        cases := []struct{
+        cases := []struct {
             expectedScheduleTime time.Duration
             expectedAmount       int
-        } {
+        }{
             {0 * time.Second, 100},
             {10 * time.Minute, 200},
             {20 * time.Minute, 300},
@@ -256,7 +256,7 @@ func (cli *CLI) PlayPoker() {
 
 こんな感じで失敗を重ねるといいですよ。
 
-```go
+```
 === RUN   TestCLI
 --- FAIL: TestCLI (0.00s)
 === RUN   TestCLI/it_schedules_printing_of_blind_values
@@ -278,7 +278,7 @@ func (cli *CLI) PlayPoker() {
     blindTime := 0 * time.Second
     for _, blind := range blinds {
         cli.alerter.ScheduleAlertAt(blindTime, blind)
-        blindTime = blindTime + 10 * time.Minute
+        blindTime = blindTime + 10*time.Minute
     }
 
     userInput := cli.readLine()
@@ -337,38 +337,38 @@ func (s *SpyBlindAlerter) ScheduleAlertAt(at time.Duration, amount int) {
 
 ```go
 t.Run("it schedules printing of blind values", func(t *testing.T) {
-    in := strings.NewReader("Chris wins\n")
-    playerStore := &poker.StubPlayerStore{}
-    blindAlerter := &SpyBlindAlerter{}
+	in := strings.NewReader("Chris wins\n")
+	playerStore := &poker.StubPlayerStore{}
+	blindAlerter := &SpyBlindAlerter{}
 
-    cli := poker.NewCLI(playerStore, in, blindAlerter)
-    cli.PlayPoker()
+	cli := poker.NewCLI(playerStore, in, blindAlerter)
+	cli.PlayPoker()
 
-    cases := []scheduledAlert {
-        {0 * time.Second, 100},
-        {10 * time.Minute, 200},
-        {20 * time.Minute, 300},
-        {30 * time.Minute, 400},
-        {40 * time.Minute, 500},
-        {50 * time.Minute, 600},
-        {60 * time.Minute, 800},
-        {70 * time.Minute, 1000},
-        {80 * time.Minute, 2000},
-        {90 * time.Minute, 4000},
-        {100 * time.Minute, 8000},
-    }
+	cases := []scheduledAlert{
+		{0 * time.Second, 100},
+		{10 * time.Minute, 200},
+		{20 * time.Minute, 300},
+		{30 * time.Minute, 400},
+		{40 * time.Minute, 500},
+		{50 * time.Minute, 600},
+		{60 * time.Minute, 800},
+		{70 * time.Minute, 1000},
+		{80 * time.Minute, 2000},
+		{90 * time.Minute, 4000},
+		{100 * time.Minute, 8000},
+	}
 
-    for i, want := range cases {
-        t.Run(fmt.Sprint(want), func(t *testing.T) {
+	for i, want := range cases {
+		t.Run(fmt.Sprint(want), func(t *testing.T) {
 
-            if len(blindAlerter.alerts) <= i {
-                t.Fatalf("alert %d was not scheduled %v", i, blindAlerter.alerts)
-            }
+			if len(blindAlerter.alerts) <= i {
+				t.Fatalf("alert %d was not scheduled %v", i, blindAlerter.alerts)
+			}
 
-            got := blindAlerter.alerts[i]
-            assertScheduledAlert(t, got, want)
-        })
-    }
+			got := blindAlerter.alerts[i]
+			assertScheduledAlert(t, got, want)
+		})
+	}
 })
 ```
 
@@ -386,9 +386,9 @@ t.Run("it schedules printing of blind values", func(t *testing.T) {
 package poker
 
 import (
-    "time"
-    "fmt"
-    "os"
+	"fmt"
+	"os"
+	"time"
 )
 
 type BlindAlerter interface {
@@ -544,38 +544,38 @@ const PlayerPrompt = "Please enter the number of players: "
 
 ```go
 t.Run("it prompts the user to enter the number of players", func(t *testing.T) {
-    stdout := &bytes.Buffer{}
-    in := strings.NewReader("7\n")
-    blindAlerter := &SpyBlindAlerter{}
+	stdout := &bytes.Buffer{}
+	in := strings.NewReader("7\n")
+	blindAlerter := &SpyBlindAlerter{}
 
-    cli := poker.NewCLI(dummyPlayerStore, in, stdout, blindAlerter)
-    cli.PlayPoker()
+	cli := poker.NewCLI(dummyPlayerStore, in, stdout, blindAlerter)
+	cli.PlayPoker()
 
-    got := stdout.String()
-    want := poker.PlayerPrompt
+	got := stdout.String()
+	want := poker.PlayerPrompt
 
-    if got != want {
-        t.Errorf("got %q, want %q", got, want)
-    }
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
 
-    cases := []scheduledAlert{
-        {0 * time.Second, 100},
-        {12 * time.Minute, 200},
-        {24 * time.Minute, 300},
-        {36 * time.Minute, 400},
-    }
+	cases := []scheduledAlert{
+		{0 * time.Second, 100},
+		{12 * time.Minute, 200},
+		{24 * time.Minute, 300},
+		{36 * time.Minute, 400},
+	}
 
-    for i, want := range cases {
-        t.Run(fmt.Sprint(want), func(t *testing.T) {
+	for i, want := range cases {
+		t.Run(fmt.Sprint(want), func(t *testing.T) {
 
-            if len(blindAlerter.alerts) <= i {
-                t.Fatalf("alert %d was not scheduled %v", i, blindAlerter.alerts)
-            }
+			if len(blindAlerter.alerts) <= i {
+				t.Fatalf("alert %d was not scheduled %v", i, blindAlerter.alerts)
+			}
 
-            got := blindAlerter.alerts[i]
-            assertScheduledAlert(t, got, want)
-        })
-    }
+			got := blindAlerter.alerts[i]
+			assertScheduledAlert(t, got, want)
+		})
+	}
 })
 ```
 
@@ -617,7 +617,7 @@ func (cli *CLI) PlayPoker() {
 }
 
 func (cli *CLI) scheduleBlindAlerts(numberOfPlayers int) {
-    blindIncrement := time.Duration(5 + numberOfPlayers) * time.Minute
+    blindIncrement := time.Duration(5+numberOfPlayers) * time.Minute
 
     blinds := []int{100, 200, 300, 400, 500, 600, 800, 1000, 2000, 4000, 8000}
     blindTime := 0 * time.Second
@@ -680,9 +680,9 @@ func (p *Game) Finish(winner string) {
 
 // cli.go
 type CLI struct {
-    in          *bufio.Scanner
-    out         io.Writer
-    game        *Game
+	in   *bufio.Scanner
+	out  io.Writer
+	game *Game
 }
 
 func NewCLI(store PlayerStore, in io.Reader, out io.Writer, alerter BlindAlerter) *CLI {
@@ -937,17 +937,17 @@ func (g *GameSpy) Finish(winner string) {
 
 ```go
 t.Run("it prints an error when a non numeric value is entered and does not start the game", func(t *testing.T) {
-        stdout := &bytes.Buffer{}
-        in := strings.NewReader("Pies\n")
-        game := &GameSpy{}
+	stdout := &bytes.Buffer{}
+	in := strings.NewReader("Pies\n")
+	game := &GameSpy{}
 
-        cli := poker.NewCLI(in, stdout, game)
-        cli.PlayPoker()
+	cli := poker.NewCLI(in, stdout, game)
+	cli.PlayPoker()
 
-        if game.StartCalled {
-            t.Errorf("game should not have started")
-        }
-    })
+	if game.StartCalled {
+		t.Errorf("game should not have started")
+	}
+})
 ```
 
 「`GameSpy`」にフィールド「`StartCalled`」を追加する必要があります。これは「`Start`」が呼び出された場合にのみ設定されます
@@ -1028,7 +1028,7 @@ const BadPlayerInputErrMsg = "Bad value received for number of players, please t
 最後に、`stdout`に送信されたものに関するテストは非常に詳細です。クリーンアップするアサート関数を作成しましょう。
 
 ```go
-func assertMessagesSentToUser(t *testing.T, stdout *bytes.Buffer, messages ...string) {
+func assertMessagesSentToUser(t testing.TB, stdout *bytes.Buffer, messages ...string) {
     t.Helper()
     want := strings.Join(messages, "")
     got := stdout.String()
@@ -1162,3 +1162,22 @@ func (a BlindAlerterFunc) ScheduleAlertAt(duration time.Duration, amount int) {
 }
 ```
 
+こうすることで、あなたのライブラリを利用する人は、関数だけであなたのインタフェースを実装することができます。彼らは [Type Conversion](https://go.dev/tour/basics/13) を使って関数を `BlindAlerterFunc` に変換し、それを BlindAlerter として使うことができます (`BlindAlerterFunc` は `BlindAlerter` を実装しているので)
+
+```go
+game := poker.NewTexasHoldem(poker.BlindAlerterFunc(poker.StdOutAlerter), store)
+```
+
+ここで重要なのは、Goでは構造体だけでなく、_型_ にもメソッドを追加できるということです。これは非常に強力な機能で、これを利用すればより便利な方法でインターフェースを実装することができます。
+
+関数の型を定義するだけでなく、他の型の周りに型を定義して、その型にメソッドを追加することができることを考慮してください。
+
+```go
+type Blog map[string]string
+
+func (b Blog) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, b[r.URL.Path])
+}
+```
+
+ここでは、非常にシンプルな「ブログ」を実装するHTTPハンドラを作成しました。このハンドラでは、URLパスをキーとして、マップに格納された投稿を表示します。

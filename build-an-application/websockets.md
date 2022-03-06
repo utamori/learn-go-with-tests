@@ -426,7 +426,7 @@ func mustDialWS(t *testing.T, url string) *websocket.Conn {
 最後に、テストコードで、メッセージの送信を整理するヘルパーを作成できます。
 
 ```go
-func writeWSMessage(t *testing.T, conn *websocket.Conn, message string) {
+func writeWSMessage(t testing.TB, conn *websocket.Conn, message string) {
     t.Helper()
     if err := conn.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
         t.Fatalf("could not send message over ws connection %v", err)
@@ -564,7 +564,7 @@ func StdOutAlerter(duration time.Duration, amount int) {
 
 そのため、 `BlindAlerter.ScheduleAlertAt`を変更してアラートの宛先を取得し、Webサーバーで再利用できるようにする必要があります。
 
-`BlindAlerter.go`を開き、パラメータ「`to io.Writer`」を追加します
+`blind_alerter.go`を開き、パラメータ「`to io.Writer`」を追加します
 
 ```go
 type BlindAlerter interface {
@@ -685,7 +685,7 @@ var (
 今のところ、テストを実行するために引数として追加するだけです
 
 ```go
-func NewPlayerServer(store PlayerStore, game Game) (*PlayerServer, error) {
+func NewPlayerServer(store PlayerStore, game Game) (*PlayerServer, error)
 ```
 
 最終的に！
@@ -729,6 +729,7 @@ func NewPlayerServer(store PlayerStore, game Game) (*PlayerServer, error) {
     p.game = game
 
     // etc
+}
 ```
 
 これで、`webSocket`内で`Game`を使用できます。
@@ -774,9 +775,7 @@ func main() {
         log.Fatalf("problem creating player server %v", err)
     }
 
-    if err := http.ListenAndServe(":5000", server); err != nil {
-        log.Fatalf("could not listen on port 5000 %v", err)
-    }
+	log.Fatal(http.ListenAndServe(":5000", server))
 }
 ```
 
@@ -853,6 +852,7 @@ func (p *PlayerServer) webSocket(w http.ResponseWriter, r *http.Request) {
     numberOfPlayers, _ := strconv.Atoi(numberOfPlayersMsg)
     p.game.Start(numberOfPlayers, ws) 
     //etc...
+}
 ```
 
 コンパイラは以下のような問題を指摘しています。
@@ -965,7 +965,7 @@ t.Run("start a game with 3 players, send some blind alerts down WS and declare R
 テストがハングすることは絶対にあってはならないことなので、タイムアウトさせたいコードを処理する方法を紹介します。
 
 ```go
-func within(t *testing.T, d time.Duration, assert func()) {
+func within(t testing.TB, d time.Duration, assert func()) {
     t.Helper()
 
     done := make(chan struct{}, 1)
@@ -1061,7 +1061,7 @@ func (p *PlayerServer) webSocket(w http.ResponseWriter, r *http.Request) {
 他のヘルパーにも同じアプローチを使用できます。
 
 ```go
-func assertFinishCalledWith(t *testing.T, game *GameSpy, winner string) {
+func assertFinishCalledWith(t testing.TB, game *GameSpy, winner string) {
     t.Helper()
 
     passed := retryUntil(500*time.Millisecond, func() bool {

@@ -115,7 +115,7 @@ func (m failOnEndReader) Read(p []byte) (n int, err error) {
 	return n, err
 }
 
-func assertScheduledAlert(t *testing.T, got, want scheduledAlert) {
+func assertScheduledAlert(t testing.TB, got, want scheduledAlert) {
 	t.Helper()
 	if got != want {
 		t.Errorf("got %+v, want %+v", got, want)

@@ -51,17 +51,17 @@ Goでアプリケーションを作成するには、`package main`内に`main`�
 
 ```text
 .
-├── FileSystemStore.go
-├── FileSystemStore_test.go
-├── cmd
-│   └── webserver
-│       └── main.go
-├── league.go
-├── server.go
-├── server_integration_test.go
-├── server_test.go
-├── tape.go
-└── tape_test.go
+|-- file_system_store.go
+|-- file_system_store_test.go
+|-- cmd
+|   |-- webserver
+|       |-- main.go
+|-- league.go
+|-- server.go
+|-- server_integration_test.go
+|-- server_test.go
+|-- tape.go
+|-- tape_test.go
 ```
 
 これで、アプリケーションとライブラリコードが実質的に分離されましたが、一部のパッケージ名を変更する必要があります。 Goアプリケーションをビルドするときは、そのパッケージを「`main`」にする必要があることを忘れないでください。
@@ -73,6 +73,7 @@ Goでアプリケーションを作成するには、`package main`内に`main`�
 パスはコンピューターによって異なりますが、次のようになります。
 
 ```go
+//cmd/webserver/main.go
 package main
 
 import (
@@ -99,9 +100,7 @@ func main() {
 
     server := poker.NewPlayerServer(store)
 
-    if err := http.ListenAndServe(":5000", server); err != nil {
-        log.Fatalf("could not listen on port 5000 %v", err)
-    }
+	log.Fatal(http.ListenAndServe(":5000", server))
 }
 ```
 
@@ -110,7 +109,7 @@ func main() {
 ドメインコードを個別のパッケージに分離し、それをGitHubのようなパブリックリポジトリにコミットすることで、Go開発者は私たちが書いた機能をパッケージ化してインポートする独自のコードを書くことができます。初めて実行すると、それが存在しないというメッセージが表示されますが、`go get`を実行するだけで済みます。
 
 
-[さらに、ユーザーは`godoc.org`でドキュメントを表示できます](https://godoc.org/github.com/quii/learn-go-with-tests/command-line/v1).
+さらに、ユーザーは[`godoc.org`でドキュメントを表示](https://godoc.org/github.com/quii/learn-go-with-tests/command-line/v1)できます
 
 ### 最終チェック
 
@@ -123,6 +122,7 @@ func main() {
 テストの作成に取り掛かる前に、プロジェクトで構築する新しいアプリケーションを追加しましょう。`cmd`内に`cli`（コマンドラインインターフェイス）という別のディレクトリを作成し、次のように`main.go`を追加します
 
 ```go
+//cmd/cli/main.go
 package main
 
 import "fmt"
@@ -143,6 +143,10 @@ func main() {
 `CLI_test.go`内（`cmd`内ではなくプロジェクトのルート内）
 
 ```go
+//CLI_test.go
+package poker
+import "testing"
+
 func TestCLI(t *testing.T) {
     playerStore := &StubPlayerStore{}
     cli := &CLI{playerStore}
@@ -173,6 +177,9 @@ func TestCLI(t *testing.T) {
 あなたはこのようなコードで終わるはずです。
 
 ```go
+//CLI.go
+package poker
+
 type CLI struct {
     playerStore PlayerStore
 }
@@ -191,6 +198,7 @@ FAIL
 ## 成功させるのに十分なコードを書く
 
 ```go
+//CLI.go
 func (cli *CLI) PlayPoker() {
     cli.playerStore.RecordWin("Cleo")
 }
@@ -205,6 +213,7 @@ func (cli *CLI) PlayPoker() {
 ## 最初にテストを書く
 
 ```go
+//CLI_test.go
 func TestCLI(t *testing.T) {
     in := strings.NewReader("Chris wins\n")
     playerStore := &StubPlayerStore{}
@@ -212,7 +221,7 @@ func TestCLI(t *testing.T) {
     cli := &CLI{playerStore, in}
     cli.PlayPoker()
 
-    if len(playerStore.winCalls) < 1 {
+    if len(playerStore.winCalls) != 1 {
         t.Fatal("expected a win call but didn't get any")
     }
 
@@ -238,6 +247,7 @@ func TestCLI(t *testing.T) {
 新しい依存関係を`CLI`に追加する必要があります。
 
 ```go
+//CLI.go
 type CLI struct {
     playerStore PlayerStore
     in          io.Reader
@@ -267,7 +277,8 @@ func (cli *CLI) PlayPoker() {
 `server_test`では、ここでのように勝利が記録されているかどうかを以前に確認しました。そのアサーションをヘルパーにDRYにしてみましょう
 
 ```go
-func assertPlayerWin(t *testing.T, store *StubPlayerStore, winner string) {
+//server_test.go
+func assertPlayerWin(t testing.TB, store *StubPlayerStore, winner string) {
     t.Helper()
 
     if len(store.winCalls) != 1 {
@@ -285,6 +296,7 @@ func assertPlayerWin(t *testing.T, store *StubPlayerStore, winner string) {
 テストは次のようになります。
 
 ```go
+//CLI_test.go
 func TestCLI(t *testing.T) {
     in := strings.NewReader("Chris wins\n")
     playerStore := &StubPlayerStore{}
@@ -301,6 +313,7 @@ func TestCLI(t *testing.T) {
 ## 最初にテストを書く
 
 ```go
+//CLI_test.go
 func TestCLI(t *testing.T) {
 
     t.Run("record chris win from user input", func(t *testing.T) {
@@ -348,6 +361,7 @@ FAIL
 コードを次のように更新します。
 
 ```go
+//CLI.go
 type CLI struct {
     playerStore PlayerStore
     in          io.Reader
@@ -455,6 +469,7 @@ Mitchell・Hashimotoによるプレゼンテーション[Goを使った高度な
 それでは、`testing.go`というファイルを作成して、スタブとヘルパーを追加しましょう。
 
 ```go
+//testing.go
 package poker
 
 import "testing"
@@ -478,7 +493,7 @@ func (s *StubPlayerStore) GetLeague() League {
     return s.league
 }
 
-func AssertPlayerWin(t *testing.T, store *StubPlayerStore, winner string) {
+func AssertPlayerWin(t testing.TB, store *StubPlayerStore, winner string) {
     t.Helper()
 
     if len(store.winCalls) != 1 {
@@ -498,6 +513,7 @@ func AssertPlayerWin(t *testing.T, store *StubPlayerStore, winner string) {
 `CLI`テストでは、別のパッケージ内でコードを使用しているかのようにコードを呼び出す必要があります。
 
 ```go
+//CLI_test.go
 func TestCLI(t *testing.T) {
 
     t.Run("record chris win from user input", func(t *testing.T) {
@@ -535,6 +551,7 @@ func TestCLI(t *testing.T) {
 これを回避する最も簡単な方法は、他の型と同じようにコンストラクターを作成することです。また、構築時に自動的にラップされるように、リーダーの代わりに`bufio.Scanner`を格納するように、`CLI`も変更します。
 
 ```go
+//CLI.go
 type CLI struct {
     playerStore PlayerStore
     in          *bufio.Scanner
@@ -551,6 +568,7 @@ func NewCLI(store PlayerStore, in io.Reader) *CLI {
 これにより、読み取りコードを簡素化してリファクタリングできます。
 
 ```go
+//CLI.go
 func (cli *CLI) PlayPoker() {
     userInput := cli.readLine()
     cli.playerStore.RecordWin(extractWinner(userInput))
@@ -571,6 +589,7 @@ func (cli *CLI) readLine() string {
 最後に、新しい`main.go`に戻り、先ほど作成したコンストラクタを使用できます。
 
 ```go
+//cmd/cli/main.go
 game := poker.NewCLI(store, os.Stdin)
 ```
 
@@ -578,10 +597,11 @@ game := poker.NewCLI(store, os.Stdin)
 
 ### リファクタリング♪
 
-それぞれのアプリケーションで、ファイルを開いてその内容から「FileSystemStore」を作成するという繰り返しがあります。
+それぞれのアプリケーションで、ファイルを開いてその内容から「file_system_store」を作成するという繰り返しがあります。
 これは、パッケージの設計のわずかな弱点のように感じられるので、パスからファイルを開いて、`PlayerStore`を返すようにカプセル化する関数を作成する必要があります。
 
 ```go
+//file_system_store.go
 func FileSystemPlayerStoreFromFile(path string) (*FileSystemPlayerStore, func(), error) {
     db, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0666)
 
@@ -608,6 +628,7 @@ func FileSystemPlayerStoreFromFile(path string) (*FileSystemPlayerStore, func(),
 #### CLIアプリケーションコード
 
 ```go
+//cmd/cli/main.go
 package main
 
 import (
@@ -636,6 +657,7 @@ func main() {
 #### Webサーバーアプリケーションコード
 
 ```go
+//cmd/webserver/main.go
 package main
 
 import (
