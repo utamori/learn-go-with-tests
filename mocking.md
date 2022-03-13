@@ -1,6 +1,6 @@
 # Mocking
 
-**[You can find all the code for this chapter here](https://github.com/quii/learn-go-with-tests/tree/master/mocking)**
+**[You can find all the code for this chapter here](https://github.com/quii/learn-go-with-tests/tree/main/mocking)**
 
 You have been asked to write a program which counts down from 3, printing each number on a new line (with a 1 second pause) and when it reaches zero it will print "Go!" and exit.
 
@@ -17,7 +17,7 @@ We'll tackle this by writing a function called `Countdown` which we will then pu
 package main
 
 func main() {
-    Countdown()
+	Countdown()
 }
 ```
 
@@ -39,16 +39,16 @@ Our software needs to print to stdout and we saw how we could use DI to facilita
 
 ```go
 func TestCountdown(t *testing.T) {
-    buffer := &bytes.Buffer{}
+	buffer := &bytes.Buffer{}
 
-    Countdown(buffer)
+	Countdown(buffer)
 
-    got := buffer.String()
-    want := "3"
+	got := buffer.String()
+	want := "3"
 
-    if got != want {
-        t.Errorf("got %q want %q", got, want)
-    }
+	if got != want {
+		t.Errorf("got %q want %q", got, want)
+	}
 }
 ```
 
@@ -73,7 +73,7 @@ func Countdown() {}
 
 Try again
 
-```go
+```
 ./countdown_test.go:11:11: too many arguments in call to Countdown
     have (*bytes.Buffer)
     want ()
@@ -93,7 +93,7 @@ Perfect!
 
 ```go
 func Countdown(out *bytes.Buffer) {
-    fmt.Fprint(out, "3")
+	fmt.Fprint(out, "3")
 }
 ```
 
@@ -105,7 +105,7 @@ We know that while `*bytes.Buffer` works, it would be better to use a general pu
 
 ```go
 func Countdown(out io.Writer) {
-    fmt.Fprint(out, "3")
+	fmt.Fprint(out, "3")
 }
 ```
 
@@ -117,17 +117,17 @@ To complete matters, let's now wire up our function into a `main` so we have som
 package main
 
 import (
-    "fmt"
-    "io"
-    "os"
+	"fmt"
+	"io"
+	"os"
 )
 
 func Countdown(out io.Writer) {
-    fmt.Fprint(out, "3")
+	fmt.Fprint(out, "3")
 }
 
 func main() {
-    Countdown(os.Stdout)
+	Countdown(os.Stdout)
 }
 ```
 
@@ -143,19 +143,19 @@ By investing in getting the overall plumbing working right, we can iterate on ou
 
 ```go
 func TestCountdown(t *testing.T) {
-    buffer := &bytes.Buffer{}
+	buffer := &bytes.Buffer{}
 
-    Countdown(buffer)
+	Countdown(buffer)
 
-    got := buffer.String()
-    want := `3
+	got := buffer.String()
+	want := `3
 2
 1
 Go!`
 
-    if got != want {
-        t.Errorf("got %q want %q", got, want)
-    }
+	if got != want {
+		t.Errorf("got %q want %q", got, want)
+	}
 }
 ```
 
@@ -173,10 +173,10 @@ countdown_test.go:21: got '3' want '3
 
 ```go
 func Countdown(out io.Writer) {
-    for i := 3; i > 0; i-- {
-        fmt.Fprintln(out, i)
-    }
-    fmt.Fprint(out, "Go!")
+	for i := 3; i > 0; i-- {
+		fmt.Fprintln(out, i)
+	}
+	fmt.Fprint(out, "Go!")
 }
 ```
 
@@ -191,10 +191,10 @@ const finalWord = "Go!"
 const countdownStart = 3
 
 func Countdown(out io.Writer) {
-    for i := countdownStart; i > 0; i-- {
-        fmt.Fprintln(out, i)
-    }
-    fmt.Fprint(out, finalWord)
+	for i := countdownStart; i > 0; i-- {
+		fmt.Fprintln(out, i)
+	}
+	fmt.Fprint(out, finalWord)
 }
 ```
 
@@ -204,13 +204,13 @@ Go lets you achieve this with `time.Sleep`. Try adding it in to our code.
 
 ```go
 func Countdown(out io.Writer) {
-    for i := countdownStart; i > 0; i-- {
-        time.Sleep(1 * time.Second)
-        fmt.Fprintln(out, i)
-    }
+	for i := countdownStart; i > 0; i-- {
+		time.Sleep(1 * time.Second)
+		fmt.Fprintln(out, i)
+	}
 
-    time.Sleep(1 * time.Second)
-    fmt.Fprint(out, finalWord)
+	time.Sleep(1 * time.Second)
+	fmt.Fprint(out, finalWord)
 }
 ```
 
@@ -235,7 +235,7 @@ Let's define our dependency as an interface. This lets us then use a _real_ Slee
 
 ```go
 type Sleeper interface {
-    Sleep()
+	Sleep()
 }
 ```
 
@@ -245,11 +245,11 @@ Now we need to make a _mock_ of it for our tests to use.
 
 ```go
 type SpySleeper struct {
-    Calls int
+	Calls int
 }
 
 func (s *SpySleeper) Sleep() {
-    s.Calls++
+	s.Calls++
 }
 ```
 
@@ -259,24 +259,24 @@ Update the tests to inject a dependency on our Spy and assert that the sleep has
 
 ```go
 func TestCountdown(t *testing.T) {
-    buffer := &bytes.Buffer{}
-    spySleeper := &SpySleeper{}
+	buffer := &bytes.Buffer{}
+	spySleeper := &SpySleeper{}
 
-    Countdown(buffer, spySleeper)
+	Countdown(buffer, spySleeper)
 
-    got := buffer.String()
-    want := `3
+	got := buffer.String()
+	want := `3
 2
 1
 Go!`
 
-    if got != want {
-        t.Errorf("got %q want %q", got, want)
-    }
+	if got != want {
+		t.Errorf("got %q want %q", got, want)
+	}
 
-    if spySleeper.Calls != 4 {
-        t.Errorf("not enough calls to sleeper, want 4 got %d", spySleeper.Calls)
-    }
+	if spySleeper.Calls != 4 {
+		t.Errorf("not enough calls to sleeper, want 4 got %d", spySleeper.Calls)
+	}
 }
 ```
 
@@ -294,13 +294,13 @@ We need to update `Countdown` to accept our `Sleeper`
 
 ```go
 func Countdown(out io.Writer, sleeper Sleeper) {
-    for i := countdownStart; i > 0; i-- {
-        time.Sleep(1 * time.Second)
-        fmt.Fprintln(out, i)
-    }
+	for i := countdownStart; i > 0; i-- {
+		time.Sleep(1 * time.Second)
+		fmt.Fprintln(out, i)
+	}
 
-    time.Sleep(1 * time.Second)
-    fmt.Fprint(out, finalWord)
+	time.Sleep(1 * time.Second)
+	fmt.Fprint(out, finalWord)
 }
 ```
 
@@ -315,10 +315,10 @@ If you try again, your `main` will no longer compile for the same reason
 Let's create a _real_ sleeper which implements the interface we need
 
 ```go
-type DefaultSleeper struct {}
+type DefaultSleeper struct{}
 
 func (d *DefaultSleeper) Sleep() {
-    time.Sleep(1 * time.Second)
+	time.Sleep(1 * time.Second)
 }
 ```
 
@@ -326,8 +326,8 @@ We can then use it in our real application like so
 
 ```go
 func main() {
-    sleeper := &DefaultSleeper{}
-    Countdown(os.Stdout, sleeper)
+	sleeper := &DefaultSleeper{}
+	Countdown(os.Stdout, sleeper)
 }
 ```
 
@@ -337,17 +337,17 @@ The test is now compiling but not passing because we're still calling the `time.
 
 ```go
 func Countdown(out io.Writer, sleeper Sleeper) {
-    for i := countdownStart; i > 0; i-- {
-        sleeper.Sleep()
-        fmt.Fprintln(out, i)
-    }
+	for i := countdownStart; i > 0; i-- {
+		sleeper.Sleep()
+		fmt.Fprintln(out, i)
+	}
 
-    sleeper.Sleep()
-    fmt.Fprint(out, finalWord)
+	sleeper.Sleep()
+	fmt.Fprint(out, finalWord)
 }
 ```
 
-The test should pass and no longer taking 4 seconds.
+The test should pass and no longer take 4 seconds.
 
 ### Still some problems
 
@@ -369,16 +369,16 @@ When writing tests if you're not confident that your tests are giving you suffic
 
 ```go
 func Countdown(out io.Writer, sleeper Sleeper) {
-    for i := countdownStart; i > 0; i-- {
-        sleeper.Sleep()
-    }
+	for i := countdownStart; i > 0; i-- {
+		sleeper.Sleep()
+	}
 
-    for i := countdownStart; i > 0; i-- {
-        fmt.Fprintln(out, i)
-    }
+	for i := countdownStart; i > 0; i-- {
+		fmt.Fprintln(out, i)
+	}
 
-    sleeper.Sleep()
-    fmt.Fprint(out, finalWord)
+	sleeper.Sleep()
+	fmt.Fprint(out, finalWord)
 }
 ```
 
@@ -389,46 +389,46 @@ Let's use spying again with a new test to check the order of operations is corre
 We have two different dependencies and we want to record all of their operations into one list. So we'll create _one spy for them both_.
 
 ```go
-type CountdownOperationsSpy struct {
-    Calls []string
+type SpyCountdownOperations struct {
+	Calls []string
 }
 
-func (s *CountdownOperationsSpy) Sleep() {
-    s.Calls = append(s.Calls, sleep)
+func (s *SpyCountdownOperations) Sleep() {
+	s.Calls = append(s.Calls, sleep)
 }
 
-func (s *CountdownOperationsSpy) Write(p []byte) (n int, err error) {
-    s.Calls = append(s.Calls, write)
-    return
+func (s *SpyCountdownOperations) Write(p []byte) (n int, err error) {
+	s.Calls = append(s.Calls, write)
+	return
 }
 
 const write = "write"
 const sleep = "sleep"
 ```
 
-Our `CountdownOperationsSpy` implements both `io.Writer` and `Sleeper`, recording every call into one slice. In this test we're only concerned about the order of operations, so just recording them as list of named operations is sufficient.
+Our `SpyCountdownOperations` implements both `io.Writer` and `Sleeper`, recording every call into one slice. In this test we're only concerned about the order of operations, so just recording them as list of named operations is sufficient.
 
 We can now add a sub-test into our test suite which verifies our sleeps and prints operate in the order we hope
 
 ```go
 t.Run("sleep before every print", func(t *testing.T) {
-    spySleepPrinter := &CountdownOperationsSpy{}
-    Countdown(spySleepPrinter, spySleepPrinter)
+	spySleepPrinter := &SpyCountdownOperations{}
+	Countdown(spySleepPrinter, spySleepPrinter)
 
-    want := []string{
-        sleep,
-        write,
-        sleep,
-        write,
-        sleep,
-        write,
-        sleep,
-        write,
-    }
+	want := []string{
+		sleep,
+		write,
+		sleep,
+		write,
+		sleep,
+		write,
+		sleep,
+		write,
+	}
 
-    if !reflect.DeepEqual(want, spySleepPrinter.Calls) {
-        t.Errorf("wanted calls %v got %v", want, spySleepPrinter.Calls)
-    }
+	if !reflect.DeepEqual(want, spySleepPrinter.Calls) {
+		t.Errorf("wanted calls %v got %v", want, spySleepPrinter.Calls)
+	}
 })
 ```
 
@@ -439,40 +439,40 @@ We now have two tests spying on the `Sleeper` so we can now refactor our test so
 ```go
 func TestCountdown(t *testing.T) {
 
-    t.Run("prints 3 to Go!", func(t *testing.T) {
-        buffer := &bytes.Buffer{}
-        Countdown(buffer, &CountdownOperationsSpy{})
+	t.Run("prints 3 to Go!", func(t *testing.T) {
+		buffer := &bytes.Buffer{}
+		Countdown(buffer, &SpyCountdownOperations{})
 
-        got := buffer.String()
-        want := `3
+		got := buffer.String()
+		want := `3
 2
 1
 Go!`
 
-        if got != want {
-            t.Errorf("got %q want %q", got, want)
-        }
-    })
+		if got != want {
+			t.Errorf("got %q want %q", got, want)
+		}
+	})
 
-    t.Run("sleep before every print", func(t *testing.T) {
-        spySleepPrinter := &CountdownOperationsSpy{}
-        Countdown(spySleepPrinter, spySleepPrinter)
+	t.Run("sleep before every print", func(t *testing.T) {
+		spySleepPrinter := &SpyCountdownOperations{}
+		Countdown(spySleepPrinter, spySleepPrinter)
 
-        want := []string{
-            sleep,
-            write,
-            sleep,
-            write,
-            sleep,
-            write,
-            sleep,
-            write,
-        }
+		want := []string{
+			sleep,
+			write,
+			sleep,
+			write,
+			sleep,
+			write,
+			sleep,
+			write,
+		}
 
-        if !reflect.DeepEqual(want, spySleepPrinter.Calls) {
-            t.Errorf("wanted calls %v got %v", want, spySleepPrinter.Calls)
-        }
-    })
+		if !reflect.DeepEqual(want, spySleepPrinter.Calls) {
+			t.Errorf("wanted calls %v got %v", want, spySleepPrinter.Calls)
+		}
+	})
 }
 ```
 
@@ -488,8 +488,8 @@ Let's first create a new type for `ConfigurableSleeper` that accepts what we nee
 
 ```go
 type ConfigurableSleeper struct {
-    duration time.Duration
-    sleep    func(time.Duration)
+	duration time.Duration
+	sleep    func(time.Duration)
 }
 ```
 
@@ -497,11 +497,11 @@ We are using `duration` to configure the time slept and `sleep` as a way to pass
 
 ```go
 type SpyTime struct {
-    durationSlept time.Duration
+	durationSlept time.Duration
 }
 
 func (s *SpyTime) Sleep(duration time.Duration) {
-    s.durationSlept = duration
+	s.durationSlept = duration
 }
 ```
 
@@ -509,15 +509,15 @@ With our spy in place, we can create a new test for the configurable sleeper.
 
 ```go
 func TestConfigurableSleeper(t *testing.T) {
-    sleepTime := 5 * time.Second
+	sleepTime := 5 * time.Second
 
-    spyTime := &SpyTime{}
-    sleeper := ConfigurableSleeper{sleepTime, spyTime.Sleep}
-    sleeper.Sleep()
+	spyTime := &SpyTime{}
+	sleeper := ConfigurableSleeper{sleepTime, spyTime.Sleep}
+	sleeper.Sleep()
 
-    if spyTime.durationSlept != sleepTime {
-        t.Errorf("should have slept for %v but slept for %v", sleepTime, spyTime.durationSlept)
-    }
+	if spyTime.durationSlept != sleepTime {
+		t.Errorf("should have slept for %v but slept for %v", sleepTime, spyTime.durationSlept)
+	}
 }
 ```
 
@@ -549,7 +549,7 @@ All we need to do now is implement the `Sleep` function for `ConfigurableSleeper
 
 ```go
 func (c *ConfigurableSleeper) Sleep() {
-    c.sleep(c.duration)
+	c.sleep(c.duration)
 }
 ```
 
@@ -561,8 +561,8 @@ The last thing we need to do is to actually use our `ConfigurableSleeper` in the
 
 ```go
 func main() {
-    sleeper := &ConfigurableSleeper{1 * time.Second, time.Sleep}
-    Countdown(os.Stdout, sleeper)
+	sleeper := &ConfigurableSleeper{1 * time.Second, time.Sleep}
+	Countdown(os.Stdout, sleeper)
 }
 ```
 
@@ -601,14 +601,12 @@ This is usually a sign of you testing too much _implementation detail_. Try to m
 
 It is sometimes hard to know _what level_ to test exactly but here are some thought processes and rules I try to follow:
 
-- **The definition of refactoring is that the code changes but the behaviour stays the same**. If you have decided to do some refactoring in theory you should be able to do make the commit without any test changes. So when writing a test ask yourself
-  - Am I testing the behaviour I want or the implementation details?
+- **The definition of refactoring is that the code changes but the behaviour stays the same**. If you have decided to do some refactoring in theory you should be able to make the commit without any test changes. So when writing a test ask yourself
+  - Am I testing the behaviour I want, or the implementation details?
   - If I were to refactor this code, would I have to make lots of changes to the tests?
-- Although Go lets you test private functions, I would avoid it as private functions are to do with implementation.
+- Although Go lets you test private functions, I would avoid it as private functions are implementation detail to support public behaviour. Test the public behaviour. Sandi Metz describes private functions as being "less stable" and you don't want to couple your tests to them.
 - I feel like if a test is working with **more than 3 mocks then it is a red flag** - time for a rethink on the design
 - Use spies with caution. Spies let you see the insides of the algorithm you are writing which can be very useful but that means a tighter coupling between your test code and the implementation. **Be sure you actually care about these details if you're going to spy on them**
-
-As always, rules in software development aren't really rules and there can be exceptions. [Uncle Bob's article of "When to mock"](https://8thlight.com/blog/uncle-bob/2014/05/10/WhenToMock.html) has some excellent pointers.
 
 #### Can't I just use a mocking framework?
 
@@ -617,7 +615,7 @@ Mocking requires no magic and is relatively simple; using a framework can make m
 - a better understanding of how to mock
 - practise implementing interfaces
 
-In collaborative projects there is value auto-generating mocks. In a team, a mock generation tool codifies consistency around the test doubles. This will avoid inconsistently written test doubles which can translate to inconsistently written tests.
+In collaborative projects there is value in auto-generating mocks. In a team, a mock generation tool codifies consistency around the test doubles. This will avoid inconsistently written test doubles which can translate to inconsistently written tests.
 
 You should only use a mock generator that generates test doubles against an interface. Any tool that overly dictates how tests are written, or that use lots of 'magic', can get in the sea.
 
@@ -640,4 +638,8 @@ Martin Fowler.
 
 Once a developer learns about mocking it becomes very easy to over-test every single facet of a system in terms of the _way it works_ rather than _what it does_. Always be mindful about **the value of your tests** and what impact they would have in future refactoring.
 
-In this post about mocking we have only covered **Spies** which are a kind of mock. There are different kind of mocks. [Uncle Bob explains the types in a very easy to read article](https://8thlight.com/blog/uncle-bob/2014/05/14/TheLittleMocker.html). In later chapters we will need to write code that depends on others for data, which is where we will show **Stubs** in action.
+In this post about mocking we have only covered **Spies** which are a kind of mock. The "proper" term for mocks though are "test doubles"
+
+[> Test Double is a generic term for any case where you replace a production object for testing purposes.](https://martinfowler.com/bliki/TestDouble.html)
+
+Under test doubles, there are various types like stubs, spies and indeed mocks! Check out [Martin Fowler's post](https://martinfowler.com/bliki/TestDouble.html) for more detail.
