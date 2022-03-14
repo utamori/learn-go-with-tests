@@ -2,22 +2,22 @@
 description: Dependency Injection
 ---
 
-# 依存性注入
+# 依存性の注入
 
 [**この章のすべてのコードはここにあります**](https://github.com/andmorefine/learn-go-with-tests/tree/master/di)
 
 これにはインターフェースの理解が必要になるため、構造体のセクションをすでに読んでいることが前提です。
 
-プログラミングコミュニティには、依存性注入に関する誤解がたくさんあります。
+プログラミングコミュニティには、依存性の注入に関する誤解がたくさんあります。
 
-このガイドでは、
+このガイドでは、次のことを説明します
 
-* フレームワークは必要ありません
-* デザインが複雑になりすぎない
-* テストを容易にします
-* 優れた汎用関数を作成できます
+* DIにフレームワークは必要ありません
+* DIは設計を複雑にしすぎることはありません
+* DIはテストを容易にします
+* DIを使えば、素晴らしい汎用的な関数が書けるようになります
 
-`hello-world`の章で行ったように、誰かに挨拶する関数を書きたいのですが、今回は _actual Printing_ をテストします。
+`hello-world`の章で行ったように、誰かに挨拶する関数を書きたいのですが、今回は _実際の出力_ をテストします。
 
 要約すると、その関数は次のようになります。
 
@@ -36,7 +36,7 @@ func Greet(name string) {
 その場合は、実装を変更して表示するように制御し、テストできるようにします。 
 実際では、stdoutに書き込むものを注入します。
 
-`fmt.Printf`のソースコードを見ると、フックする方法がわかります。
+[`fmt.Printf`](https://pkg.go.dev/fmt#Printf)のソースコードを見ると、フックする方法がわかります。
 
 ```go
 // It returns the number of bytes written and any write error encountered.
@@ -69,6 +69,8 @@ type Writer interface {
 }
 ```
 
+このことから、 `os.Stdout` は `io.Writer` を実装していると推測できます。`Printf` は `os.Stdout` を `Fprintf` に渡し、`io.Writer` が期待されます。
+
 さらに多くのGoコードを書くと、このインターフェイスが「このデータをどこかに置く」ための優れた汎用インターフェイスであるため、多くのポップアップが表示されます。
 
 つまり、私たちは最終的に `Writer`を使用して挨拶をどこかに送信していることを知っています。この既存の抽象化を使用して、コードをテスト可能にし、再利用可能にします。
@@ -89,7 +91,7 @@ func TestGreet(t *testing.T) {
 }
 ```
 
-`bytes`パッケージの`buffer`タイプは `Writer`インターフェースを実装しています。
+`bytes`パッケージの`Buffer`型は`Write(p []byte) (n int, err error)`メソッドを持っているので、 `Writer`インターフェースを実装しています。
 
 テストでこれを使用して`Writer`として送信し、`Greet`を呼び出した後に何が書き込まれたかを確認できます。
 
@@ -152,8 +154,8 @@ package main
 
 import (
     "fmt"
-    "os"
     "io"
+    "os"
 )
 
 func Greet(writer io.Writer, name string) {
@@ -180,6 +182,7 @@ package main
 import (
     "fmt"
     "io"
+    "log"
     "net/http"
 )
 
@@ -192,7 +195,7 @@ func MyGreeterHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-    http.ListenAndServe(":5000", http.HandlerFunc(MyGreeterHandler))
+	log.Fatal(http.ListenAndServe(":5000", http.HandlerFunc(MyGreeterHandler)))
 }
 ```
 
