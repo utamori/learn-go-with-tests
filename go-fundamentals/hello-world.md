@@ -131,7 +131,7 @@ Goのもう1つの質機能はドキュメントです。 `godoc -http :8000`を
 
 標準ライブラリの大部分には、例を含む優れたドキュメントがあります。 [http://localhost:8000/pkg/testing/](http://localhost:8000/pkg/testing/) に移動すると、何が利用できるかを確認する価値があります。
 
-`godoc` コマンドがない場合は、`godoc`を含まない新しいバージョンのGo（`1.14`以降）を使用している可能性があります [no longer including `godoc`](https://golang.org/doc/go1.14#godoc)。 `go get golang.org/x/tools/cmd/godoc`を使用して手動でインストールできます。
+`godoc` コマンドがない場合は、`godoc`を含まない新しいバージョンのGo（`1.14`以降）を使用している可能性があります [no longer including `godoc`](https://golang.org/doc/go1.14#godoc)。 `go install golang.org/x/tools/cmd/godoc@latest`を使用して手動でインストールできます。
 
 ### Hello, YOU
 
